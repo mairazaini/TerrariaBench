@@ -2,6 +2,8 @@
 
 ## 1. Mission & Scope
 
+> **Language Standard:** Implement **all training loops, rollout workers, reward calculators, and evaluation harnesses in pure Python (>= 3.11)** whenever possible. Avoid external bash orchestration scripts; expose all local and cloud (Modal/Verda) workflows through Python CLI flags (`python -m terraria_bench.harness.train_grpo`).
+
 You own **Track 3 (Open-Weight Gemma 4 Policy & GRPO + LoRA Post-Training Pipeline)** of **TerrariaBench**, mirroring StoreBench §7 and Appendices C & K.
 The deterministic environment ([engine.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/engine.py)), task splits ([tasks.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tasks.py)), composite and dense reward channels ([grader.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/grader.py)), provenance ([provenance.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/provenance.py)), and 24-tool `Episode` surface ([tools.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tools.py)) are already implemented and frozen.
 

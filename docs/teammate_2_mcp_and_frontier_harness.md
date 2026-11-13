@@ -2,6 +2,8 @@
 
 ## 1. Mission & Scope
 
+> **Language Standard:** Implement **all code, agents, MCP servers, and CLI entrypoints in pure Python (>= 3.11)** whenever possible. Do not introduce Node/TypeScript MCP wrappers or shell-script runners; use Python's `mcp` SDK and stdlib (`json`, `sys`, `urllib`, `asyncio`) directly.
+
 You own **Track 2 (MCP Server & Frontier Model Evaluation Harness)** of **TerrariaBench**.
 The core world engine ([engine.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/engine.py)), task lenses ([tasks.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tasks.py)), composite grader ([grader.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/grader.py)), provenance ([provenance.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/provenance.py)), and the 24-tool `Episode` session ([tools.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tools.py)) are already complete and frozen.
 

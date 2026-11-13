@@ -22,6 +22,8 @@ The core deterministic simulation environment, task suite, cryptographic provena
 
 ## 2. Parallel 4-Teammate Assignment Documents
 
+> **Language Standard Across All 4 Tracks:** Code everything in **pure Python (>= 3.11)** whenever possible (including the port `8765` bridge server, CLI/FastAPI operator console, server-rendered leaderboard dashboard, and `python -m` task runners — zero Node/npm/JS build steps or required `.NET` compilation).
+
 Assign one document in `docs/` to each teammate (zero overlapping files):
 
 1. **[Teammate 1 — Scripted Anchors, Reward-Exploit Catalogue, Calibration & Verification Suite](file:///C:/Users/natha/dev/TerrariaBench/docs/teammate_1_anchors_exploits_calibration.md)**
