@@ -1,0 +1,7 @@
+Optional live-game tModLoader forwarder for TerrariaBench.
+
+All deterministic simulation, A* pathfinding, combat calculations, windowed
+operation metering, and sealed ledger recording execute in Python via
+terraria_bench.human_recorder on port 8765. When attached to tModLoader, this
+ModSystem hooks PostUpdateEverything(), pauses world progression between agent
+operations, and forwards macro commands/telemetry to the Python bridge.
