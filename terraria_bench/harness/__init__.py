@@ -12,8 +12,17 @@ _RUNNER_EXPORTS = (
     "run_eval_standard",
 )
 _OPTIONAL_TRACK3_EXPORTS = {
+    "AgentConfig": ".gemma_agent",
     "GemmaAgent": ".gemma_agent",
+    "StepRecord": ".gemma_agent",
+    "Trajectory": ".gemma_agent",
+    "evaluate_agent": ".gemma_agent",
+    "BehaviorCloningTrainer": ".train_grpo",
+    "GRPOConfig": ".train_grpo",
+    "GRPOTrainer": ".train_grpo",
+    "build_lora_config": ".train_grpo",
     "compute_group_advantages": ".train_grpo",
+    "compute_salvage_discounted_reward": ".train_grpo",
 }
 
 __all__ = [

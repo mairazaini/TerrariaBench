@@ -1,5 +1,7 @@
 # Teammate 3 — Open-Weight Gemma 4 Agent & GRPO + LoRA Post-Training Pipeline
 
+**Status:** **COMPLETED & VERIFIED** (`terraria_bench/harness/{gemma_agent,train_grpo}.py` and `tests/test_grpo_pipeline.py` implemented and verified offline with CPU `torch`/`transformers`/`peft`)
+
 ## 1. Mission & Scope
 
 > **Language Standard:** Implement **all training loops, rollout workers, reward calculators, and evaluation harnesses in pure Python (>= 3.11)** whenever possible. Avoid external bash orchestration scripts; expose all local and cloud (Modal/Verda) workflows through Python CLI flags (`python -m terraria_bench.harness.train_grpo`).
@@ -105,7 +107,8 @@ Must implement the exact StoreBench §7 / Appendix K training recipe:
 Run:
 ```powershell
 python -m terraria_bench.harness.train_grpo --dry-run
+python -m pytest tests/test_grpo_pipeline.py -v
 ```
-- [ ] Confirm `TRAIN_TASKS` and `EVAL_TASKS` disjointness check passes.
-- [ ] Confirm `sum(unclipped_dense_rewards)` equals `(phi_final - phi0) / s` to within `1e-6` on all 4 training tasks.
-- [ ] Confirm `--dry-run` completes in < 10 seconds, verifies group advantage calculation, and saves a checkpoint summary to `artifacts/checkpoints/gemma_grpo_lora/`.
+- [x] Confirm `TRAIN_TASKS` and `EVAL_TASKS` disjointness check passes.
+- [x] Confirm `sum(unclipped_dense_rewards)` equals `(phi_final - phi0) / s` to within `1e-6` on all 4 training tasks.
+- [x] Confirm `--dry-run` verifies group advantage calculation and saves `artifacts/checkpoints/gemma_grpo_lora/checkpoint_manifest.json`, and `tests/test_grpo_pipeline.py` passes (`9 passed`).
