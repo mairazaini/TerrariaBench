@@ -6,6 +6,7 @@ import functools
 import importlib
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
@@ -13,9 +14,9 @@ from .. import provenance
 from ..engine import AIR, CAMPFIRE, DOOR, WORKBENCH
 from ..grader import components, grade
 from ..provenance import ARTIFACTS_DIR, CALIBRATION_PATH, ProvenanceError, load_sealed, verify_seal, write_sealed
-from ..tasks import EVAL_TASKS, REPORTED_SEEDS
+from ..tasks import EVAL_TASKS, REPORTED_SEEDS, TASKS
 from ..tools import Episode
-from .gemini_agent import GeminiAgent
+from .gemini_agent import GeminiAgent, GeminiLiveError
 from .nemotron_agent import NemotronAgent
 
 MAX_TURNS = 150
@@ -89,8 +90,15 @@ def run_agent_episode(
     calibration: dict[str, Any] | None = None,
     max_turns: int = MAX_TURNS,
     save_dir: Path | None = None,
+    on_turn: Any = None,
 ) -> dict[str, Any]:
-    """Run ``agent`` over ``Episode(task_id, seed, redact_seed=True)`` up to ``max_turns``."""
+    """Run ``agent`` over ``Episode(task_id, seed, redact_seed=True)`` up to ``max_turns``.
+
+    A tool call the episode cannot execute (unknown tool, wrong argument names
+    or types) is returned to the agent as an ``ok: False`` observation instead
+    of aborting the run. ``on_turn(turn, tool, args, result)`` is called after
+    every turn when given.
+    """
     ep = Episode(task_id, seed, redact_seed=True)
     history = CompactHistory()
     obs: dict[str, Any] = {
@@ -109,8 +117,19 @@ def run_agent_episode(
         tool_name, tool_args = _normalize_action(agent.next_action(obs, history.render_context(), ep))
         if not tool_name:
             break
-        res = ep.step(tool_name, **tool_args)
+        try:
+            res = ep.step(tool_name, **tool_args)
+        except (TypeError, ValueError, KeyError, IndexError, AttributeError) as exc:
+            res = {
+                "ok": False,
+                "error": f"invalid call {tool_name}({tool_args}): {type(exc).__name__}: {exc}",
+                "header": ep.header(),
+                "window": ep.world.window,
+                "ops_left": ep.ops_left,
+            }
         turns_played = turn
+        if on_turn is not None:
+            on_turn(turn, tool_name, tool_args, res)
         compact_res = {k: v for k, v in res.items() if k != "viewport_png_b64"}
         history.append({"turn": turn, "tool": tool_name, "args": tool_args, "result": compact_res}, ep)
         obs = res
@@ -492,12 +511,63 @@ def run_eval_standard(live: bool = False) -> dict[str, Any]:
     return {"table1": table1, "table3": table3, "calibration_source": cal.get("source", "sealed")}
 
 
+def play_episode(
+    agent_name: str = "gemini",
+    task_id: str = "first-night",
+    seed: int = 7,
+    live: bool = False,
+    max_turns: int = MAX_TURNS,
+    save: bool = False,
+    verbose: bool = True,
+) -> dict[str, Any]:
+    """Play one episode with a named agent, printing each turn. Returns the run dict."""
+    agent = {"gemini": GeminiAgent, "nemotron": NemotronAgent}[agent_name](live=live)
+    try:
+        cal: dict[str, Any] | None = _reference_calibration()
+    except Exception:
+        cal = None  # stale or missing calibration: report raw components instead of a graded score
+
+    def show(turn: int, tool: str, args: dict[str, Any], res: dict[str, Any]) -> None:
+        shown = {k: ("<matrix>" if k == "matrix" else v) for k, v in args.items()}
+        status = "ok" if res.get("ok", True) else f"FAIL {res.get('error', '')}"
+        print(f"[{turn:3d}] {tool} {json.dumps(shown, default=str)} -> {status}\n      {res.get('header', '')}")
+
+    mode = "live" if live else "offline scripted stand-in (no model calls)"
+    print(f"== {agent_name} | {task_id} seed {seed} | {mode} ==")
+    if live and agent_name == "gemini":
+        print(f"supervisor={agent.model} decision={agent.decisions.model}")
+    save_dir = (ARTIFACTS_DIR / "runs" / agent_name) if (save and live) else None
+    out = run_agent_episode(agent, task_id, seed, calibration=cal, max_turns=max_turns,
+                            save_dir=save_dir, on_turn=show if verbose else None)
+    score = out["score"]
+    print(f"turns={out['turns']} windows={len(out['ledger']['windows'])}/{TASKS[task_id].windows} "
+          f"milestones={sorted(out['ledger'].get('milestones', []))}")
+    print("score: " + json.dumps({k: v for k, v in score.items() if isinstance(v, (int, float, bool))}, sort_keys=True))
+    if getattr(agent, "stats", None):
+        print("agent stats: " + json.dumps(agent.stats, sort_keys=True))
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="TerrariaBench Multi-Model Evaluation Harness")
     parser.add_argument("--eval-standard", action="store_true", help="Run StoreBench standard evaluation protocol")
     parser.add_argument("--live", action="store_true", help="Invoke live API models when API keys are set")
+    parser.add_argument("--play", choices=["gemini", "nemotron"], help="Play one episode with this agent and print each turn")
+    parser.add_argument("--task", default="first-night", choices=sorted(TASKS))
+    parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--max-turns", type=int, default=MAX_TURNS)
+    parser.add_argument("--save", action="store_true", help="With --play --live: write the sealed ledger to artifacts/runs/<agent>")
+    parser.add_argument("--quiet", action="store_true", help="With --play: print only the summary")
     args = parser.parse_args(argv)
 
+    if args.play:
+        try:
+            play_episode(args.play, args.task, args.seed, live=args.live, max_turns=args.max_turns,
+                         save=args.save, verbose=not args.quiet)
+        except GeminiLiveError as exc:
+            print(f"live Gemini run aborted: {exc}", file=sys.stderr)
+            return 2
+        return 0
     if args.eval_standard:
         run_eval_standard(live=args.live)
         return 0

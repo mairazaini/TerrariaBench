@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Build:  dotnet build mod/TerrariaRLBridge
+    Needs the .NET 8 SDK and a tModLoader install. Point TMODLOADER_PATH at the
+    install directory (the one holding tModLoader.dll and tMLMod.targets) if it
+    is not in the default Steam location below.
+  -->
+  <PropertyGroup>
+    <tMLInstallDir Condition="'$(TMODLOADER_PATH)' != ''">$(TMODLOADER_PATH)</tMLInstallDir>
+    <tMLInstallDir Condition="'$(tMLInstallDir)' == '' And Exists('D:\Games\steamapps\common\tModLoader\tMLMod.targets')">D:\Games\steamapps\common\tModLoader</tMLInstallDir>
+    <tMLInstallDir Condition="'$(tMLInstallDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\tModLoader</tMLInstallDir>
+  </PropertyGroup>
+
+  <Target Name="CheckTModLoader" BeforeTargets="BeforeBuild">
+    <Error Condition="!Exists('$(tMLInstallDir)\tMLMod.targets')"
+           Text="tModLoader not found at '$(tMLInstallDir)'. Set the TMODLOADER_PATH environment variable to your tModLoader install directory." />
+  </Target>
+
+  <Import Project="$(tMLInstallDir)\tMLMod.targets" Condition="Exists('$(tMLInstallDir)\tMLMod.targets')" />
+
+  <PropertyGroup>
+    <AssemblyName>TerrariaRLBridge</AssemblyName>
+    <RootNamespace>TerrariaRLBridge</RootNamespace>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Shell client for the TerrariaBench game server.
+
+    terraria tools                         list the 24 tools and their parameters
+    terraria <tool> ['{"json": "args"}']   call one tool (costs what the tool costs)
+
+Same world and same operation metering as the `terraria` MCP server.
+"""
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+
+BASE = os.environ.get("TERRARIA_GAME_URL", "http://game:8000")
+
+
+def _request(path, payload=None):
+    data = None if payload is None else json.dumps(payload).encode()
+    req = urllib.request.Request(BASE + path, data=data, headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as exc:
+        return json.loads(exc.read() or b'{"text": "server error"}')
+
+
+def main(argv):
+    if len(argv) < 2 or argv[1] in ("-h", "--help"):
+        print(__doc__)
+        return 0
+    if argv[1] == "tools":
+        for t in _request("/tools")["tools"]:
+            params = t["inputSchema"]["properties"]
+            required = set(t["inputSchema"].get("required", []))
+            sig = ", ".join(f"{k}{'' if k in required else '?'}: {v['type']}" for k, v in params.items())
+            print(f"{t['name']}({sig})\n    {t['description']}")
+        return 0
+    try:
+        args = json.loads(argv[2]) if len(argv) > 2 else {}
+    except ValueError as exc:
+        print(f"arguments must be one JSON object: {exc}", file=sys.stderr)
+        return 2
+    res = _request("/call", {"tool": argv[1], "args": args})
+    print(res.get("text", json.dumps(res)))
+    return 0 if res.get("ok") else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

@@ -1,0 +1,25 @@
+schema_version = "1.4"
+
+[metadata]
+author_name = "TerrariaBench"
+difficulty = "hard"
+category = "simulation"
+tags = ["simulation", "game", "long-horizon", "planning", "resource-management", "mcp"]
+
+[verifier]
+timeout_sec = 300.0
+
+[agent]
+timeout_sec = 8400.0
+
+[environment]
+build_timeout_sec = 900.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+
+[[environment.mcp_servers]]
+name = "game"
+transport = "streamable-http"
+url = "http://game:8000/mcp"
+args = []

@@ -9,3 +9,10 @@ build/
 artifacts/checkpoints/
 uv.lock
 
+
+# tModLoader mod build output
+mod/**/bin/
+mod/**/obj/
+
+# Harbor run output (curated logs live in harbor/runs/)
+harbor/jobs/
