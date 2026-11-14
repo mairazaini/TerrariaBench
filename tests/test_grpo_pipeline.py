@@ -18,8 +18,13 @@ from pathlib import Path
 from typing import Any, Optional
 
 import pytest
-import torch
-from peft import LoraConfig, get_peft_model
+
+# The training stack is optional: the benchmark itself runs without it.
+torch = pytest.importorskip("torch")
+pytest.importorskip("peft")
+pytest.importorskip("transformers")
+
+from peft import LoraConfig, get_peft_model  # noqa: E402
 from transformers import GemmaConfig, GemmaForCausalLM
 
 pytestmark = pytest.mark.filterwarnings("ignore::FutureWarning")

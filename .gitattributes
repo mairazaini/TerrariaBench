@@ -1,0 +1,5 @@
+# Shell scripts and container entrypoints run on Linux: keep LF on every platform.
+*.sh text eol=lf
+harbor/**/terraria text eol=lf
+harbor/**/Dockerfile text eol=lf
+*.py text eol=lf

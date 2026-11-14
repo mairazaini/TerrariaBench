@@ -17,7 +17,6 @@ from ..provenance import ARTIFACTS_DIR, CALIBRATION_PATH, ProvenanceError, load_
 from ..tasks import EVAL_TASKS, REPORTED_SEEDS, TASKS
 from ..tools import Episode
 from .gemini_agent import GeminiAgent, GeminiLiveError
-from .gemma_agent import AgentConfig as GemmaConfig, GemmaAgent
 from .nemotron_agent import (
     DEFAULT_VERDA_DEEPSEEK_MODEL,
     DEFAULT_VERDA_KIMI_MODEL,
@@ -496,6 +495,9 @@ def _build_agent(agent_name: str, live: bool) -> Any:
         )
         agent.name = agent_name
         return agent
+    if agent_name in ("gemma_base", "gemma_tuned"):
+        # Imported here: the Gemma agent needs torch, which the scripted evaluation must not require.
+        from .gemma_agent import AgentConfig as GemmaConfig, GemmaAgent
     if agent_name == "gemma_base":
         return GemmaAgent(config=GemmaConfig(), live=live)
     if agent_name == "gemma_tuned":

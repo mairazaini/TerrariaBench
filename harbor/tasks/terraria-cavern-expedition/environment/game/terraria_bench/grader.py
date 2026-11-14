@@ -96,10 +96,23 @@ def compute_eye_progress(state: dict[str, Any]) -> dict[str, Any]:
     - armor_score (10%): Equipped armor and total defense rating (0 -> 8+ defense).
     - tasks_score (35%): 9 tech-tree milestones toward Eye of Cthulhu
       (wood, workbench, shelter, weapons, arrows, stone/furnace, anvil/metal, lenses/altar, arena/summon).
-    - boss_fight_score (25%): Engaged Eye of Cthulhu (5%) + lowest Eye HP ratio achieved (up to 20%).
+    - boss_fight_score (25%): damaged the Eye of Cthulhu (5%) + lowest Eye HP ratio achieved (up to 20%).
+      The Eye appearing without taking damage scores nothing.
     - eye_kill_score (20%, and locks total score to 100% / 1.0): Eye of Cthulhu defeated.
     """
     ms = {str(m) for m in (state.get("milestones") or [])}
+    # A sealed simulator ledger carries exact inputs in ``eye``. They are measured as gains over the
+    # task's starting kit, so a scenario that starts the player with 300 HP or gold armor credits only
+    # what the agent added. Live sessions pass the same fields flat (EyeProgressTracker.as_dict).
+    sealed = state.get("eye") if isinstance(state.get("eye"), dict) else None
+    if sealed is not None:
+        state = {
+            **state,
+            "max_hp": 100.0 + max(0.0, float(sealed.get("max_hp", 100)) - float(sealed.get("start_max_hp", 100))),
+            "defense": max(0.0, float(sealed.get("armor_peak", 0)) - float(sealed.get("armor_start", 0))),
+            "eye_fought": bool(sealed.get("fought")),
+            "eye_min_hp_ratio": sealed.get("min_hp_ratio", 1.0),
+        }
 
     # 1. Health / Life Crystals (up to 0.10)
     max_hp = float(state.get("max_hp") or 100.0)
@@ -117,7 +130,7 @@ def compute_eye_progress(state: dict[str, Any]) -> dict[str, Any]:
     # 2. Armor & Defense (up to 0.10)
     defense = float(state.get("defense") or 0.0)
     armor_pieces = int(state.get("armor_pieces") or 0)
-    if defense == 0.0:
+    if defense == 0.0 and sealed is None:  # legacy ledgers only: infer from what was crafted
         if any(m.startswith("CRAFT:") and any(k in m for k in ("gold_armor", "platinum_armor", "silver_armor", "tungsten_armor", "iron_armor", "lead_armor")) for m in ms):
             defense = 8.0
         elif "CRAFT:wood_armor" in ms:
@@ -136,7 +149,10 @@ def compute_eye_progress(state: dict[str, Any]) -> dict[str, Any]:
         state.get("weapons")
         or any(m.startswith("CRAFT:") and ("bow" in m or "sword" in m) for m in ms)
     )
-    has_stone_or_ore = bool(state.get("stone_or_ore") or any(m.startswith("MINE:") for m in ms))
+    has_stone_or_ore = bool(
+        state.get("stone_or_ore") or any(m.startswith("MINE:") for m in ms)
+        or "FURNACE" in ms or "CAVERN" in ms or any(m.startswith("CRAFT:") and m.endswith("_bar") for m in ms)
+    )
     has_furnace = bool(
         state.get("furnace") or "FURNACE" in ms or "CRAFT:furnace" in ms
         or any("bar" in m.lower() for m in ms)
@@ -153,11 +169,13 @@ def compute_eye_progress(state: dict[str, Any]) -> dict[str, Any]:
     eye_killed = bool(state.get("eye_killed") or "KILL:eye" in ms)
     raw_min_ratio = state.get("eye_min_hp_ratio", 1.0)
     eye_min_hp_ratio = 0.0 if eye_killed else _clip(float(1.0 if raw_min_ratio is None else raw_min_ratio))
-    eye_fought = bool(state.get("eye_fought") or eye_killed or eye_min_hp_ratio < 1.0)
+    # "Fought" means the Eye took damage. The Eye merely appearing (it can spawn on its own) is not
+    # progress, so an idle player standing under it earns nothing here.
+    eye_fought = bool(eye_killed or eye_min_hp_ratio < 1.0)
 
-    has_altar = bool(state.get("altar_found") or state.get("has_summon_item") or "CRAFT:suspicious_looking_eye" in ms or eye_fought)
+    has_altar = bool(state.get("altar_found") or state.get("has_summon_item") or "CRAFT:suspicious_looking_eye" in ms or eye_killed)
     has_arena = bool(state.get("arena_built") or "ARENA" in ms)
-    has_summon = bool(state.get("has_summon_item") or "CRAFT:suspicious_looking_eye" in ms or eye_fought)
+    has_summon = bool(state.get("has_summon_item") or "CRAFT:suspicious_looking_eye" in ms or eye_killed)
 
     checklist = {
         "wood_gathered": has_wood_gathered,
@@ -359,7 +377,7 @@ class EyeProgressTracker:
             out.append("METAL_ARMOR_DEF")
         elif self.armor_pieces > 0:
             out.append("ARMOR_EQUIPPED")
-        if self.eye_fought:
+        if res["eye_fought"]:
             out.append("EYE_FOUGHT")
         if self.eye_killed:
             out.append("KILL:eye")

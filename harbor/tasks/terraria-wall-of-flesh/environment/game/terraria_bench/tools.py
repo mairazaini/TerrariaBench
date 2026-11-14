@@ -164,6 +164,10 @@ class Episode:
         self.attended = False
         self.windows_log: list[dict[str, Any]] = []
         self.actions_log: list[dict[str, Any]] = []
+        # Eye-progress inputs, sealed into the ledger. Armor is tracked as a high-water mark of
+        # *equipped* armor (buffs excluded) so a potion or an unequipped craft cannot stand in for it.
+        self._armor_start = self._armor_defense()
+        self._armor_peak = self._armor_start
         self._sealed_ledger: dict[str, Any] | None = None
 
     @property
@@ -237,7 +241,12 @@ class Episode:
             body["done"] = self.world.done
         return self._wrap(body)
 
+    def _armor_defense(self) -> int:
+        armor = self.world.eq.get("armor")
+        return int(ITEMS[armor]["defense"]) if armor else 0
+
     def _wrap(self, body: dict[str, Any]) -> dict[str, Any]:
+        self._armor_peak = max(self._armor_peak, self._armor_defense())
         hdr = self.header()
         payload = {"header": hdr, **body}
         payload["text"] = f"{hdr}\n{json.dumps(body, sort_keys=True)}"
@@ -259,6 +268,14 @@ class Episode:
             "windows": self.windows_log,
             "milestones": sorted(self.world.milestones),
             "deaths": self.world.deaths,
+            "eye": {
+                "start_max_hp": self.task.start_max_hp,
+                "max_hp": self.world.max_hp,
+                "armor_start": self._armor_start,
+                "armor_peak": max(self._armor_peak, self._armor_defense()),
+                "fought": "eye" in self.world.boss_min,
+                "min_hp_ratio": round(float(self.world.boss_min.get("eye", 1.0)), 6),
+            },
             "manifest": run_manifest(calibration),
         }
         self._sealed_ledger = seal(raw)
