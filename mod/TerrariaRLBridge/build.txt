@@ -1,0 +1,3 @@
+displayName = TerrariaBench RL & MCP Bridge
+author = TerrariaBench Team
+version = 0.1.0
