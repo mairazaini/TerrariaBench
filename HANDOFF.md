@@ -1,14 +1,14 @@
 # HANDOFF.md — TerrariaBench Session Continuation
 
-**Generated:** 2026-11-14 12:38
-**Branch:** main
+**Generated:** 2026-11-14 20:27
+**Branch:** codex/terraria-agent-inspiration
 **Repo:** TerrariaBench (C:/Users/natha/dev/TerrariaBench)
 
 ---
 
 ## Current Session
 
-**Session ID:** b34f371f-1a3b-421b-aa9d-022c0cbc3caa
+**Session ID:** 8ab49451-9571-4bec-a068-04f71136fcb4
 **Title:** pending
 
 ## Working Tree Status
@@ -16,36 +16,71 @@
 ⚠️  **Uncommitted work present** — commit or stash before ending the session.
 
 ```
-M HANDOFF.md
+M EVAL_RESULTS.md
+ M HANDOFF.md
+ M README.md
+ M artifacts/calibration.json
  M artifacts/recordings/real_terraria_live.html
  M artifacts/recordings/real_terraria_live.json
+ M artifacts/runs/eye_memory.json
+ M artifacts/seed_data.json
+ M harbor/tasks/terraria-arena-architect/environment/game/artifacts/calibration.json
+ M harbor/tasks/terraria-arena-architect/environment/game/artifacts/seed_data.json
+ M harbor/tasks/terraria-arena-architect/environment/game/terraria_bench/grader.py
+ M harbor/tasks/terraria-blood-moon-survival/environment/game/artifacts/calibration.json
+ M harbor/tasks/terraria-blood-moon-survival/environment/game/artifacts/seed_data.json
+ M harbor/tasks/terraria-blood-moon-survival/environment/game/terraria_bench/grader.py
+ M harbor/tasks/terraria-cavern-expedition/environment/game/artifacts/calibration.json
+ M harbor/tasks/terraria-cavern-expedition/environment/game/artifacts/seed_data.json
+ M harbor/tasks/terraria-cavern-expedition/environment/game/terraria_bench/grader.py
+ M harbor/tasks/terraria-eye-of-cthulhu/environment/game/artifacts/calibration.json
+ M harbor/tasks/terraria-eye-of-cthulhu/environment/game/artifacts/seed_data.json
+ M harbor/tasks/terraria-eye-of-cthulhu/environment/game/terraria_bench/grader.py
+ M harbor/tasks/terraria-first-night/environment/game/artifacts/calibration.json
+ M harbor/tasks/terraria-first-night/environment/game/artifacts/seed_data.json
+ M harbor/tasks/terraria-first-night/environment/game/terraria_bench/grader.py
+ M harbor/tasks/terraria-full-progression/environment/game/artifacts/calibration.json
+ M harbor/tasks/terraria-full-progression/environment/game/artifacts/seed_data.json
+ M harbor/tasks/terraria-full-progression/environment/game/terraria_bench/grader.py
+ M harbor/tasks/terraria-goblin-siege/environment/game/artifacts/calibration.json
+ M harbor/tasks/terraria-goblin-siege/environment/game/artifacts/seed_data.json
+ M harbor/tasks/terraria-goblin-siege/environment/game/terraria_bench/grader.py
+ M harbor/tasks/terraria-wall-of-flesh/environment/game/artifacts/calibration.json
+ M harbor/tasks/terraria-wall-of-flesh/environment/game/artifacts/seed_data.json
+ M harbor/tasks/terraria-wall-of-flesh/environment/game/terraria_bench/grader.py
+ M mod/TerrariaRLBridge/Skills.cs
  M mod/TerrariaRLBridge/TerrariaRLBridge.cs
- M terraria_bench/context_crawler.py
+ M telemetry/local_aiven_fallback.db
+ M terraria_bench/calibrate.py
+ M terraria_bench/exploits.py
+ M terraria_bench/eye_planner.py
+ M terraria_bench/grader.py
+ M terraria_bench/harness/gemini_agent.py
+ M terraria_bench/harness/runner.py
  M terraria_bench/real_game.py
+ M tests/test_calibration_gates.py
  M tests/test_live_play.py
-?? mod/TerrariaRLBridge/Skills.cs
-?? terraria_bench/eye_planner.py
+ M tests/test_reward_exploits.py
+ M tests/test_teammate2_mcp_and_harness.py
+ M tests/test_teammate4_bridge_and_ui.py
+?? artifacts/runs/real_terraria/
+?? terraria_bench/harness/eye_trials.py
+?? terraria_bench/real_eval.py
 ```
 
 ## Recent Commits
 
 ```
-f9cd5d3 Merge pull request #7 from mairazaini/fix/real-terraria-latency
-d3db8b5 feat: reduce real Terraria bridge latency, add wiki context crawler, and update live play
-ba408ff Merge pull request #6 from mairazaini/fix/matrix-free-tiles-and-gemini-two-tier
-2b090b6 feat: add two-tier gemini-decision-1 harness, live play studio, Harbor tasks, and tModLoader bridge
-ad202d0 Merge pull request #5 from mairazaini/feat/teammate-3-gemma-and-grpo-training
-aa5a000 feat(track-3): integrate GemmaAgent with EpisodeRunner, expand harness lazy exports, and update docs
-c365b44 Merge remote-tracking branch 'origin/main' into feat/teammate-3-gemma-and-grpo-training
-e154f50 Merge pull request #2 from mairazaini/feat/teammate-4-bridge-console-dashboard
-4537457 Merge pull request #4 from mairazaini/feat/teammate-2-mcp-and-frontier-harness
-412b600 Merge pull request #3 from mairazaini/feat/teammate1-anchors-exploits-calibration
-```
-
-## Resume
-
-```
-claude --continue "C:\Users\natha\.claude\projects\C--Users-natha-dev-TerrariaBench\b34f371f-1a3b-421b-aa9d-022c0cbc3caa.jsonl"
+4cf8be4 docs: reproduce commands, the two scores and the plan/skill architecture; guard the tuned-Gemma label
+c27f4c7 feat: model-written long-term plan in skill mode; remove fabricated leaderboard
+5749257 fix: exact, exploit-checked Eye progress score; evaluation runs without torch
+cb2a4d6 Merge remote-tracking branch 'origin/feat/teammate-3-gemma-and-grpo-training' into main
+47bb954 Merge remote-tracking branch 'origin/feat/post-training-bc-gemma'
+e292da1 feat: integrate 60Hz skill mode, Eye progression grading, and live multi-model benchmarks
+9ba51cb feat: enhance evaluation viewer with physical progression stages, live Gemini REST caller, and rubric cards
+f7093d0 feat: closed-loop behaviour-cloning LoRA for Gemma 4 with engine-grounded data
+36e4cbd feat: add live Terraria Eye progression support
+dec53ae feat: complete 1-project 10-submission architecture with Aiven telemetry, Gemini autopsy, and GRPO eval
 ```
 
 ## Next Steps

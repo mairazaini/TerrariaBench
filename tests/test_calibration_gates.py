@@ -66,7 +66,7 @@ def test_gates(calibration, task_id, seed):
     assert cell["threshold"] == threshold_for(a["rule-based"], a["smart-triage"])
     # anchor pins
     assert a["do-nothing"] == 0.0
-    assert a["absentee"] == pytest.approx(0.1, abs=1e-4)
+    assert a["absentee"] == 0.0  # attendance without progress earns nothing
     assert a["exploiter"] < 0.05
     # gate arithmetic, spelled out
     assert min(a["rule-based"], a["smart-triage"]) > max(a["blast-list"], a["absentee"], a["do-nothing"])

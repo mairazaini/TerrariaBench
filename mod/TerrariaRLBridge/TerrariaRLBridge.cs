@@ -81,6 +81,7 @@ namespace TerrariaRLBridge
             if (Main.dedServ || Main.gameMenu || Player.whoAmI != Main.myPlayer)
                 return;
 
+            MeteredBridgeSystem.PlacementFeedback = "";
             var snap = MeteredBridgeSystem.LatestControls;
             // A running skill owns the keyboard and mouse until it ends, even if the agent is slow to answer.
             SkillRunner.Sync(snap, Player);
@@ -160,59 +161,30 @@ namespace TerrariaRLBridge
                 _wasUsingItem = false;
             }
 
-            // Contextual Smart Cursor & non-interfering tool/weapon/block auto-aim while actively using an item.
-            Main.SmartCursorWanted_Mouse = snap.SmartCursor;
-            Vector2 aimWorld = Player.Center + new Vector2(snap.CursorDx * 16f, snap.CursorDy * 16f);
+            // Direct cursor control from gemini-decision-1 (no C# auto-aim overrides).
             Item heldItem = Player.HeldItem;
-            if (held && snap.UseItem && !wantSlotChange && heldItem != null && !heldItem.IsAir)
+            bool solidBlock = heldItem != null && !heldItem.IsAir
+                && heldItem.createTile >= 0 && heldItem.createTile < Main.tileSolid.Length
+                && Main.tileSolid[heldItem.createTile] && !Main.tileSolidTop[heldItem.createTile];
+            bool placingBlock = held && snap.UseItem && !wantSlotChange && solidBlock;
+            Main.SmartCursorWanted_Mouse = snap.SmartCursor && !placingBlock;
+            Vector2 aimWorld = Player.Center + new Vector2(snap.CursorDx * 16f, snap.CursorDy * 16f);
+            if (held && snap.UseItem && !wantSlotChange)
             {
-                if (heldItem.axe > 0)
+                Player.direction = snap.CursorDx >= 0f ? 1 : -1;
+            }
+            MeteredBridgeSystem.PlacementFeedback = "";
+            if (placingBlock)
+            {
+                Point? target = MeteredBridgeSystem.FindValidBlockPlacement(Player, aimWorld, snap.CursorDy, out string feedback);
+                MeteredBridgeSystem.PlacementFeedback = feedback;
+                if (target.HasValue)
+                    aimWorld = new Vector2(target.Value.X * 16f + 8f, target.Value.Y * 16f + 8f);
+                else
                 {
-                    Main.SmartCursorWanted_Mouse = true;
-                    Point? tree = MeteredBridgeSystem.FindNearestTreeBase(Player, Math.Sign(snap.CursorDx));
-                    if (tree.HasValue)
-                    {
-                        aimWorld = new Vector2(tree.Value.X * 16f + 8f, tree.Value.Y * 16f + 8f);
-                        float dxTiles = (aimWorld.X - Player.Center.X) / 16f;
-                        if (Math.Abs(dxTiles) > 2.8f && Math.Abs(dxTiles) <= 14f)
-                        {
-                            Player.controlLeft = dxTiles < 0f;
-                            Player.controlRight = dxTiles > 0f;
-                            if (Collision.SolidCollision(Player.position + new Vector2(dxTiles < 0f ? -8f : Player.width, 4f), 8, Math.Max(8, Player.height - 10)))
-                                Player.controlJump = true;
-                        }
-                    }
-                }
-                else if (heldItem.pick > 0)
-                {
-                    Point? mineTarget = MeteredBridgeSystem.FindPickaxeTarget(Player, aimWorld, snap.CursorDx, snap.CursorDy);
-                    if (mineTarget.HasValue)
-                        aimWorld = new Vector2(mineTarget.Value.X * 16f + 8f, mineTarget.Value.Y * 16f + 8f);
-                    Main.SmartCursorWanted_Mouse = snap.SmartCursor || mineTarget.HasValue;
-                }
-                else if (heldItem.damage > 0 && heldItem.pick == 0 && heldItem.axe == 0 && heldItem.hammer == 0 && heldItem.createTile < 0 && heldItem.createWall < 0)
-                {
-                    Main.SmartCursorWanted_Mouse = false;
-                    NPC enemy = MeteredBridgeSystem.NearestVisibleEnemy(Player);
-                    float maxRange = (heldItem.useAmmo > 0 || heldItem.shoot > ProjectileID.None) ? 480f : 180f;
-                    if (enemy != null && Vector2.DistanceSquared(enemy.Center, Player.Center) <= maxRange * maxRange)
-                    {
-                        aimWorld = enemy.Center + (heldItem.shoot > ProjectileID.None ? enemy.velocity * 5f : Vector2.Zero);
-                        Player.direction = enemy.Center.X >= Player.Center.X ? 1 : -1;
-                    }
-                }
-                else if (heldItem.createTile > -1 && Main.tileSolid[heldItem.createTile])
-                {
-                    Main.SmartCursorWanted_Mouse = false;
-                    Point? placeTile = MeteredBridgeSystem.FindValidBlockPlacement(Player, aimWorld, snap.CursorDy);
-                    if (placeTile.HasValue)
-                        aimWorld = new Vector2(placeTile.Value.X * 16f + 8f, placeTile.Value.Y * 16f + 8f);
-                }
-                else if (heldItem.createWall > 0)
-                {
-                    Point? wallTile = MeteredBridgeSystem.FindValidWallPlacement(Player, aimWorld);
-                    if (wallTile.HasValue)
-                        aimWorld = new Vector2(wallTile.Value.X * 16f + 8f, wallTile.Value.Y * 16f + 8f);
+                    Player.controlUseItem = false;
+                    Player.releaseUseItem = true;
+                    _wasUsingItem = false;
                 }
             }
             Main.mouseX = (int)Math.Clamp(aimWorld.X - Main.screenPosition.X, 4, Main.screenWidth - 4);
@@ -243,6 +215,7 @@ namespace TerrariaRLBridge
 
         internal static volatile AgentControlSnapshot LatestControls;
         internal static int TickCounter;
+        internal static string PlacementFeedback = "";
 
         private volatile bool _inFlight;
         private bool _wantCapture;
@@ -283,6 +256,7 @@ namespace TerrariaRLBridge
             _lastReplyUtc = DateTime.MinValue;
             _events.Clear();
             LatestControls = null;
+            PlacementFeedback = "";
             _houseAnchor = null;
             SkillRunner.Reset();
 
@@ -664,8 +638,12 @@ namespace TerrariaRLBridge
                     if (!IsTreeTile(Framing.GetTileSafely(tx, ty)))
                         continue;
                     int baseY = ty;
-                    for (int step = 0; step < 12 && IsTreeTile(Framing.GetTileSafely(tx, baseY + 1)); step++)
+                    for (int step = 0; step < 35 && IsTreeTile(Framing.GetTileSafely(tx, baseY + 1)); step++)
                         baseY++;
+                    // Skip side branches / floating canopy tiles: a real trunk base rests on a solid tile.
+                    Tile below = Framing.GetTileSafely(tx, baseY + 1);
+                    if (!below.HasTile || !Main.tileSolid[below.TileType])
+                        continue;
                     double d2 = dx * dx + (baseY - py) * (baseY - py);
                     if (d2 < bestAnyDist)
                     {
@@ -778,37 +756,45 @@ namespace TerrariaRLBridge
             return false;
         }
 
-        internal static Point? FindValidBlockPlacement(Player p, Vector2 aimWorld, float cursorDy)
+        internal static Point? FindValidBlockPlacement(Player p, Vector2 aimWorld, float cursorDy, out string feedback)
         {
+            feedback = "";
             int px = (int)(p.Center.X / 16f);
             int floorY = (int)((p.Bottom.Y + 4f) / 16f);
             int ax = Math.Clamp((int)(aimWorld.X / 16f), 5, Main.maxTilesX - 5);
             int ay = Math.Clamp((int)(aimWorld.Y / 16f), 5, Main.maxTilesY - 5);
-            Point? best = null;
-            double bestDist = double.MaxValue;
-            // Tight -1..1 snap radius so manual clicks never fill interior air and trap the player.
-            for (int rx = -1; rx <= 1; rx++)
+            // Exact tile placement only (no -1..1 neighbor snapping that turns walls into mounds).
+            int tx = ax, ty = ay;
+            if (cursorDy < 1.5f && Math.Abs(tx - px) <= 2 && ty >= floorY - 4 && ty <= floorY - 1)
             {
-                for (int ry = -1; ry <= 1; ry++)
-                {
-                    int tx = ax + rx, ty = ay + ry;
-                    if (cursorDy < 1.5f && Math.Abs(tx - px) <= 2 && ty >= floorY - 4 && ty <= floorY - 1)
-                        continue;
-                    Vector2 cellCenter = new Vector2(tx * 16f + 8f, ty * 16f + 8f);
-                    if (Vector2.DistanceSquared(cellCenter, p.Center) > 84f * 84f)
-                        continue;
-                    if (new Rectangle(tx * 16, ty * 16, 16, 16).Intersects(p.Hitbox))
-                        continue;
-                    Tile t = Framing.GetTileSafely(tx, ty);
-                    if (t.HasTile && !Main.tileCut[t.TileType])
-                        continue;
-                    if (!HasPlacementSupport(tx, ty))
-                        continue;
-                    double d = rx * rx + ry * ry;
-                    if (d < bestDist) { bestDist = d; best = new Point(tx, ty); }
-                }
+                feedback = "Block placement blocked: target is beside the player's feet; aim at the intended floor cell explicitly.";
+                return null;
             }
-            return best;
+            Item item = p.HeldItem;
+            int boost = (item?.tileBoost ?? 0) + p.blockRange;
+            if (!SkillRunner.CanReach(p, tx, ty, boost))
+            {
+                feedback = $"Block placement blocked: tile ({tx},{ty}) is outside item reach; move closer before placing.";
+                return null;
+            }
+            if (new Rectangle(tx * 16, ty * 16, 16, 16).Intersects(p.Hitbox))
+            {
+                feedback = "Block placement blocked: target overlaps the player's body; stand beside the target cell.";
+                return null;
+            }
+            Tile t = Framing.GetTileSafely(tx, ty);
+            if (t.HasTile)
+            {
+                string kind = MeteredBridgeSystem.IsTreeTile(t) ? "tree" : "occupied tile";
+                feedback = $"Block placement blocked: target contains a {kind}; clear it first and aim at the now-empty cell.";
+                return null;
+            }
+            if (!HasPlacementSupport(tx, ty))
+            {
+                feedback = "Block placement blocked: empty target has no neighboring tile or background wall for support.";
+                return null;
+            }
+            return new Point(tx, ty);
         }
 
         internal static Point? FindValidWallPlacement(Player p, Vector2 aimWorld)
@@ -861,7 +847,14 @@ namespace TerrariaRLBridge
                 || tileType == TileID.Platforms;
         }
 
-        private static Point? FindExistingHouseAnchor(int px, int floorY)
+        /// <summary>House anchor (centre column, floor row) shared by house_status and the build_house skill.</summary>
+        internal static Point? HouseAnchor
+        {
+            get => _houseAnchor;
+            set => _houseAnchor = value;
+        }
+
+        internal static Point? FindExistingHouseAnchor(int px, int floorY)
         {
             int minWx = int.MaxValue, maxWx = int.MinValue, maxWy = int.MinValue;
             int wallCount = 0;
@@ -1141,6 +1134,50 @@ namespace TerrariaRLBridge
                 });
             }
 
+            var townNpcs = new List<object>();
+            for (int i = 0; i < Main.maxNPCs && townNpcs.Count < 6; i++)
+            {
+                NPC n = Main.npc[i];
+                if (n == null || !n.active || !n.townNPC || n.life <= 0)
+                    continue;
+                float dx = (n.Center.X - p.Center.X) / 16f;
+                float dy = (n.Center.Y - p.Center.Y) / 16f;
+                float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+                if (dist > 40f)
+                    continue;
+                townNpcs.Add(new
+                {
+                    name = n.GivenOrTypeName,
+                    dx = Math.Round(dx, 1),
+                    dy = Math.Round(dy, 1),
+                    dist = Math.Round(dist, 1),
+                    homeless = n.homeless,
+                });
+            }
+
+            var droppedItems = new List<(double dist, object item)>();
+            for (int i = 0; i < Main.maxItems; i++)
+            {
+                Item it = Main.item[i];
+                if (it == null || !it.active || it.IsAir || it.stack <= 0)
+                    continue;
+                float dx = (it.Center.X - p.Center.X) / 16f;
+                float dy = (it.Center.Y - p.Center.Y) / 16f;
+                double dist = Math.Sqrt(dx * dx + dy * dy);
+                if (dist > 24.0)
+                    continue;
+                droppedItems.Add((dist, new
+                {
+                    name = it.Name,
+                    stack = it.stack,
+                    dx = Math.Round(dx, 1),
+                    dy = Math.Round(dy, 1),
+                    dist = Math.Round(dist, 1),
+                }));
+            }
+            droppedItems.Sort((a, b) => a.dist.CompareTo(b.dist));
+            var nearbyDrops = droppedItems.GetRange(0, Math.Min(10, droppedItems.Count)).ConvertAll(x => x.item);
+
             var worldView = BuildWorldView(p);
 
             var blocked = new
@@ -1159,6 +1196,7 @@ namespace TerrariaRLBridge
                 // Skill-runner status and the facts a planner needs that a player reads off the map, the
                 // equipment page, the boss health bar and a watch.
                 skill = SkillRunner.Hud(),
+                placement_feedback = PlacementFeedback,
                 pos = new { x = (int)(p.Center.X / 16f) - Main.spawnTileX, y = (int)(p.Center.Y / 16f) - Main.spawnTileY },
                 defense = (int)p.statDefense,
                 clock = Math.Round(clock, 2),
@@ -1177,6 +1215,10 @@ namespace TerrariaRLBridge
                 mana = p.statMana,
                 max_mana = p.statManaMax2,
                 dead = p.dead,
+                grounded = Math.Abs(p.velocity.Y) < 0.01f,
+                wet = p.wet,
+                vx = Math.Round(p.velocity.X, 2),
+                vy = Math.Round(p.velocity.Y, 2),
                 time_phase = Main.dayTime ? "Day" : "Night",
                 blocked,
                 selected_slot = p.selectedItem + 1,
@@ -1195,6 +1237,8 @@ namespace TerrariaRLBridge
                 cursor = new { dx = snap?.CursorDx ?? 0f, dy = snap?.CursorDy ?? 0f },
                 events,
                 visible_enemies = visibleEnemies,
+                town_npcs = townNpcs,
+                dropped_items = nearbyDrops,
                 world_view = worldView,
                 // Image scale only (what a player judges by eye): lets the vision model convert pixels to tiles.
                 view = new
@@ -1293,10 +1337,14 @@ namespace TerrariaRLBridge
                     if (Math.Abs(dy) <= 14 && IsTreeTile(t) && treeCols.Add(tx))
                     {
                         int baseY = ty;
-                        for (int s = 0; s < 12 && IsTreeTile(Framing.GetTileSafely(tx, baseY + 1)); s++)
+                        for (int s = 0; s < 35 && IsTreeTile(Framing.GetTileSafely(tx, baseY + 1)); s++)
                             baseY++;
-                        int bdy = baseY - py;
-                        trees.Add((Math.Sqrt(dx * dx + bdy * bdy), new { dx, dy = bdy, dist = Math.Round(Math.Sqrt(dx * dx + bdy * bdy), 1) }));
+                        Tile below = Framing.GetTileSafely(tx, baseY + 1);
+                        if (below.HasTile && Main.tileSolid[below.TileType])
+                        {
+                            int bdy = baseY - py;
+                            trees.Add((Math.Sqrt(dx * dx + bdy * bdy), new { dx, dy = bdy, dist = Math.Round(Math.Sqrt(dx * dx + bdy * bdy), 1) }));
+                        }
                     }
                     if (Math.Abs(dx) <= 24 && TileID.Sets.Ore[t.TileType])
                     {
@@ -1440,13 +1488,13 @@ namespace TerrariaRLBridge
                     caves.Add(new { dx, dy = 2 });
             }
 
-            var asciiMap = new List<string>(13);
-            for (int dy = -6; dy <= 6; dy++)
+            var asciiMap = new List<string>(17);
+            for (int dy = -8; dy <= 8; dy++)
             {
-                var row = new char[25];
-                for (int dx = -12; dx <= 12; dx++)
+                var row = new char[31];
+                for (int dx = -15; dx <= 15; dx++)
                 {
-                    int col = dx + 12;
+                    int col = dx + 15;
                     if (dx == 0 && Math.Abs(dy) <= 1)
                     {
                         row[col] = '@';
@@ -1456,7 +1504,12 @@ namespace TerrariaRLBridge
                     int ty = Math.Clamp(py + dy, 1, Main.maxTilesY - 2);
                     Tile t = Framing.GetTileSafely(tx, ty);
                     if (!t.HasTile)
-                        row[col] = t.WallType > 0 && Main.wallHouse[t.WallType] ? ',' : '.';
+                    {
+                        if (t.LiquidAmount > 40)
+                            row[col] = t.LiquidType == LiquidID.Lava ? '!' : '~';
+                        else
+                            row[col] = t.WallType > 0 && Main.wallHouse[t.WallType] ? ',' : '.';
+                    }
                     else if (IsTreeTile(t)) row[col] = 'T';
                     else if (TileID.Sets.Ore[t.TileType]) row[col] = '*';
                     else if (t.TileType == TileID.Containers || t.TileType == TileID.Containers2) row[col] = 'C';

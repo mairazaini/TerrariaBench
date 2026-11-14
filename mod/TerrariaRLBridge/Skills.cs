@@ -124,6 +124,7 @@ namespace TerrariaRLBridge
                 case "use": return 12;
                 case "build_arena": return 420;
                 case "bunker": return 90;
+                case "build_house": return 600;
                 case "fight": return 660;
                 case "hunt": return 600;
                 case "loot_chest": return 90;
@@ -150,27 +151,49 @@ namespace TerrariaRLBridge
                 Fail("timeout after " + (_timeout / 60) + "s" + (Detail == "" ? "" : " (" + Detail + ")"));
                 return;
             }
+            if (Name != "fight" && MeteredBridgeSystem.FindBoss() != null)
+            {
+                Fail("boss appeared");
+                return;
+            }
+            if (p.statLife < p.statLifeMax2 / 2 && !p.HasBuff(BuffID.PotionSickness) && Ticks % 15 == 0)
+                p.controlQuickHeal = true;
             try
             {
-                switch (Name)
+                bool canSelfDefend = Name != "fight" && Name != "hunt" && Name != "bunker" && Name != "wait" && Name != "use" && Name != "equip";
+                NPC threat = canSelfDefend ? NearestHostile(p, 9f, null) : null;
+                if (threat != null && (Best(p, MeleeScore) >= 0 || Best(p, it => RangedScore(p, it)) >= 0))
                 {
-                    case "goto": Goto(p); break;
-                    case "explore": Explore(p); break;
-                    case "chop": Chop(p); break;
-                    case "mine": Mine(p); break;
-                    case "dig_down": DigDown(p); break;
-                    case "surface": Surface(p); break;
-                    case "craft": Craft(p); break;
-                    case "place": Place(p); break;
-                    case "equip": Equip(p); break;
-                    case "use": UseItemSkill(p); break;
-                    case "build_arena": BuildArena(p); break;
-                    case "bunker": Bunker(p); break;
-                    case "fight": Fight(p); break;
-                    case "hunt": Hunt(p); break;
-                    case "loot_chest": LootChest(p); break;
-                    case "wait": Wait(p); break;
-                    default: Fail("unknown skill '" + Name + "'"); break;
+                    if (p.statLife < Math.Max(20, p.statLifeMax2 / 4))
+                    {
+                        Fail($"under heavy attack by {threat.TypeName}");
+                        return;
+                    }
+                    CombatStep(p, threat, false, 0, 0);
+                }
+                else
+                {
+                    switch (Name)
+                    {
+                        case "goto": Goto(p); break;
+                        case "explore": Explore(p); break;
+                        case "chop": Chop(p); break;
+                        case "mine": Mine(p); break;
+                        case "dig_down": DigDown(p); break;
+                        case "surface": Surface(p); break;
+                        case "craft": Craft(p); break;
+                        case "place": Place(p); break;
+                        case "equip": Equip(p); break;
+                        case "use": UseItemSkill(p); break;
+                        case "build_arena": BuildArena(p); break;
+                        case "bunker": Bunker(p); break;
+                        case "build_house": BuildHouse(p); break;
+                        case "fight": Fight(p); break;
+                        case "hunt": Hunt(p); break;
+                        case "loot_chest": LootChest(p); break;
+                        case "wait": Wait(p); break;
+                        default: Fail("unknown skill '" + Name + "'"); break;
+                    }
                 }
             }
             catch (Exception e)
@@ -729,8 +752,8 @@ namespace TerrariaRLBridge
             }
             if (_phase == 1)
             {
-                // The tree has fallen: walk over the drops for a few seconds.
-                if (_phaseTicks < 420 && CollectStep(p, it => IsWood(it) || it.type == ItemID.Acorn, 24f))
+                // The tree has fallen: walk over the drops briefly.
+                if (_phaseTicks < 150 && CollectStep(p, it => IsWood(it) || it.type == ItemID.Acorn, 24f))
                     return;
                 SetPhase(0);
                 _hasTarget = false;
@@ -1193,6 +1216,516 @@ namespace TerrariaRLBridge
                 Fail("bunker has " + _baseline + " open cells (nothing to attach a block to)");
             else
                 Done("bunker closed: side walls and roof are in place");
+        }
+
+        // ------------------------------------------------------------------ house
+
+        // The approach (blueprint at a fixed world anchor, re-read the world every tick, verify each cell by
+        // reading the tile back, vanilla reach formula, craft the furniture inside the builder) follows the
+        // TerraBlind project's HouseBuilder / PlaceAction / Reach (github.com/Reisenbug/TerraBlind).
+
+        private const int JobMine = 1, JobBlock = 2, JobWall = 3, JobObject = 4;
+        private static readonly Dictionary<long, int> _houseFail = new Dictionary<long, int>();
+        private static readonly HashSet<string> _houseNoCraft = new HashSet<string>();
+        private static int _houseJobKind, _houseJobX, _houseJobY, _houseJobTicks;
+        private static string _houseNote = "";
+
+        private static long CellKey(int x, int y) => ((long)x << 20) | (uint)y;
+
+        private static bool HouseSkip(int x, int y)
+        {
+            return _houseFail.TryGetValue(CellKey(x, y), out int n) && n >= 2;
+        }
+
+        private static void HouseCellFailed(int x, int y, string why)
+        {
+            long k = CellKey(x, y);
+            _houseFail.TryGetValue(k, out int n);
+            _houseFail[k] = n + 1;
+            _houseNote = why;
+            _houseJobTicks = 0;
+            _approachTicks = 0;
+        }
+
+        /// <summary>A real tile is here (grass, flowers and other cuttable plants do not count: placing replaces them).</summary>
+        private static bool Occupied(int x, int y)
+        {
+            if (!WorldGen.InWorld(x, y, 2))
+                return true;
+            Tile t = Framing.GetTileSafely(x, y);
+            return t.HasTile && !Main.tileCut[t.TileType];
+        }
+
+        private static bool IsDoorTile(Tile t)
+        {
+            return t.HasTile && (t.TileType == TileID.ClosedDoor || t.TileType == TileID.OpenDoor);
+        }
+
+        /// <summary>
+        /// Terraria only places a block next to an existing tile or on a background wall, and a wall next to an
+        /// existing tile or wall. A cell that fails this is "in the air" and clicking it does nothing.
+        /// </summary>
+        private static bool Attachable(int x, int y, bool wall)
+        {
+            if (!wall && Framing.GetTileSafely(x, y).WallType > 0)
+                return true;
+            for (int i = 0; i < 4; i++)
+            {
+                int nx = x + (i == 0 ? -1 : i == 1 ? 1 : 0);
+                int ny = y + (i == 2 ? -1 : i == 3 ? 1 : 0);
+                if (Occupied(nx, ny))
+                    return true;
+                if (wall && Framing.GetTileSafely(nx, ny).WallType > 0)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>The game's own item reach box (Player.IsTargetTileInItemRange) with a small safety margin.</summary>
+        internal static bool CanReach(Player p, int x, int y, int boost)
+        {
+            float rx = Player.tileRangeX + boost, ry = Player.tileRangeY + boost;
+            return p.position.X / 16f - rx + 0.3f <= x
+                && (p.position.X + p.width) / 16f + rx - 1.3f >= x
+                && p.position.Y / 16f - ry + 0.1f <= y
+                && (p.position.Y + p.height) / 16f + ry - 2.1f >= y;
+        }
+
+        /// <summary>Row of the walkable ground surface in a column, searched from the player's feet row.</summary>
+        private static int GroundRow(int x, int feet)
+        {
+            int y = feet;
+            if (Solid(x, y))
+            {
+                while (y > feet - 12 && Solid(x, y - 1)) y--;
+                return y;
+            }
+            while (y < feet + 12 && !Solid(x, y)) y++;
+            return y;
+        }
+
+        /// <summary>Picks the flattest, least obstructed 12-wide strip near the player. Returns (centre column, floor row).</summary>
+        private static Point PickHouseSite(Player p)
+        {
+            int px = Cx(p), feet = FeetRow(p);
+            Point best = new Point(px, feet + 1);
+            int bestCost = int.MaxValue;
+            int[] g = new int[12];
+            int[] sorted = new int[12];
+            for (int c = px - 10; c <= px + 10; c++)
+            {
+                int left = c - 5;
+                if (left < 12 || left + 11 > Main.maxTilesX - 12)
+                    continue;
+                for (int i = 0; i < 12; i++)
+                    g[i] = GroundRow(left + i, feet);
+                Array.Copy(g, sorted, 12);
+                Array.Sort(sorted);
+                int floor = sorted[6]; // lower median: bumps get mined (free dirt), few holes need filling
+                int cost = Math.Abs(c - px);
+                for (int i = 0; i < 12; i++)
+                {
+                    cost += 3 * Math.Min(6, Math.Abs(g[i] - floor));
+                    if (MeteredBridgeSystem.IsTreeTile(Framing.GetTileSafely(left + i, g[i] - 1)))
+                        cost += 6;
+                }
+                for (int x = left + 1; x <= left + 10; x++)
+                {
+                    for (int y = floor - 5; y <= floor - 1; y++)
+                    {
+                        Tile t = Framing.GetTileSafely(x, y);
+                        if (t.WallType > 0 && !Main.wallHouse[t.WallType]) cost += 20; // needs a hammer to fix
+                        if (t.LiquidAmount > 0) cost += 10;
+                    }
+                }
+                if (cost < bestCost)
+                {
+                    bestCost = cost;
+                    best = new Point(c, floor);
+                }
+            }
+            return best;
+        }
+
+        /// <summary>Leftmost column of a free w x h spot standing on the house floor, nearest to pref. int.MinValue if none.</summary>
+        private static int HouseSpot(int left, int right, int floor, int w, int h, int pref)
+        {
+            for (int k = 0; k < 20; k++)
+            {
+                int x = pref + (k % 2 == 0 ? k / 2 : -(k / 2 + 1));
+                if (x < left + 2 || x + w - 1 > right - 2 || HouseSkip(x, floor - h))
+                    continue;
+                bool ok = true;
+                for (int c = x; c < x + w && ok; c++)
+                {
+                    if (!Solid(c, floor)) ok = false;
+                    for (int r = floor - h; r <= floor - 1 && ok; r++)
+                        if (Occupied(c, r)) ok = false;
+                }
+                if (ok)
+                    return x;
+            }
+            return int.MinValue;
+        }
+
+        /// <summary>One craft click every fifth of a second, standing next to the bench when the recipe needs it.</summary>
+        private static void HouseCraft(Player p, string item, int benchX, int floor)
+        {
+            Detail = "crafting " + item;
+            if (benchX != int.MinValue && Math.Abs(Cx(p) - benchX) > 2)
+            {
+                StepToward(p, benchX + 1, floor - 2, 1, 2, true, 45);
+                return;
+            }
+            if (Ticks % 12 != 6)
+                return;
+            if (!ModContent.GetInstance<MeteredBridgeSystem>().TryCraft(p, item))
+            {
+                _houseNoCraft.Add(item);
+                _houseNote = "could not craft " + item + " (not enough materials)";
+                Main.playerInventory = false;
+            }
+        }
+
+        /// <summary>Walks into reach of one cell (standing inside the house footprint) and mines or places there.</summary>
+        private static void HouseAct(Player p, int kind, int x, int y, int slot, int left, int right, int floor, string label)
+        {
+            if (kind != _houseJobKind || x != _houseJobX || y != _houseJobY)
+            {
+                _houseJobKind = kind;
+                _houseJobX = x;
+                _houseJobY = y;
+                _houseJobTicks = 0;
+                _approachTicks = 0;
+            }
+            if (Main.playerInventory)
+                Main.playerInventory = false;
+            Detail = $"{label} at ({x - _target.X:+0;-0;0},{y - _target.Y:+0;-0;0}) from house centre/floor";
+
+            int boost;
+            if (kind == JobMine)
+            {
+                bool tree = MeteredBridgeSystem.IsTreeTile(Framing.GetTileSafely(x, y));
+                int tool = tree ? Best(p, it => it.axe) : Best(p, it => it.pick);
+                boost = tool >= 0 ? p.inventory[tool].tileBoost : 0;
+            }
+            else
+            {
+                boost = p.inventory[slot].tileBoost + p.blockRange;
+            }
+
+            // A solid block cannot go where the player's body is: step two tiles aside first.
+            bool overlap = kind == JobBlock && x >= LeftCol(p) && x <= RightCol(p) && y >= TopRow(p) && y <= FeetRow(p);
+            int standX = overlap ? x + (x < (left + right) / 2 ? 2 : -2) : Math.Clamp(x, left + 3, right - 3);
+            if (overlap || !CanReach(p, x, y, boost))
+            {
+                if (++_approachTicks > 600)
+                {
+                    HouseCellFailed(x, y, $"{label} at ({x - _target.X:+0;-0;0},{y - _target.Y:+0;-0;0}): could not get within reach");
+                    return;
+                }
+                if (StepToward(p, standX, floor - 2, 0, 2, true, 45) && y < TopRow(p))
+                    Jump(p); // standing in place but the cell is too high for this tool: jump for it
+                return;
+            }
+            _approachTicks = 0;
+            if (kind == JobMine)
+            {
+                MineStep(p, x, y);
+                return;
+            }
+            if (++_houseJobTicks > 150)
+            {
+                HouseCellFailed(x, y, $"{label} at ({x - _target.X:+0;-0;0},{y - _target.Y:+0;-0;0}) did not place (something is in the way)");
+                return;
+            }
+            AimTile(x, y);
+            if (Hold(p, slot))
+                Use(p);
+        }
+
+        /// <summary>
+        /// Builds a complete valid NPC house: 12 wide x 7 tall frame at a fixed world anchor, wood back walls,
+        /// door, work bench, chair and torch. Every tick the world is read again and the nearest unfinished cell
+        /// that can legally take a block (touching an existing tile or wall) is done next, so nothing is ever
+        /// clicked into empty air and a rerun simply continues where the last one stopped.
+        /// Layout (floor row F, centre column C): floor F, side walls C-5 and C+6, roof F-6, interior 10 x 5.
+        /// </summary>
+        private static void BuildHouse(Player p)
+        {
+            if (Ticks == 1)
+            {
+                _houseFail.Clear();
+                _houseNoCraft.Clear();
+                _houseNote = "";
+                _houseJobKind = 0;
+                int feet0 = FeetRow(p);
+                if (WorldGen.StartRoomCheck(Cx(p), Math.Max(5, feet0 - 1)))
+                {
+                    Done("already standing inside a valid house");
+                    return;
+                }
+                Point? known = MeteredBridgeSystem.HouseAnchor ?? MeteredBridgeSystem.FindExistingHouseAnchor(Cx(p), feet0 + 1);
+                bool near = known.HasValue && Math.Abs(known.Value.X - Cx(p)) <= 60 && Math.Abs(known.Value.Y - feet0) <= 30;
+                _target = near ? known.Value : PickHouseSite(p);
+                _target.X = Math.Clamp(_target.X, 20, Main.maxTilesX - 20);
+                _target.Y = Math.Clamp(_target.Y, 20, Main.maxTilesY - 20);
+                MeteredBridgeSystem.HouseAnchor = _target;
+            }
+            int cx = _target.X, F = _target.Y;
+            int L = cx - 5, R = L + 11, top = F - 6;
+            int px = Cx(p);
+
+            // ---- what already stands
+            bool hasBench = false, hasChair = false, hasLight = false, hasDoor = false;
+            int benchX = int.MinValue, doorX = R, wallsLeft = 0, naturalWalls = 0;
+            for (int x = L; x <= R; x++)
+            {
+                for (int y = top + 1; y <= F - 1; y++)
+                {
+                    Tile t = Framing.GetTileSafely(x, y);
+                    bool inside = x > L && x < R;
+                    if (inside && t.WallType == 0) wallsLeft++;
+                    if (inside && t.WallType > 0 && !Main.wallHouse[t.WallType]) naturalWalls++;
+                    if (!t.HasTile) continue;
+                    if (IsDoorTile(t))
+                    {
+                        hasDoor = true;
+                        if (x <= L + 1) doorX = L;
+                    }
+                    if (!inside) continue;
+                    if (t.TileType == TileID.WorkBenches) { hasBench = true; benchX = x; }
+                    if (t.TileType == TileID.Chairs) hasChair = true;
+                    if (t.TileType == TileID.Torches || t.TileType == TileID.Campfire) hasLight = true;
+                }
+            }
+
+            // ---- what is in the bag
+            int benchSlot = Best(p, it => it.createTile == TileID.WorkBenches ? 1 : 0);
+            int doorSlot = Best(p, it => it.createTile == TileID.ClosedDoor ? 1 : 0);
+            int chairSlot = Best(p, it => it.createTile == TileID.Chairs ? 1 : 0);
+            int torchSlot = Best(p, it => it.createTile == TileID.Torches ? 1 : 0);
+            int wallSlot = Best(p, it => it.createWall > 0 && it.createWall < Main.wallHouse.Length && Main.wallHouse[it.createWall] ? 1 : 0);
+            int wallItems = Count(p, it => it.createWall > 0 && it.createWall < Main.wallHouse.Length && Main.wallHouse[it.createWall]);
+            int wood = Count(p, it => it.type == ItemID.Wood);
+            bool doorPlanned = hasDoor || doorSlot >= 0 || !_houseNoCraft.Contains("Wooden Door");
+
+            // Wood kept back for furniture and walls; the frame uses other blocks first when wood is short.
+            int reserve = (hasBench || benchSlot >= 0 ? 0 : 10) + (hasDoor || doorSlot >= 0 ? 0 : 6)
+                + (hasChair || chairSlot >= 0 ? 0 : 4) + (hasLight || torchSlot >= 0 ? 0 : 1)
+                + (Math.Max(0, wallsLeft - wallItems) + 3) / 4;
+            int blockSlot = Best(p, it =>
+            {
+                int s = BlockScore(it);
+                if (s == 0) return 0;
+                return it.type == ItemID.Wood ? (wood > reserve ? 200 : 1) : s;
+            });
+
+            // ---- stage A: clear the footprint (lowest cell first, so a tree is cut at its base)
+            {
+                int bx = 0, by = 0, bs = int.MinValue;
+                for (int x = L; x <= R; x++)
+                {
+                    for (int y = top; y <= F; y++)
+                    {
+                        Tile t = Framing.GetTileSafely(x, y);
+                        if (!t.HasTile || Main.tileCut[t.TileType] || HouseSkip(x, y))
+                            continue;
+                        bool inside = x > L && x < R && y > top && y < F;
+                        bool tree = MeteredBridgeSystem.IsTreeTile(t);
+                        bool clear;
+                        if (inside)
+                            clear = Solid(x, y) || tree || !Main.tileFrameImportant[t.TileType];
+                        else
+                            clear = (!Solid(x, y) && !IsDoorTile(t))
+                                || (x == doorX && y >= F - 3 && y <= F - 1 && !hasDoor && doorSlot >= 0 && !IsDoorTile(t));
+                        if (!clear)
+                            continue;
+                        int s = y * 100 - Math.Abs(x - px);
+                        if (s > bs) { bs = s; bx = x; by = y; }
+                    }
+                }
+                if (bs != int.MinValue)
+                {
+                    while (MeteredBridgeSystem.IsTreeTile(Framing.GetTileSafely(bx, by))
+                        && MeteredBridgeSystem.IsTreeTile(Framing.GetTileSafely(bx, by + 1)))
+                        by++;
+                    HouseAct(p, JobMine, bx, by, -1, L, R, F, "clearing site");
+                    return;
+                }
+            }
+
+            // ---- stages B-D: floor, side walls (bottom up), roof. Only cells touching something solid.
+            int floorGaps = 0, frameGaps = 0;
+            for (int stage = 0; stage < 3; stage++)
+            {
+                int bx = 0, by = 0, bs = int.MaxValue, pending = 0;
+                int cells = stage == 1 ? 10 : 12;
+                for (int i = 0; i < cells; i++)
+                {
+                    int x, y;
+                    if (stage == 0) { x = L + i; y = F; }
+                    else if (stage == 2) { x = L + i; y = top; }
+                    else { x = i < 5 ? L : R; y = F - 1 - (i % 5); }
+                    Tile t = Framing.GetTileSafely(x, y);
+                    if (Solid(x, y) || IsDoorTile(t))
+                        continue;
+                    if (stage == 1 && doorPlanned && x == doorX && y >= F - 3)
+                        continue; // doorway
+                    pending++;
+                    if (HouseSkip(x, y) || !Attachable(x, y, false))
+                        continue;
+                    int s = Math.Abs(x - px) + 2 * Math.Abs(F - y);
+                    if (s < bs) { bs = s; bx = x; by = y; }
+                }
+                if (stage == 0) floorGaps = pending; else frameGaps += pending;
+                if (bs == int.MaxValue)
+                    continue;
+                if (blockSlot < 0)
+                {
+                    _houseNote = "no building blocks left (need Wood, Dirt or Stone)";
+                    continue;
+                }
+                HouseAct(p, JobBlock, bx, by, blockSlot, L, R, F,
+                    stage == 0 ? "filling floor" : stage == 1 ? "raising side wall" : "laying roof");
+                return;
+            }
+
+            // ---- stage E: work bench first (walls, door and chair are crafted at it)
+            if (!hasBench)
+            {
+                if (benchSlot >= 0)
+                {
+                    int spot = HouseSpot(L, R, F, 2, 1, L + 2);
+                    if (spot != int.MinValue)
+                    {
+                        HousePlaceObject(p, benchSlot, spot, F, L, R, "placing Work Bench");
+                        return;
+                    }
+                    _houseNote = "no free floor spot for the Work Bench";
+                }
+                else if (!_houseNoCraft.Contains("Work Bench"))
+                {
+                    HouseCraft(p, "Work Bench", int.MinValue, F);
+                    return;
+                }
+            }
+
+            // ---- stage F: craft what is still missing
+            if (!hasDoor && doorSlot < 0 && hasBench && !_houseNoCraft.Contains("Wooden Door"))
+            {
+                HouseCraft(p, "Wooden Door", benchX, F);
+                return;
+            }
+            if (!hasDoor && doorSlot < 0 && !hasBench)
+                _houseNoCraft.Add("Wooden Door"); // no bench, no door: close the doorway with blocks instead
+            if (!hasChair && chairSlot < 0 && hasBench && !_houseNoCraft.Contains("Wooden Chair"))
+            {
+                HouseCraft(p, "Wooden Chair", benchX, F);
+                return;
+            }
+            if (!hasLight && torchSlot < 0 && !_houseNoCraft.Contains("Torch"))
+            {
+                HouseCraft(p, "Torch", int.MinValue, F);
+                return;
+            }
+            if (wallItems < wallsLeft && hasBench && !_houseNoCraft.Contains("Wood Wall"))
+            {
+                HouseCraft(p, "Wood Wall", benchX, F);
+                return;
+            }
+
+            // ---- stage G: door in the doorway (needs the solid lintel above and floor below, both built by now)
+            if (!hasDoor && doorSlot >= 0 && Solid(doorX, F) && Solid(doorX, F - 4) && !HouseSkip(doorX, F - 3))
+            {
+                Item door = p.inventory[doorSlot];
+                TileObjectData dd = TileObjectData.GetTileData(door.createTile, door.placeStyle);
+                int oy = dd != null ? dd.Origin.Y : 0;
+                HouseAct(p, JobObject, doorX, F - 3 + oy, doorSlot, L, R, F, "placing door");
+                return;
+            }
+
+            // ---- stage H: back walls, nearest cell that touches a tile or an existing wall
+            if (wallsLeft > 0 && wallSlot >= 0)
+            {
+                int bx = 0, by = 0, bs = int.MaxValue;
+                for (int x = L + 1; x <= R - 1; x++)
+                {
+                    for (int y = top + 1; y <= F - 1; y++)
+                    {
+                        if (Framing.GetTileSafely(x, y).WallType != 0 || HouseSkip(x, y) || !Attachable(x, y, true))
+                            continue;
+                        int s = Math.Abs(x - px) + 2 * Math.Abs(F - y);
+                        if (s < bs) { bs = s; bx = x; by = y; }
+                    }
+                }
+                if (bs != int.MaxValue)
+                {
+                    HouseAct(p, JobWall, bx, by, wallSlot, L, R, F, $"placing back wall ({wallsLeft} left)");
+                    return;
+                }
+            }
+
+            // ---- stage I: chair and torch
+            if (!hasChair && chairSlot >= 0)
+            {
+                int spot = HouseSpot(L, R, F, 1, 2, cx);
+                if (spot != int.MinValue)
+                {
+                    HousePlaceObject(p, chairSlot, spot, F, L, R, "placing chair");
+                    return;
+                }
+                _houseNote = "no free floor spot for the chair";
+            }
+            if (!hasLight && torchSlot >= 0)
+            {
+                for (int k = 0; k < 8; k++)
+                {
+                    int x = cx + 2 + (k % 2 == 0 ? k / 2 : -(k / 2 + 1));
+                    int y = F - 3;
+                    if (x <= L || x >= R || Occupied(x, y) || HouseSkip(x, y) || !Attachable(x, y, false))
+                        continue;
+                    HouseAct(p, JobObject, x, y, torchSlot, L, R, F, "placing torch");
+                    return;
+                }
+                _houseNote = "no wall or block to hang the torch on";
+            }
+
+            // ---- verdict: the game's own housing check, and an exact list of what is missing if it fails
+            if (Main.playerInventory)
+                Main.playerInventory = false;
+            if (WorldGen.StartRoomCheck(cx, F - 2))
+            {
+                Done($"valid house built: 12x7 at {cx - Main.spawnTileX:+0;-0;0} tiles from spawn, door on the {(doorX == L ? "left" : "right")}");
+                return;
+            }
+            var missing = new List<string>();
+            if (floorGaps > 0) missing.Add(floorGaps + " floor gaps");
+            if (frameGaps > 0) missing.Add(frameGaps + " wall/roof gaps");
+            if (wallsLeft > 0) missing.Add(wallsLeft + " back wall cells (1 Wood makes 4 Wood Wall at a Work Bench)");
+            if (naturalWalls > 0) missing.Add(naturalWalls + " natural wall cells (need a hammer)");
+            if (!hasBench) missing.Add("Work Bench (10 Wood)");
+            if (!hasDoor) missing.Add("door (6 Wood at a Work Bench)");
+            if (!hasChair) missing.Add("chair (4 Wood at a Work Bench)");
+            if (!hasLight) missing.Add("torch (1 Wood + 1 Gel)");
+            if (missing.Count == 0) missing.Add("the game's room check still fails (open door or a hole in the frame)");
+            Fail("house not finished, missing: " + string.Join(", ", missing)
+                + $". Have {wood} Wood." + (_houseNote == "" ? "" : " Last problem: " + _houseNote));
+        }
+
+        /// <summary>Places a floor-standing object whose top-left free cell is (x, floor - height).</summary>
+        private static void HousePlaceObject(Player p, int slot, int x, int floor, int left, int right, string label)
+        {
+            Item it = p.inventory[slot];
+            int h = 1, ox = 0, oy = 0;
+            TileObjectData data = TileObjectData.GetTileData(it.createTile, it.placeStyle);
+            if (data != null)
+            {
+                h = data.Height;
+                ox = data.Origin.X;
+                oy = data.Origin.Y;
+            }
+            HouseAct(p, JobObject, x + ox, floor - h + oy, slot, left, right, floor, label);
         }
 
         // ------------------------------------------------------------------ combat

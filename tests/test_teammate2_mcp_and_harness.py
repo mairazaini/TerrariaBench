@@ -280,6 +280,6 @@ def test_nemotron_backoff_multimodal_and_eval_standard():
     report = run_eval_standard(live=False)
     rows = {r["name"]: r for r in report["table1"]}
     assert rows["do-nothing"]["composite"] == 0.0
-    assert rows["absentee"]["composite"] == 0.1
+    assert rows["absentee"]["composite"] == 0.0
     assert rows["exploiter"]["composite"] < 0.05
     assert rows["smart-triage"]["composite"] > rows["rule-based"]["composite"] > rows["blast-list"]["composite"]

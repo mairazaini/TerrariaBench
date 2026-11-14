@@ -94,6 +94,17 @@ python -m terraria_bench.harness.runner --eval-standard --live
 
 Standard evaluation saves each model under `artifacts/runs/verda_deepseek/` and `artifacts/runs/verda_kimi/`. Override model IDs with `TERRARIA_VERDA_DEEPSEEK_MODEL` or `TERRARIA_VERDA_KIMI_MODEL`, and the endpoint with `VERDA_INFERENCE_BASE_URL`.
 
+### Eye boss trial matrix
+
+Run the same seeded Eye of Cthulhu challenge with starter gear, an early ranger kit, and a prepared gold loadout. The report contains scores, sealed ledgers, and action logs; replay it to check deterministic reproduction:
+
+```powershell
+python -m terraria_bench.harness.eye_trials --agent verda_kimi --live --seed 7
+python -m terraria_bench.harness.eye_trials --replay artifacts/runs/eye_trials/verda_kimi/matrix_seed7.json
+```
+
+Scenario tasks can also be constructed as `Task` values and passed directly to `run_agent_episode`, so trials can set their own kit, equipment, health, event timing, and objectives without adding temporary entries to the public task catalog.
+
 For Harbor/OpenCode runs, merge the [Verda OpenCode provider config](docs/opencode-verda.jsonc) into `~/.config/opencode/opencode.jsonc`, then select either `verda/deepseek-4-1-flash-1017` or `verda/kimi-k3-1-pro`:
 
 ```powershell
@@ -109,7 +120,7 @@ harbor run -p harbor/tasks/terraria-eye-of-cthulhu -a opencode -m verda/kimi-k3-
 - *Scarce actions.* Looking costs the same as doing. An agent that inspects everything runs out of operations before it has built anything.
 - *Deadlines it is not told.* Each scenario has unlisted deadlines (shelter before the first dusk, armour before the siege, an arena before the boss). The agent has to infer what will be needed from the brief and the world, and prepare ahead of time.
 - *Dependent progress.* Gear follows a tech tree (wood, then ore, furnace, anvil, armour), bosses need an arena and a summoning item, and the Underworld needs depth and a bridge. Steps done out of order are wasted.
-- *No shortcuts.* The simulator, the calibration and the score ledger live in a sidecar container the agent cannot read or restart. Eleven known reward exploits (free tiles, kill farming, sell-and-rebuy loops, quitting early, and others) are closed and regression-tested in `tests/test_reward_exploits.py`.
+- *No shortcuts.* The simulator, the calibration and the score ledger live in a sidecar container the agent cannot read or restart. Twelve known reward exploits (free tiles, kill farming, sell-and-rebuy loops, quitting early, attending every window without doing anything, and others) are closed and regression-tested in `tests/test_reward_exploits.py`.
 
 **How it is scored.** When the agent stops, the verifier asks the game server to settle any windows the agent did not play (with the player idle) and to grade the sealed episode ledger. It writes one number between 0 and 1 to `/logs/verifier/reward.txt`, with the breakdown in `grade.json` and the full ledger in `ledger.json` beside it:
 

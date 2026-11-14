@@ -45,8 +45,9 @@ HUD_KEYS = (
     "hp", "max_hp", "mana", "max_mana", "dead", "time_phase", "blocked",
     "selected_slot", "held_item", "hotbar", "backpack", "equipment_now", "craftable_now",
     "buffs", "inventory_open", "inventory", "equipment", "craftable", "chest_open", "chest",
-    "cursor", "events", "view", "visible_enemies", "world_view",
-    "skill", "pos", "defense", "clock", "evil_biome", "world", "boss",
+    "cursor", "events", "view", "visible_enemies", "town_npcs", "dropped_items", "world_view",
+    "skill", "pos", "defense", "clock", "evil_biome", "world", "boss", "placement_feedback",
+    "grounded", "wet", "vx", "vy",
 )
 
 CURSOR_X = (-20, -12, -8, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 8, 12, 20)
@@ -64,8 +65,7 @@ BUILTIN_ROUTINE_NAMES = (
     "mine_clear_overhead",
     "clear_area_right",
     "clear_area_left",
-    "build_house_frame",
-    "furnish_house",
+    "build_house",
     "dig_down",
     "stairs_down_left",
     "stairs_down_right",
@@ -117,26 +117,53 @@ TERRARIA_KNOWLEDGE_BASE = (
     "- Trees & Building: Trees do NOT block player movement, so you can walk past them, BUT tree trunks/canopy occupy build cells so blocks cannot be placed on them. Chop obstructing trees at their base trunk with an Axe + Smart Cursor.\n"
     "- Hotbar Switching: Changing hotbar slots while holding Left Mouse can be delayed by auto-swing tools; stop clicking for one tap when switching items.\n"
     "- House Rules: Minimum ~10 wide x 6 tall exterior (leave 4+ interior height so you never trap your head), solid Wood perimeter, safe crafted Wood Walls filling the background, 1 Torch, 1 Work Bench (counts as table), 1 Chair, and 1 Door.\n"
+    "- Block placement: a block can ONLY be placed in a cell that touches an existing solid tile (left, right, above "
+    "or below it) or that has a background wall behind it. A click on a cell with open air on all four sides places "
+    "NOTHING. Walls of a house are therefore built bottom-up from the ground and a roof is extended sideways from the "
+    "top of a wall, never started in mid-air. Background walls need a neighbouring tile or wall the same way. Reach is "
+    "about 5 tiles sideways and 4 up/down from the body.\n"
+    "- House building: use the `build_house` routine. It obeys the placement rule cell by cell, verifies every tile and "
+    "reports exactly what is still missing. Placing house blocks by hand produces mounds and pillars.\n"
     "- Crafting: Only available while inventory is open (Esc). Many items require standing within ~4 tiles of a placed Work Bench, Furnace (3 Iron/Silver/Gold Ore -> 1 Bar), or Anvil.\n"
     "- Mining & Caves: Place Torches frequently while digging down (`dig_down` / `stairs_down_*`). Look for chests (loot all) and glowing red Life Crystals (mine with pickaxe, then select and left-click to raise max HP by 20).\n"
     "- Eye of Cthulhu: Summon ONLY at Night (`time_phase == Night`), never Dawn/Day. Kite horizontally along platform tiers, jump/drop (`S`) to evade dashes, and focus on dodging fast dashes in Phase 2."
 )
 
 VISION_SYSTEM = (
-    "You are the live quick eyes AND short-term tactical spotter of an agent playing Terraria. You receive one "
+    "You are the RAPID ERROR-CORRECTION EYES and tactical spotter of an agent playing Terraria. You receive one "
     "screenshot of the game exactly as it appears on the player's monitor, plus the player's current supervisor "
-    "objective and HUD summary. Report ONLY what is visible in this image. Never guess what is hidden in darkness "
-    "or off screen. IMPORTANT: In Terraria daytime, the sky is bright and underground dirt/stone beneath the surface "
-    "is naturally black fog-of-war — NEVER report lighting as 'pitch_black' when daytime sky or lit terrain is visible; "
-    "reserve 'pitch_black' ONLY for when the player is completely in darkness (night/cave with no visible terrain).\n"
+    "objective, recent actions, and full HUD/coordinate summary. Report ONLY what is visible in this image. Never "
+    "guess what is hidden in darkness or off screen. IMPORTANT: In Terraria daytime, the sky is bright and underground "
+    "dirt/stone beneath the surface is naturally black fog-of-war — NEVER report lighting as 'pitch_black' when "
+    "daytime sky or lit terrain is visible; reserve 'pitch_black' ONLY for when the player is completely in darkness.\n"
     "The player character stands near the centre of the image (2 tiles wide, 3 tiles tall). Give positions as tile "
     "offsets from the player's centre: dx positive = right, dy positive = down.\n"
-    "Because the Supervisor plans slowly in the background, YOU provide the fast short-term 'reaction' guidance for "
-    "the 1-second Decision API controller: spot enemies within 5 tiles, walls/ceilings trapping the player, nearby "
-    "tree trunks to chop, or open flat ground to build on, and output a concrete 1-sentence immediate_directive plus "
-    "optional recommended_routine / recommended_hotbar / recommended_cursor_dx / recommended_cursor_dy.\n"
-    "Return JSON only: {\"lighting\": \"bright|dim|dark|pitch_black\", \"surroundings\": \"<1-2 sentences: biome, "
-    "surface or underground, terrain shape near the player>\", \"blocked\": {\"left\": bool, \"right\": bool, "
+    "Your #1 priority is RAPIDLY FIXING WHAT THE AI IS DOING WRONG right now (e.g. building random mounds/pillars, "
+    "swinging a pickaxe/axe at empty air, stuck against a 1-3 block ledge without jumping, ignoring an attacking slime, "
+    "holding the wrong hotbar slot, or placing blocks where a doorway/floor should be).\n"
+    "The Decision model cannot reason about the picture. It only copies what you tell it, so every instruction you "
+    "write MUST be executable without interpretation. An instruction is complete only if it names all of: (1) the "
+    "exact action (routine name, or key + click), (2) the item and hotbar slot number to hold, (3) the exact target "
+    "cell as (dx, dy), (4) why that cell works. Write 'Hold Wood (slot 4), click (dx=+3, dy=+1): empty cell, solid "
+    "dirt directly below it', never 'build a wall on the right'.\n"
+    "PLACEMENT RULE you must check before recommending any block or wall click: the target cell must be empty AND "
+    "touch an existing solid tile on its left, right, top or bottom (or have a background wall behind it), and be "
+    "within 5 tiles sideways / 4 tiles vertically of the player. If the cell floats in open air, say so in "
+    "\"correction\" and give the nearest supported cell instead (normally the cell directly on top of the ground or "
+    "on top of the last placed block). Fill \"placement\" with that check. If no block click is needed set "
+    "placement.needed=false.\n"
+    "HOUSE RULE: if the goal involves a house and you see scattered blocks, a mound, a pillar, or blocks being "
+    "clicked into the sky, the correction is always: stop placing by hand and select routine `build_house` (it lays "
+    "the frame cell by cell and crafts the furniture). Describe what stands so far: floor width, wall heights left "
+    "and right, roof present or not, door, furniture, in \"house_progress\".\n"
+    "If RECENT AI INPUTS show a routine that FAILED with a reason, repeat that reason and say the concrete next step "
+    "that removes it (for example 'needs 12 more Wood: chop the tree at dx=-6').\n"
+    "Output a crisp, concrete \"correction\" string telling the Decision API exactly what mistake is visible and the "
+    "immediate fix, plus \"reaction\" with immediate_directive, optional recommended_routine / recommended_hotbar / "
+    "recommended_cursor_dx / recommended_cursor_dy.\n"
+    "Return JSON only: {\"lighting\": \"bright|dim|dark|pitch_black\", \"correction\": \"<what the AI is doing wrong "
+    "on screen right now and the exact immediate fix, or 'none' if on track>\", \"surroundings\": \"<1-2 sentences: "
+    "biome, surface or underground, terrain shape near the player>\", \"blocked\": {\"left\": bool, \"right\": bool, "
     "\"above\": bool, \"below\": bool}, \"in_hole_or_enclosed\": bool, \"enemies\": [{\"name\": str, \"dx\": number, "
     "\"dy\": number, \"moving_toward_player\": bool}], \"objects\": [{\"kind\": \"tree|ore|chest|crafting_station|"
     "door|dropped_item|torch|light_source|water|lava|npc|placed_block|other\", \"label\": str, \"dx\": number, "
@@ -144,7 +171,10 @@ VISION_SYSTEM = (
     "\"chest_open\": bool, \"death_screen\": bool, \"text_on_screen\": str}, \"reaction\": {\"threat_level\": "
     "\"none|low|high|critical\", \"immediate_directive\": \"<1 short imperative sentence for THIS frame>\", "
     "\"recommended_routine\": \"<builtin routine name or none>\", \"recommended_hotbar\": 0, "
-    "\"recommended_cursor_dx\": 0, \"recommended_cursor_dy\": 0}, \"notes\": \"<anything else a player would notice>\"}"
+    "\"recommended_cursor_dx\": 0, \"recommended_cursor_dy\": 0}, \"placement\": {\"needed\": bool, \"item\": str, "
+    "\"hotbar\": 0, \"target_dx\": 0, \"target_dy\": 0, \"cell_is_empty\": bool, \"touches_solid_on\": "
+    "\"left|right|above|below|wall_behind|nothing\", \"in_reach\": bool}, \"house_progress\": \"<what of the house "
+    "stands and what is missing, or 'no house'>\", \"notes\": \"<anything else a player would notice>\"}"
 )
 
 REAL_SUPERVISOR_SYSTEM = (
@@ -167,7 +197,7 @@ REAL_SUPERVISOR_SYSTEM = (
     "to run `mine_clear_overhead` against its own house roof/doorway lintel (`in_house=true`).\n"
     "- Specify concrete inventory counts, exact target coordinates from `world_view` (`trees`, `ores`, `chests`, "
     "`life_crystals`), the exact builtin routine sequence (`chop_tree_right`/`left`, `mine_clear_overhead`, "
-    "`clear_area_right`/`left`, `build_house_frame`, `furnish_house`, `dig_down`, `stairs_down_left`/`right`, "
+    "`clear_area_right`/`left`, `build_house`, `dig_down`, `stairs_down_left`/`right`, "
     "`build_arena_platform_right`/`left`, `pillar_up`, `stairs_up_left`/`right`, `place_torch`), explicit "
     "`avoid` guardrails, and an observable `done_when` transition condition.\n"
     "You may also define up to 3 custom reusable routines for multi-step sequences if helpful.\n"
@@ -179,6 +209,39 @@ REAL_SUPERVISOR_SYSTEM = (
     "\"routines\": [optional custom routines]}"
 )
 
+SHORT_TERM_SYSTEM = (
+    "You are the fast SHORT-TERM TACTICAL PLANNER for an agent playing real Terraria. "
+    "You sit between the slow Long-Term Supervisor (which plans the whole run up to the Eye of Cthulhu) and the "
+    "1-second Decision+Vision reactionary loop (which presses keys and aims the mouse). "
+    "Your job is to take the Long-Term Plan's current stage/steps, the latest Vision report, and the current HUD, "
+    "and break them down into ONE crystal-clear, immediate micro-goal and 2-4 concrete tactical steps for the "
+    "Decision model right now, adapting immediately to enemies, holes, walls, or missing items.\n"
+    "The Decision model executes literally. Every tactical step must name the routine or the exact keys, the item "
+    "with its hotbar slot, and the target as (dx, dy) taken from LIVE TILE & ENEMY COORDINATES. No step may say "
+    "'build', 'place a wall' or 'make a roof' without a cell.\n"
+    "A block only attaches to a cell touching an existing solid tile or background wall; never send a click into "
+    "open air. For anything about the house (frame, walls, door, furniture) the only correct step is: select routine "
+    "`build_house`. If `house_status.last_build` or the recent inputs show build_house FAILED, read its reason and "
+    "plan the step that fixes exactly that (usually chop more Wood), then build_house again.\n"
+    "Return JSON only: {\"current_subgoal\": \"<1 concrete immediate subgoal>\", "
+    "\"tactical_steps\": [\"<2-4 short imperative steps>\"], "
+    "\"priority_target\": \"<exact target/item/enemy/tile to act on now, or 'none'>\", "
+    "\"recommended_routine\": \"<builtin routine name or 'none'>\", "
+    "\"adaptation\": \"<how to adapt to nearby threats or terrain obstacles right now>\"}"
+)
+
+
+def parse_short_term_plan(text: str) -> dict[str, Any]:
+    data = _parse_json_object(text)
+    steps = [str(s).strip() for s in (data.get("tactical_steps") or []) if str(s).strip()]
+    return {
+        "current_subgoal": str(data.get("current_subgoal") or "").strip(),
+        "tactical_steps": steps[:4],
+        "priority_target": str(data.get("priority_target") or "none").strip(),
+        "recommended_routine": str(data.get("recommended_routine") or "none").strip(),
+        "adaptation": str(data.get("adaptation") or "").strip(),
+    }
+
 STRATEGY_SYSTEM = (
     "You are the long-term strategist for an agent playing real Terraria whose single goal is to defeat the Eye of "
     "Cthulhu. You do not press keys. You choose the plan the run will follow: a deterministic planner turns your "
@@ -188,18 +251,26 @@ STRATEGY_SYSTEM = (
 
 DECISION_BRIEF = (
     "You control a Terraria player with a keyboard and mouse, like a human. Every answer becomes a real input. "
-    "You are the fast loop (~1 Hz): react immediately to what the attached frame, `HUD.world_view`, and Vision's "
-    "IMMEDIATE SHORT-TERM REACTION show while advancing the Supervisor's stage objective. Do not wait.\n"
-    "IMPORTANT: If IMMEDIATE SHORT-TERM REACTION specifies `recommended_routine != 'none'` and that routine is available, "
-    "select that `routine` immediately instead of clicking randomly.\n"
+    "You are the fast loop (~1 Hz): react immediately to what the attached frame, `LIVE TILE & ENEMY COORDINATES`, "
+    "and `SHORT-TERM TACTICAL PLAN` show while advancing the Supervisor's stage objective. Do not wait.\n"
+    "COORDINATE AIMING: Use exact `(dx, dy)` offsets from `enemies_dx_dy`, `trees`, `ores`, `chests`, `stations`, "
+    "`dropped_items`, and `town_npcs` to set `cursor_x` and `cursor_y` directly onto your target, and move left/right "
+    "toward items/enemies/trees that are out of reach. Attack any enemy with `los=true` and `dist<=5` immediately.\n"
+    "IMPORTANT: If `SHORT-TERM TACTICAL PLAN` or IMMEDIATE SHORT-TERM REACTION specifies `recommended_routine != 'none'` "
+    "and that routine is available, select that `routine` immediately unless an enemy is attacking you.\n"
+    "PLACING BLOCKS: a block or wall only goes into an empty cell that touches an existing solid tile (or wall) and "
+    "is within 5 tiles sideways / 4 vertically. A click into open air does nothing. Follow the vision model's "
+    "`placement` target exactly when it gives one; if `touches_solid_on` is 'nothing' or `in_reach` is false, do not "
+    "click. NEVER build a house by hand: select routine `build_house` whenever it is offered and the plan is at the "
+    "house stage. `build_house` runs by itself until done and then reports SUCCEEDED or FAILED with the reason in "
+    "YOUR RECENT INPUTS; after a FAILED report fix that reason first (usually more Wood).\n"
     "TOOLS: 'routine' runs a fixed multi-step input sequence (e.g. `chop_tree_right`/`left`, `mine_clear_overhead`, "
-    "`clear_area_right`/`left`, `build_house_frame`, `furnish_house`, `dig_down`, `stairs_down_right`/`left`, "
-    "`build_arena_platform_right`/`left`, `pillar_up`, `stairs_up_right`/`left`, `place_torch`) with Smart Cursor & "
-    "contextual auto-aim enabled, then returns control to you.\n"
+    "`clear_area_right`/`left`, `build_house`, `dig_down`, `stairs_down_right`/`left`, "
+    "`build_arena_platform_right`/`left`, `pillar_up`, `stairs_up_right`/`left`, `place_torch`), then returns control.\n"
+    "PLACEMENT FEEDBACK: if HUD.placement_feedback explains a blocked click, follow the stated reason, move into "
+    "reach or clear the occupied target, then select a supported empty cell. Never repeat the same blocked click.\n"
     "GEOMETRY & CONTROLS: cursor offset is in tiles from player's centre (dx>0 right, dy>0 down; body is dy -1..+1, "
-    "floor is dy=+2, ceiling above head is dy=-2). Trees and tombstones block building — chop/clear them first. Tool/"
-    "weapon/block auto-aim helps land clicks when attacking/mining/chopping/placing, so focus on picking the right tool, "
-    "routine, movement, and crafting (crafting auto-opens inventory if needed)."
+    "floor is dy=+2, ceiling above head is dy=-2). Trees and tombstones block building — chop/clear them first."
 )
 
 
@@ -401,23 +472,17 @@ def builtin_routines(hud: dict[str, Any]) -> dict[str, dict[str, Any]]:
             + [step(jump=True, use_item=True, cursor_dx=-0.5, cursor_dy=2, hold="short"),
                step(jump=True, use_item=True, cursor_dx=0.5, cursor_dy=2, hold="short")] * 4,
         }
-        if not house_valid:
-            out["build_house_frame"] = {
-                "when": "Build and furnish a single anchored 12x7 valid house (clears interior, never rebuilds once valid).",
-                "steps": [
-                    step(hotbar=block, select_item="block", macro_action="build_house_frame", hold="tap"),
-                    step(hold="tap"),
-                    step(hold="tap"),
-                ],
-            }
-    if can_furnish and not house_valid:
-        out["furnish_house"] = {
-            "when": "Finish crafting and placing walls, doors, Work Bench, Chair, and Torch inside the anchored house.",
-            "steps": [
-                step(hotbar=wall or workbench or chair or door or torch, select_item="wall", macro_action="furnish_house", hold="tap"),
-                step(hold="tap"),
-                step(hold="tap"),
-            ],
+    if not house_valid and (has_block or can_furnish or _item_count(hud, "Wood") >= 10):
+        # One step: the mod's closed-loop builder does the whole job and reports back (see _track_routine_skill).
+        out["build_house"] = {
+            "when": (
+                "Build or finish the whole NPC house in one go. Picks a flat site, clears trees and bumps, fills the "
+                "floor, raises walls and roof one supported block at a time, crafts and places Work Bench, door, "
+                "chair, torch and back walls, then checks the room is valid. Safe to run again after gathering more "
+                "Wood: it continues the same house. Needs about 55 Wood for a house from nothing."
+            ),
+            "skill": {"name": "build_house", "args": {}},
+            "steps": [step(hold="short")],
         }
     if has_pick:
         out["mine_clear_overhead"] = {
@@ -473,9 +538,9 @@ def builtin_routines(hud: dict[str, Any]) -> dict[str, dict[str, Any]]:
             tdx = float(target_tree.get("dx", d * 1.5)) if target_tree else d * 1.5
             tdy = float(target_tree.get("dy", 1.0)) if target_tree else 1.0
             out[f"chop_tree_{side}"] = {
-                "when": f"Chop a tree trunk to the {side} at its base with Smart Cursor and axe auto-aim.",
+                "when": f"Walk to and chop a tree trunk to the {side} at its base ({tdx:+g},{tdy:+g}) with Smart Cursor.",
                 "steps": [
-                    step(hotbar=axe, select_item="axe", macro_action=f"chop_tree_{side}", hold="tap"),
+                    step(hotbar=axe, select_item="axe", hold="tap"),
                     step(move=side, use_item=True, smart_cursor=True, cursor_dx=tdx, cursor_dy=tdy, hold="long"),
                     step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=1, hold="long"),
                 ],
@@ -716,6 +781,12 @@ def _simulate_vision(hud: dict[str, Any], plan: dict[str, Any] | None = None) ->
     )
     missing_house = [str(m) for m in (house.get("missing_for_house") or [])]
     tombstones = int(house.get("tombstones_nearby") or 0)
+    last_build = house.get("last_build") if isinstance(house.get("last_build"), dict) else {}
+    build_reason = str(last_build.get("reason") or "")[:240]
+    # A failed build is only worth repeating once the bag has changed (more Wood than when it gave up).
+    build_blocked = (
+        not valid_room and last_build.get("status") == "failed" and wood <= int(last_build.get("wood") or 0)
+    )
 
     objects: list[dict[str, Any]] = []
     for t in trees[:4]:
@@ -770,21 +841,34 @@ def _simulate_vision(hud: dict[str, Any], plan: dict[str, Any] | None = None) ->
             "recommended_hotbar": pick_slot,
             "recommended_cursor_dx": -1.5 if side == "left" else 1.5,
         })
-    elif not valid_room and phase in ("", "gather_wood", "clear_house_site", "build_house") and (
-        wood >= 40 or in_house or int(house.get("floor_tiles") or 0) >= 6 or int(house.get("roof_tiles") or 0) >= 6
+    elif build_blocked and trees:
+        nearest_tree = trees[0]
+        tdx = float(nearest_tree.get("dx") or 0.0)
+        tdy = float(nearest_tree.get("dy") or 1.0)
+        side = "right" if tdx >= 0 else "left"
+        reaction.update({
+            "immediate_directive": (
+                f"Do NOT run build_house yet: last attempt stopped ({build_reason}) and Wood is still {wood}. "
+                f"Chop the tree at ({tdx:+g},{tdy:+g}) with chop_tree_{side} first, then run build_house again."
+            )[:400],
+            "recommended_routine": f"chop_tree_{side}",
+            "recommended_hotbar": axe_slot,
+            "recommended_cursor_dx": tdx,
+            "recommended_cursor_dy": tdy,
+        })
+    elif not valid_room and not build_blocked and phase in ("", "gather_wood", "clear_house_site", "build_house") and (
+        wood >= 40 or in_house or int(house.get("roof_tiles") or 0) >= 6 or int(house.get("back_walls") or 0) >= 8
     ):
-        if int(house.get("floor_tiles") or 0) < 10 or int(house.get("roof_tiles") or 0) < 8:
-            reaction.update({
-                "immediate_directive": "Run build_house_frame once at anchor to finish the 12x7 house.",
-                "recommended_routine": "build_house_frame",
-                "recommended_hotbar": block_slot,
-            })
-        else:
-            missing_str = ", ".join(missing_house) or "walls/furniture"
-            reaction.update({
-                "immediate_directive": f"Run furnish_house to finish valid house (missing: {missing_str}).",
-                "recommended_routine": "furnish_house",
-            })
+        missing_str = ", ".join(missing_house) or "frame, back walls, furniture"
+        reaction.update({
+            "immediate_directive": (
+                f"Select routine build_house now (Wood={wood}). It builds the house cell by cell on supported "
+                f"tiles and crafts the furniture itself. Do NOT place house blocks, walls or furniture by hand. "
+                f"Still missing: {missing_str}."
+                + (f" Last attempt: {build_reason}" if build_reason else "")
+            )[:400],
+            "recommended_routine": "build_house",
+        })
     elif (phase in ("", "gather_wood") or (wood < 50 and not valid_room and not in_house)) and trees:
         nearest_tree = trees[0]
         tdx = float(nearest_tree.get("dx") or 0.0)
@@ -921,8 +1005,10 @@ class RealGameController:
         vision_model: str | None = None,
         vision_fn: Callable[[str, str | None], str] | None = None,
         supervisor_fn: Callable[[str, str | None], str] | None = None,
+        short_term_fn: Callable[[str, str | None], str] | None = None,
         strategy_fn: Callable[[str, str | None], str] | None = None,
-        supervisor_every: int = 45,
+        supervisor_every: int = 90,
+        short_term_every: int = 8,
         async_supervisor: bool = True,
         async_vision: bool = True,
         decision_sees_frame: bool | None = None,
@@ -940,10 +1026,21 @@ class RealGameController:
                 thinking_level=os.environ.get("TERRARIA_VISION_THINKING", "low") or None))
         self.supervisor_fn = supervisor_fn or (
             lambda prompt, png: agent._call_supervisor_model(prompt, png, system=REAL_SUPERVISOR_SYSTEM))
+        short_term_model = os.environ.get("TERRARIA_SHORT_TERM_MODEL") or vision_model
+        if short_term_fn is not None:
+            self.short_term_fn = short_term_fn
+        elif live:
+            self.short_term_fn = (
+                lambda prompt, png: agent._call_supervisor_model(
+                    prompt, png, system=SHORT_TERM_SYSTEM, model=short_term_model,
+                    thinking_level=os.environ.get("TERRARIA_SHORT_TERM_THINKING", "low") or None))
+        else:
+            self.short_term_fn = None
         # Skill mode: the same strategy model writes the run's long-term plan (eye_planner.Strategy).
         self.strategy_fn = strategy_fn or (
             lambda prompt, png: agent._call_supervisor_model(prompt, png, system=STRATEGY_SYSTEM))
         self.supervisor_every = max(1, int(supervisor_every))
+        self.short_term_every = max(1, int(short_term_every))
         self.async_supervisor = async_supervisor
         self.async_vision = async_vision
         if decision_sees_frame is None:
@@ -952,6 +1049,7 @@ class RealGameController:
 
         self.tiers = {
             "supervisor": _Tier("strategy", agent.model),
+            "short_term": _Tier("tactical_planner", short_term_model),
             "vision": _Tier("sight", vision_model),
             "decision": _Tier("controls", agent.decisions.model),
         }
@@ -967,6 +1065,11 @@ class RealGameController:
         self._plan_requested_tick = 0
         self._supervisor_retry_at_tick = 0
         self._supervising = False
+        self._short_term_plan: dict[str, Any] | None = None
+        self._short_term_tick = 0
+        self._short_term_requested_tick = 0
+        self._short_term_plan_no = 0
+        self._short_term_planning = False
         self._want_replan = False
         self._was_dead = False
         self._history: deque[str] = deque(maxlen=6)
@@ -980,6 +1083,8 @@ class RealGameController:
         self._signatures: deque[str] = deque(maxlen=5)
         self._stored_routines: dict[str, dict[str, Any]] = {}
         self._queue: list[dict[str, Any]] = []
+        self._routine_skill: dict[str, Any] | None = None  # closed-loop mod skill started by a routine
+        self._last_build: dict[str, Any] | None = None  # how the last build_house ended, shown to every tier
         self._queue_name = ""
         self._queue_len = 0
         self._queue_hp = 0
@@ -999,23 +1104,24 @@ class RealGameController:
             tier.set_status("NO FRAME", error)
             return {"lighting": "unknown", "surroundings": "NO PICTURE THIS TICK: nothing can be seen.", "notes": error}
         safe_hud = sanitize_hud(hud)
-        hud_summary = {
-            k: safe_hud[k]
-            for k in ("hp", "max_hp", "time_phase", "blocked", "selected_slot", "held_item", "hotbar", "inventory_open", "visible_enemies")
-            if k in safe_hud
-        }
+        hud_summary = self._hud_for_prompt(safe_hud, tick)
         with self._lock:
             plan = self._plan
+            short_term = self._short_term_plan
+            recent_inputs = list(self._history)[-5:]
         plan_summary = (
             {"phase": plan.get("phase", ""), "objective": plan.get("objective", "")}
             if plan is not None else {"phase": "", "objective": self.goal}
         )
         ppt = (safe_hud.get("view") or {}).get("px_per_tile")
         prompt = (
-            "Describe this Terraria frame and output short-term reaction guidance for the player."
+            "Inspect this Terraria frame, identify any mistake the AI is making right now in \"correction\", "
+            "and output rapid reaction guidance for the Decision API."
             + (f" In this image one tile is about {float(ppt):.1f} pixels." if ppt else "")
             + f"\nCURRENT SUPERVISOR GOAL: {json.dumps(plan_summary, default=str)}"
-            + f"\nHUD SUMMARY: {json.dumps(hud_summary, sort_keys=True, default=str)[:1800]}"
+            + (f"\nSHORT-TERM SUBGOAL: {json.dumps(short_term, default=str)}" if short_term else "")
+            + (f"\nRECENT AI INPUTS: {json.dumps(recent_inputs, default=str)}" if recent_inputs else "")
+            + f"\nHUD SUMMARY (FULL & COORDINATES): {json.dumps(hud_summary, sort_keys=True, default=str)}"
         )
         with self._lock:
             self.last_prompts["vision"] = prompt
@@ -1047,7 +1153,7 @@ class RealGameController:
                 self.last_prompts["vision"] = json.dumps({"simulated_world_view": True, "phase": (plan or {}).get("phase", "")})
                 vlm_latest = self._vision
                 vlm_seen_at = self._vision_time
-                start_vlm = bool(self.async_vision and shot and not self._seeing and (now - self._vision_time >= 6.0))
+                start_vlm = bool(self.async_vision and shot and not self._seeing)
                 if start_vlm:
                     self._seeing = True
             if start_vlm:
@@ -1063,17 +1169,24 @@ class RealGameController:
 
             report = _simulate_vision(hud, plan)
             if isinstance(vlm_latest, dict):
+                vlm_correction = str(vlm_latest.get("correction") or "").strip()
+                vlm_reaction = vlm_latest.get("reaction") if isinstance(vlm_latest.get("reaction"), dict) else {}
                 vlm_bits = [
+                    f"FIX: {vlm_correction}" if vlm_correction and vlm_correction.lower() != "none" else "",
                     str(vlm_latest.get("surroundings") or "").strip(),
-                    str(((vlm_latest.get("reaction") or {}) if isinstance(vlm_latest.get("reaction"), dict) else {}).get("immediate_directive") or "").strip(),
+                    str(vlm_reaction.get("immediate_directive") or "").strip(),
                     str(vlm_latest.get("notes") or "").strip(),
                 ]
                 vlm_note = " | ".join(b for b in vlm_bits if b and "VISION FAILED" not in b and "nothing can be seen" not in b)
                 if vlm_note:
                     age = round(now - vlm_seen_at, 1) if vlm_seen_at else 0.0
-                    report["notes"] = f"{report['notes']} [VLM {age}s ago: {vlm_note[:300]}]"
-                    report["vlm_note"] = vlm_note[:300]
+                    report["notes"] = f"{report['notes']} [VLM {age}s ago: {vlm_note[:500]}]"
+                    report["vlm_note"] = vlm_note[:500]
                     report["vlm_age_s"] = age
+                if vlm_correction and vlm_correction.lower() != "none":
+                    report["vlm_correction"] = vlm_correction
+                if vlm_reaction:
+                    report["vlm_reaction"] = vlm_reaction
             # The structured view is not a vision-model result: the tier turns LIVE only inside _see().
             return {**report, "age_s": 0.0}
 
@@ -1107,12 +1220,14 @@ class RealGameController:
             previous = self._plan
             history = list(self._history)
         hud_for_prompt = self._hud_for_prompt(safe_hud, tick)
+        coords_text = json.dumps(self._coordinates_summary(safe_hud), default=str)
         prompt = (
             f"GOAL\n{self.goal}\n\nWHY YOU ARE BEING ASKED\n{reason}\n\n"
             f"PROGRESSION STAGES\n{json.dumps(PROGRESSION_STAGES)}\n\n"
             f"TERRARIA KNOWLEDGE BASE\n{TERRARIA_KNOWLEDGE_BASE}\n\n"
-            f"VISION REPORT (what is on screen now)\n{json.dumps(vision, sort_keys=True, default=str)[:3000]}\n\n"
-            f"ON-SCREEN HUD\n{json.dumps(hud_for_prompt, sort_keys=True, default=str)[:3500]}\n\n"
+            f"LIVE TILE & ENEMY COORDINATES (dx/dy in tiles from player)\n{coords_text}\n\n"
+            f"VISION REPORT (what is on screen now)\n{json.dumps(vision, sort_keys=True, default=str)[:2500]}\n\n"
+            f"ON-SCREEN HUD\n{json.dumps(hud_for_prompt, sort_keys=True, default=str)[:3000]}\n\n"
             f"YOUR PREVIOUS PLAN\n{json.dumps(previous, default=str)[:1500] if previous else 'none'}\n\n"
             "RECENT INPUTS BY THE DECISION MODEL\n" + ("\n".join(history) or "none")
         )
@@ -1193,8 +1308,112 @@ class RealGameController:
         else:
             threading.Thread(target=work, daemon=True).start()
 
+    def _short_term_supervise(self, tick: int, hud: dict[str, Any], vision: dict[str, Any], plan: dict[str, Any], plan_no: int) -> None:
+        if self.short_term_fn is None:
+            return
+        tier = self.tiers["short_term"]
+        safe_hud = sanitize_hud(hud)
+        hud_for_prompt = self._hud_for_prompt(safe_hud, tick)
+        coords_text = json.dumps(self._coordinates_summary(safe_hud), default=str)
+        with self._lock:
+            history = list(self._history)
+            prev_st = self._short_term_plan
+        prompt = (
+            f"LONG-TERM PLAN #{plan_no}\n{json.dumps({k: v for k, v in plan.items() if k != 'routines'}, default=str)[:2000]}\n\n"
+            f"LIVE TILE & ENEMY COORDINATES (dx/dy in tiles from player)\n{coords_text}\n\n"
+            f"VISION REPORT (live surroundings & threats)\n{json.dumps(vision, sort_keys=True, default=str)[:1800]}\n\n"
+            f"ON-SCREEN HUD\n{json.dumps(hud_for_prompt, sort_keys=True, default=str)[:2200]}\n\n"
+            f"PREVIOUS SHORT-TERM PLAN\n{json.dumps(prev_st, default=str)[:800] if prev_st else 'none'}\n\n"
+            "RECENT INPUTS BY THE DECISION MODEL\n" + ("\n".join(history) or "none")
+        )
+        self.last_prompts["short_term"] = prompt
+        started = time.time()
+        try:
+            st_plan = parse_short_term_plan(self.short_term_fn(prompt, None))
+        except Exception as exc:
+            tier.fail(exc)
+            if prev_st is not None:
+                tier.status = "STALE"
+            return
+        with self._lock:
+            self._short_term_plan = st_plan
+            self._short_term_tick = tick
+            self._short_term_plan_no = plan_no
+        tier.ok(tick, time.time() - started)
+
+    def _maybe_short_term_plan(self, hud: dict[str, Any], vision: dict[str, Any]) -> None:
+        if self.short_term_fn is None:
+            return
+        tick = self.ticks
+        with self._lock:
+            plan = self._plan
+            plan_no = self._plan_no
+            if plan is None or self._short_term_planning:
+                return
+            due = (
+                self._short_term_plan is None
+                or self._short_term_plan_no != plan_no
+                or (tick - self._short_term_requested_tick) >= self.short_term_every
+            )
+            if not due:
+                return
+            self._short_term_planning = True
+            self._short_term_requested_tick = tick
+            blocking = not self.async_supervisor
+
+        def work() -> None:
+            try:
+                self._short_term_supervise(tick, hud, vision, plan, plan_no)
+            finally:
+                with self._lock:
+                    self._short_term_planning = False
+
+        if blocking:
+            work()
+        else:
+            threading.Thread(target=work, daemon=True).start()
+
+    def _coordinates_summary(self, hud: dict[str, Any]) -> dict[str, Any]:
+        """Compact, never-truncated tile & enemy coordinate summary for all 4 tiers."""
+        wv = hud.get("world_view") if isinstance(hud.get("world_view"), dict) else {}
+        enemies = [
+            {
+                "name": e.get("name"),
+                "dx": e.get("dx"),
+                "dy": e.get("dy"),
+                "dist": e.get("dist"),
+                "los": e.get("line_of_sight", True),
+            }
+            for e in (hud.get("visible_enemies") or [])[:6]
+            if isinstance(e, dict)
+        ]
+        out: dict[str, Any] = {
+            "player_tile": hud.get("pos"),
+            "grounded": hud.get("grounded"),
+            "wet": hud.get("wet"),
+            "held_item": hud.get("held_item"),
+            "selected_slot": hud.get("selected_slot"),
+            "blocked": hud.get("blocked"),
+            "enemies_dx_dy": enemies,
+        }
+        if hud.get("boss"):
+            out["boss"] = hud.get("boss")
+        if hud.get("town_npcs"):
+            out["town_npcs"] = (hud.get("town_npcs") or [])[:4]
+        if hud.get("dropped_items"):
+            out["dropped_items"] = (hud.get("dropped_items") or [])[:6]
+        if wv:
+            out["house_status"] = wv.get("house_status")
+            for key in ("trees", "ores", "chests", "stations", "life_crystals"):
+                items = wv.get(key)
+                if items:
+                    out[key] = items[:4]
+            if wv.get("ascii_map"):
+                out["ascii_map"] = wv.get("ascii_map")
+        return out
+
     def _hud_for_prompt(self, hud: dict[str, Any], tick: int) -> dict[str, Any]:
-        out = {k: v for k, v in hud.items() if k != "view"}
+        out = {k: v for k, v in hud.items() if k not in ("view", "world_view", "visible_enemies", "town_npcs", "dropped_items")}
         if not hud.get("inventory_open") and self._inventory_memory is not None:
             out["inventory_memory"] = {
                 "note": "inventory is closed; this is what it contained when last opened",
@@ -1298,15 +1517,19 @@ class RealGameController:
             )
 
         if self._active_skill is not None and mod_id == self._active_skill["id"]:
+            boss_active = isinstance(hud.get("boss"), dict) and bool(hud.get("boss"))
             if mod_status == "running":
-                ctrl = {**idle_controls(), "skill": dict(self._active_skill)}
-                ctrl["active_keys"] = [f"SKILL:{self._active_skill['name']}"]
-                detail_s = f" | {mod_detail}" if mod_detail else ""
-                return self._reply(
-                    ctrl, vision, self._plan, "skill_running",
-                    note=f"skill #{mod_id} {self._active_skill['name']} running ({mod_ticks}t){detail_s}",
-                    confidence=1.0,
-                )
+                if boss_active and self._active_skill["name"] != "fight":
+                    self._active_skill = None
+                else:
+                    ctrl = {**idle_controls(), "skill": dict(self._active_skill)}
+                    ctrl["active_keys"] = [f"SKILL:{self._active_skill['name']}"]
+                    detail_s = f" | {mod_detail}" if mod_detail else ""
+                    return self._reply(
+                        ctrl, vision, self._plan, "skill_running",
+                        note=f"skill #{mod_id} {self._active_skill['name']} running ({mod_ticks}t){detail_s}",
+                        confidence=1.0,
+                    )
             if mod_status in ("success", "failed"):
                 if self._last_completed_skill_id != mod_id:
                     self.eye_planner.record_result(
@@ -1439,20 +1662,35 @@ class RealGameController:
             return self._reply(idle_controls(), {}, None, "offline_no_models",
                                note="NO MODELS CONNECTED (no API key / offline mode): player idle")
 
-        if self._is_skill_mode(hud):
+        if self._is_skill_mode(hud) and os.environ.get("TERRARIA_SKILL_MODE", "0") in ("1", "true", "yes"):
             return self._tick_skill_mode(hud, shot, payload.get("screenshot_error"))
+
+        # Settle a running routine skill first, so a result that arrived this tick is in what every tier reads now.
+        running = self._track_routine_skill(hud, tick)
+        if self._house_completed:
+            self._last_build = None
+        elif self._last_build is not None:
+            wv = hud.get("world_view") if isinstance(hud.get("world_view"), dict) else {}
+            hs = wv.get("house_status") if isinstance(wv.get("house_status"), dict) else {}
+            hud["world_view"] = {**wv, "house_status": {**hs, "last_build": dict(self._last_build)}}
 
         vision = self._look(shot, hud, payload.get("screenshot_error"), tick)
         self._maybe_supervise(hud, vision, shot)
+        self._maybe_short_term_plan(hud, vision)
         with self._lock:
             plan = self._plan
             plan_no, plan_tick = self._plan_no, self._plan_tick
+            short_term_plan = self._short_term_plan
+            short_term_tick = self._short_term_tick
             supervising = self._supervising
             routines = {**self._stored_routines, **builtin_routines(hud)}
         if plan is None and (not supervising or self.tiers["supervisor"].status == "FAILED"):
             # The supervisor tried and failed: an unsupervised run is not a valid run, so stop and say so.
             return self._reply(idle_controls(), vision, None, "no_supervisor_plan",
                                note="SUPERVISOR HAS NOT PRODUCED A PLAN: player idle until it does")
+
+        if running is not None:
+            return self._reply(running, vision, plan, "skill_running", note=running.pop("note", ""))
 
         # A routine the decision model started keeps running until it ends, the player is hurt, or dies.
         if self._queue:
@@ -1469,21 +1707,34 @@ class RealGameController:
                 return self._reply(controls, vision, plan, "decisions_api_routine", note=note)
 
         questions, craft_ids, item_ids = build_questions(hud, routines)
+        vlm_correction = str(vision.get("vlm_correction") or vision.get("correction") or "").strip()
+        correction_text = (
+            f"VISION RAPID CORRECTION ({vision.get('vlm_age_s', 0) or 0}s ago — FIX THIS IMMEDIATELY)\n{vlm_correction}\n\n"
+            if vlm_correction and vlm_correction.lower() != "none" else ""
+        )
         reaction = vision.get("reaction")
         reaction_text = (
             f"IMMEDIATE SHORT-TERM REACTION (from live vision)\n{json.dumps(reaction, sort_keys=True, default=str)}\n\n"
             if isinstance(reaction, dict) and reaction else ""
+        )
+        short_term_text = (
+            f"SHORT-TERM TACTICAL PLAN (updated {tick - short_term_tick} ticks ago)\n"
+            f"{json.dumps(short_term_plan, sort_keys=True, default=str)}\n\n"
+            if isinstance(short_term_plan, dict) and short_term_plan.get("current_subgoal") else ""
         )
         plan_text = (
             f"SUPERVISOR PLAN #{plan_no} (written {tick - plan_tick} decisions ago)\n{json.dumps({k: v for k, v in plan.items() if k != 'routines'}, default=str)}"
             if plan is not None else
             f"SUPERVISOR PLAN: the first plan is still being written. Until it arrives, work toward the goal yourself and stay alive.\nGOAL: {self.goal}"
         )
+        coords_text = json.dumps(self._coordinates_summary(hud), default=str)
         context = (
-            f"{DECISION_BRIEF}\n\n{reaction_text}{plan_text}\n\n"
+            f"{DECISION_BRIEF}\n\n{correction_text}{short_term_text}{reaction_text}"
+            f"LIVE TILE & ENEMY COORDINATES (use exact dx/dy for cursor_dx/cursor_dy)\n{coords_text}\n\n"
+            f"{plan_text}\n\n"
             f"SCENE NOTES from the vision model ({vision.get('age_s', 0) or 0} s old; the attached frame is current)\n"
-            f"{json.dumps(vision, sort_keys=True, default=str)[:3000]}\n\n"
-            f"ON-SCREEN HUD\n{json.dumps(self._hud_for_prompt(hud, tick), sort_keys=True, default=str)[:3500]}\n\n"
+            f"{json.dumps(vision, sort_keys=True, default=str)}\n\n"
+            f"ON-SCREEN HUD\n{json.dumps(self._hud_for_prompt(hud, tick), sort_keys=True, default=str)}\n\n"
             "YOUR RECENT INPUTS (oldest first)\n" + ("\n".join(self._history) or "none")
         )
         self.last_prompts["decision"] = context
@@ -1503,6 +1754,19 @@ class RealGameController:
         controls = answers_to_real_controls(answers, craft_ids, item_ids)
         controls["aim_assist"] = False
         chosen = str((answers.get("routine") or {}).get("value") or "none")
+        if chosen in routines and isinstance(routines[chosen].get("skill"), dict):
+            spec = routines[chosen]["skill"]
+            self._skill_id += 1
+            self._routine_skill = {
+                "id": self._skill_id, "name": str(spec.get("name") or chosen),
+                "args": dict(spec.get("args") or {}), "routine": chosen, "waited": 0,
+            }
+            self._history.append(f"#{tick}: started routine {chosen} (runs by itself until it reports back)")
+            self._signatures.clear()
+            running = self._routine_skill_controls()
+            running["decisions"] = controls.get("decisions")
+            return self._reply(running, vision, plan, "skill_running",
+                               note=f"routine {chosen} started (started by {tier.model})")
         if chosen in routines:
             steps = list(routines[chosen]["steps"])
             self._queue_name, self._queue_len, self._queue_hp = chosen, len(steps), int(hud.get("hp") or 0)
@@ -1534,6 +1798,52 @@ class RealGameController:
             self._signatures.clear()
         return self._reply(controls, vision, plan, "decisions_api")
 
+    def _routine_skill_controls(self) -> dict[str, Any]:
+        rs = self._routine_skill or {}
+        ctrl = {**idle_controls(), "skill": {"id": rs.get("id"), "name": rs.get("name"), "args": dict(rs.get("args") or {})}}
+        ctrl["active_keys"] = [f"SKILL:{rs.get('name')}"]
+        return ctrl
+
+    def _track_routine_skill(self, hud: dict[str, Any], tick: int) -> dict[str, Any] | None:
+        """Keep a routine's closed-loop mod skill running; when it ends, record why, for every model tier to read.
+
+        Returns the controls to send while the skill is still running, or None once control is back with the models.
+        """
+        rs = self._routine_skill
+        if rs is None:
+            return None
+        mod = hud.get("skill") if isinstance(hud.get("skill"), dict) else {}
+        ours = int(mod.get("id") or 0) == rs["id"]
+        status, reason = "", ""
+        if hud.get("dead"):
+            status, reason = "failed", "player died"
+        elif ours:
+            if str(mod.get("status") or "") != "running":
+                status, reason = str(mod.get("status") or "failed"), str(mod.get("reason") or "")
+        else:
+            rs["waited"] += 1
+            if rs["waited"] > 8:
+                status = "failed"
+                reason = "the game mod never started the skill: rebuild and reload TerrariaRLBridge"
+        if not status:
+            ctrl = self._routine_skill_controls()
+            detail = str(mod.get("detail") or "") if ours else "starting"
+            ctrl["note"] = f"routine {rs['routine']} running: {detail}"[:200]
+            return ctrl
+        ok = status == "success"
+        self._routine_skill = None
+        self._history.append(f"#{tick}: routine {rs['routine']} {'SUCCEEDED' if ok else 'FAILED'}: {reason[:400]}")
+        if rs["name"] == "build_house":
+            self._last_build = {
+                "status": "success" if ok else "failed", "reason": reason[:400], "tick": tick,
+                "wood": _item_count(hud, "Wood"),
+            }
+        if not ok:
+            with self._lock:
+                self._want_replan = True
+                self._replan_reason = f"Routine {rs['routine']} failed: {reason[:300]}. Plan the steps that fix exactly this."
+        return None
+
     def _reply(
         self,
         controls: dict[str, Any],
@@ -1548,7 +1858,9 @@ class RealGameController:
         tiers = {k: tier.as_dict(tick) for k, tier in self.tiers.items()}
         sup_state, vis_state, dec_state = tiers["supervisor"], tiers["vision"], tiers["decision"]
         if plan is not None:
-            sup_line = f"{sup.model} [{sup_state['status']}] plan #{self._plan_no}, {tick - self._plan_tick} decisions old: {plan.get('objective') or plan.get('strategy')}"
+            st_subgoal = ((self._short_term_plan or {}).get("current_subgoal") or "").strip()
+            st_suffix = f" | next: {st_subgoal}" if st_subgoal else ""
+            sup_line = f"{sup.model} [{sup_state['status']}] plan #{self._plan_no}, {tick - self._plan_tick}t old: {plan.get('objective') or plan.get('strategy')}{st_suffix}"
         else:
             sup_line = f"{sup.model} [{sup_state['status']}] " + ("writing first plan..." if self._supervising else "no plan") + (f" - {sup_state['last_error']}" if sup_state['last_error'] else "")
         if vis_state["status"] == "LIVE":

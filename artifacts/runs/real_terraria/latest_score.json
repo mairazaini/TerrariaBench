@@ -1,0 +1,14 @@
+{
+  "source": "tmodloader_real_game",
+  "recording": "C:\\Users\\natha\\dev\\TerrariaBench\\artifacts\\recordings\\real_terraria_live.json",
+  "frames": 300,
+  "eye_progress_pct": 0.0,
+  "eye_killed": false,
+  "passed": false,
+  "max_hp": 100,
+  "defense": 0,
+  "deaths": 0,
+  "survival_score": 1.0,
+  "milestones": [],
+  "task_checklist": {}
+}

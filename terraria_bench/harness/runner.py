@@ -12,9 +12,9 @@ from typing import Any, Protocol, runtime_checkable
 
 from .. import provenance
 from ..engine import AIR, CAMPFIRE, DOOR, WORKBENCH
-from ..grader import components, grade
+from ..grader import components, compute_eye_progress, grade
 from ..provenance import ARTIFACTS_DIR, CALIBRATION_PATH, ProvenanceError, load_sealed, verify_seal, write_sealed
-from ..tasks import EVAL_TASKS, REPORTED_SEEDS, TASKS
+from ..tasks import EVAL_TASKS, REPORTED_SEEDS, TASKS, Task
 from ..tools import Episode
 from .gemini_agent import GeminiAgent, GeminiLiveError
 from .nemotron_agent import (
@@ -93,7 +93,7 @@ def _normalize_action(raw: Any) -> tuple[str | None, dict[str, Any]]:
 
 def run_agent_episode(
     agent: Any,
-    task_id: str,
+    task_id: str | Task,
     seed: int,
     calibration: dict[str, Any] | None = None,
     max_turns: int = MAX_TURNS,
@@ -107,7 +107,9 @@ def run_agent_episode(
     of aborting the run. ``on_turn(turn, tool, args, result)`` is called after
     every turn when given.
     """
-    ep = Episode(task_id, seed, redact_seed=True)
+    task = TASKS[task_id] if isinstance(task_id, str) else task_id
+    task_id = task.id
+    ep = Episode(task, seed, redact_seed=True)
     history = CompactHistory()
     obs: dict[str, Any] = {
         "ok": True,
@@ -148,7 +150,11 @@ def run_agent_episode(
         write_sealed(save_dir / f"{task_id}_seed{seed}.json", ledger)
 
     cell = (calibration or {}).get("cells", {}).get(f"{task_id}:{seed}")
-    score = grade(ledger, cell) if (cell and cell.get("s", 0) > 0) else components(ledger)
+    if task_id in TASKS:
+        score = grade(ledger, cell) if (cell and cell.get("s", 0) > 0) else components(ledger)
+    else:
+        # Custom Task scenarios are useful for controlled trials but are not part of sealed calibration.
+        score = compute_eye_progress(ledger)
     return {
         "task": task_id,
         "seed": seed,
@@ -156,6 +162,7 @@ def run_agent_episode(
         "compactions": history.compactions,
         "ledger": ledger,
         "score": score,
+        "actions": list(ep.actions_log),
     }
 
 
@@ -166,7 +173,7 @@ class EpisodeRunner:
         self.calibration = calibration
         self.max_turns = max_turns
 
-    def run(self, agent: Any, task_id: str, seed: int, save_dir: Path | None = None) -> dict[str, Any]:
+    def run(self, agent: Any, task_id: str | Task, seed: int, save_dir: Path | None = None) -> dict[str, Any]:
         return run_agent_episode(
             agent,
             task_id,

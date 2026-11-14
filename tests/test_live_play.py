@@ -140,7 +140,7 @@ def _payload(hp: int = 100, deaths: int = 0, **hud_over) -> dict:
 def _wire_mock_models(app, answers: dict, supervisor_fn=None):
     """Replace all three tiers with recording fakes; returns the call log."""
     real = app.state.controller.real
-    calls = {"vision": [], "supervisor": [], "decision": []}
+    calls = {"vision": [], "supervisor": [], "short_term": [], "decision": []}
 
     def vision_fn(prompt, png):
         calls["vision"].append((prompt, png))
@@ -149,6 +149,10 @@ def _wire_mock_models(app, answers: dict, supervisor_fn=None):
     def default_supervisor(prompt, png):
         calls["supervisor"].append((prompt, png))
         return json.dumps({"strategy": "Make light before moving.", "objective": "Craft torches", "steps": ["open inventory"], "avoid": [], "done_when": "torches in hotbar"})
+
+    def short_term_fn(prompt, png):
+        calls["short_term"].append((prompt, png))
+        return json.dumps({"current_subgoal": "Open inventory to craft torches", "tactical_steps": ["Press Esc"], "priority_target": "Torch", "recommended_routine": "none", "adaptation": "Stay put"})
 
     def decide(questions, context_text, viewport_png_b64=None):
         calls["decision"].append((questions, context_text, viewport_png_b64))
@@ -160,6 +164,7 @@ def _wire_mock_models(app, answers: dict, supervisor_fn=None):
         tier.status = "WAITING"
     real.vision_fn = vision_fn
     real.supervisor_fn = supervisor_fn or default_supervisor
+    real.short_term_fn = short_term_fn
     real.async_supervisor = False
     real.async_vision = False
     real.agent.decisions.decide = decide
@@ -410,8 +415,7 @@ def test_real_game_aim_assist_and_routines_are_offered_only_when_usable():
         "mine_clear_overhead",
         "clear_area_right",
         "clear_area_left",
-        "build_house_frame",
-        "furnish_house",
+        "build_house",
         "dig_down",
         "stairs_down_right",
         "stairs_down_left",
@@ -573,7 +577,8 @@ def test_real_game_simulated_vision_and_backpack_routines_zero_latency(tmp_path:
 
     monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
     app = create_live_app(live_models=False)
-    calls = _wire_mock_models(app, {"move_x": "idle", "routine": "build_house_frame"})
+    answers = {"move_x": "idle", "routine": "build_house"}
+    calls = _wire_mock_models(app, answers)
     client = TestClient(app)
 
     payload = _payload(
@@ -613,15 +618,39 @@ def test_real_game_simulated_vision_and_backpack_routines_zero_latency(tmp_path:
     d = client.post("/real_game_tick", json=payload).json()
     assert calls["vision"] == []  # 0ms simulated player vision; never blocks on vision LLM
     assert d["vision_report"]["age_s"] == 0.0
-    assert d["vision_report"]["reaction"]["recommended_routine"] in (
-        "build_house_frame", "furnish_house", "chop_tree_right"
-    )
+    assert d["vision_report"]["reaction"]["recommended_routine"] == "build_house"
     criteria = calls["decision"][0][0]["routine"]["criteria"]
-    assert "build_house_frame" in criteria
-    assert "furnish_house" in criteria
-    assert d["source"] == "decisions_api_routine"
-    assert d["controls"]["select_item"] == "block"
-    assert d["controls"]["macro_action"] == "build_house_frame"
+    assert "build_house" in criteria
+    assert "build_house_frame" not in criteria and "furnish_house" not in criteria
+    # The house is never placed by blind clicks: the routine hands over to the mod's closed-loop skill.
+    assert d["source"] == "skill_running"
+    skill = d["controls"]["skill"]
+    assert skill["name"] == "build_house" and skill["id"] > 0
+    assert d["controls"]["use_item"] is False
+
+    # While the mod reports the skill running, no model is asked and the same skill id is re-sent.
+    payload["hud"]["skill"] = {"id": skill["id"], "name": "build_house", "status": "running", "detail": "laying floor"}
+    payload["tick"] = 2
+    d2 = client.post("/real_game_tick", json=payload).json()
+    assert d2["source"] == "skill_running"
+    assert d2["controls"]["skill"]["id"] == skill["id"]
+    assert "laying floor" in d2["note"]
+    assert len(calls["decision"]) == 1
+
+    # When it fails, the mod's reason reaches the models, and vision sends the player for wood, not straight back.
+    answers["routine"] = "none"
+    payload["hud"]["skill"] = {"id": skill["id"], "name": "build_house", "status": "failed",
+                               "reason": "house not finished, missing: roof. Have 80 Wood."}
+    payload["tick"] = 3
+    d3 = client.post("/real_game_tick", json=payload).json()
+    real = app.state.controller.real
+    assert real._routine_skill is None
+    assert real._last_build["status"] == "failed"
+    assert any("routine build_house FAILED: house not finished, missing: roof" in h for h in real._history)
+    assert d3["source"] == "decisions_api"
+    assert "missing: roof" in calls["decision"][1][1]
+    assert d3["vision_report"]["reaction"]["recommended_routine"] == "chop_tree_right"
+    assert "missing: roof" in d3["vision_report"]["reaction"]["immediate_directive"]
 
     blob = "\n".join([calls["supervisor"][0][0], calls["decision"][0][1]])
     for secret in ("987654", "123456", "31337", "SENTINEL_BOSS", "SENTINEL_ORE", "referee", "depth_below_surface"):
@@ -666,11 +695,11 @@ def test_simulated_vision_ignores_roof_enemies_without_los_and_never_rebuilds_va
         },
     )["hud"]
     sim = _simulate_vision(hud_inside, {"phase": "build_house"})
-    assert sim["reaction"]["recommended_routine"] == "furnish_house"
+    assert sim["reaction"]["recommended_routine"] == "build_house"
     assert sim["reaction"]["threat_level"] == "none"
     routines_inside = builtin_routines(hud_inside)
-    assert len(routines_inside["build_house_frame"]["steps"]) == 3
-    assert all(not s["use_item"] for s in routines_inside["build_house_frame"]["steps"])
+    assert routines_inside["build_house"]["skill"] == {"name": "build_house", "args": {}}
+    assert not any(s["use_item"] for s in routines_inside["build_house"]["steps"])
 
     # 2. Once valid_room=True is observed, RealGameController latches _house_completed and never offers house rebuilds again.
     app = create_live_app(live_models=False)
@@ -708,9 +737,8 @@ def test_simulated_vision_ignores_roof_enemies_without_los_and_never_rebuilds_va
     walked_away_wv = {**valid_wv, "house_status": {**valid_wv["house_status"], "valid_room": False, "in_house": False}}
     d2 = client.post("/real_game_tick", json=_payload(tick=2, backpack={"Wood": 80}, world_view=walked_away_wv)).json()
     criteria2 = calls["decision"][1][0].get("routine", {}).get("criteria", {})
-    assert "build_house_frame" not in criteria2
-    assert "furnish_house" not in criteria2
-    assert d2["vision_report"]["reaction"]["recommended_routine"] not in ("build_house_frame", "furnish_house")
+    assert "build_house" not in criteria2
+    assert d2["vision_report"]["reaction"]["recommended_routine"] != "build_house"
 
 
 def test_skill_mode_lifecycle_and_eye_progress_scoring(tmp_path: Path, monkeypatch):
@@ -720,6 +748,7 @@ def test_skill_mode_lifecycle_and_eye_progress_scoring(tmp_path: Path, monkeypat
 
     monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
     monkeypatch.setenv("TERRARIA_EYE_MEMORY", str(tmp_path / "eye_mem.json"))
+    monkeypatch.setenv("TERRARIA_SKILL_MODE", "1")
     app = create_live_app(live_models=False)
     _wire_mock_models(app, {"skill": "s0"})
     app.state.controller.real.eye_planner = app.state.controller.real.eye_planner.__class__(memory_path=tmp_path / "eye_mem.json")
@@ -830,6 +859,7 @@ def test_skill_mode_runs_under_a_model_written_long_term_plan(tmp_path: Path, mo
 
     monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
     monkeypatch.delenv("TERRARIA_AUTOPILOT", raising=False)
+    monkeypatch.setenv("TERRARIA_SKILL_MODE", "1")
     app = create_live_app(live_models=False)
     calls = _wire_mock_models(app, {"skill": "s0"})
     real = app.state.controller.real
@@ -873,6 +903,7 @@ def test_skill_mode_without_a_usable_plan_falls_back_to_the_reference_and_says_s
 
     monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
     monkeypatch.delenv("TERRARIA_AUTOPILOT", raising=False)
+    monkeypatch.setenv("TERRARIA_SKILL_MODE", "1")
     app = create_live_app(live_models=False)
     _wire_mock_models(app, {"skill": "s0"})
     real = app.state.controller.real
@@ -886,3 +917,43 @@ def test_skill_mode_without_a_usable_plan_falls_back_to_the_reference_and_says_s
     assert r["tiers"]["supervisor"]["status"] == "FAILED"
     assert "reference plan" in r["plan"]["written_by"]
     assert r["controls"]["skill"]["name"] == "chop"                      # the run still proceeds
+
+
+def test_four_tier_coordinates_never_truncated_and_routines_are_real_inputs(tmp_path: Path, monkeypatch):
+    import terraria_bench.live_play as lp
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+    app = create_live_app(live_models=False)
+    calls = _wire_mock_models(app, {"move_x": "right", "cursor_x": "4", "cursor_y": "-1", "use_item": 0.9})
+    client = TestClient(app)
+
+    huge_backpack = {f"Filler Item {i}": i + 1 for i in range(180)}
+    huge_backpack["Wood"] = 45
+    payload = _payload(
+        pos={"x": 14, "y": -2},
+        grounded=True,
+        wet=False,
+        backpack=huge_backpack,
+        visible_enemies=[{"name": "Green Slime", "dx": 4.2, "dy": -0.5, "dist": 4.2, "line_of_sight": True}],
+        town_npcs=[{"name": "Andrew the Guide", "dx": -6.0, "dy": 0.0, "dist": 6.0, "homeless": True}],
+        dropped_items=[{"name": "Wood", "stack": 12, "dx": 2.5, "dy": 0.5, "dist": 2.5}],
+        world_view={
+            "trees": [{"dx": 5.0, "dy": 1.0, "dist": 5.1}],
+            "ores": [{"name": "Iron Ore", "dx": -3.0, "dy": 4.0, "dist": 5.0}],
+            "house_status": {"valid_room": False, "in_house": False, "missing_for_house": ["walls"]},
+            "ascii_map": ["..T..", "..@.."],
+        },
+    )
+    r = client.post("/real_game_tick", json=payload).json()
+    assert r["source"] == "decisions_api"
+    dec_ctx = calls["decision"][0][1]
+    assert "LIVE TILE & ENEMY COORDINATES" in dec_ctx
+    assert "Green Slime" in dec_ctx
+    assert "Andrew the Guide" in dec_ctx
+    assert "Iron Ore" in dec_ctx
+    assert "SHORT-TERM TACTICAL PLAN" in dec_ctx
+    assert calls["short_term"]
+    assert "LIVE TILE & ENEMY COORDINATES" in calls["short_term"][0][0]
+    routines = builtin_routines(payload["hud"])
+    assert all(not s.get("macro_action") for s in routines["chop_tree_right"]["steps"])
+    assert all(not s.get("macro_action") for s in routines["build_house"]["steps"])

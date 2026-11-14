@@ -134,7 +134,7 @@ def test_dashboard_endpoints_and_exploits_catalogue(tmp_path: Path, monkeypatch:
     lb = client.get("/api/leaderboard").json()
     assert lb["ok"] is True
     assert any(row["name"] == "do-nothing" and row["composite"] == 0.0 for row in lb["table1"])
-    assert any(row["name"] == "absentee" and row["composite"] == 0.1 for row in lb["table1"])
+    assert any(row["name"] == "absentee" and row["composite"] == 0.0 for row in lb["table1"])
     assert len(lb["table3"]) == 2
     assert len(lb["trajectories"]) == 1
 
@@ -143,4 +143,4 @@ def test_dashboard_endpoints_and_exploits_catalogue(tmp_path: Path, monkeypatch:
 
     exp = client.get("/api/exploits").json()
     assert exp["ok"] is True
-    assert exp["count"] == len(EXPLOITS) == 11
+    assert exp["count"] == len(EXPLOITS) == 12

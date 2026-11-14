@@ -12,16 +12,16 @@ policy). Eye progress is the 0-100% progress-toward-killing-the-Eye score.
 |:---|:---|---:|---:|---:|---:|
 | smart-triage | anchor | 24 | 0.982 | 100% | 57% |
 | rule-based | anchor | 24 | 0.505 | 0% | 32% |
-| blast-list | anchor | 24 | 0.184 | 0% | 4% |
-| absentee | anchor | 24 | 0.100 | 0% | 0% |
+| blast-list | anchor | 24 | 0.116 | 0% | 4% |
+| absentee | anchor | 24 | 0.000 | 0% | 0% |
 | do-nothing | anchor | 24 | 0.000 | 0% | 0% |
-| exploiter | anchor | 24 | 0.011 | 0% | 0% |
+| exploiter | anchor | 24 | 0.000 | 0% | 0% |
 | Human experts | evaluated | 1 | 0.489 | 0% | 19% |
-| Gemini 4 / 2.5 | evaluated | 2 | 0.196 | 0% | 19% |
-| Nemotron 3.5 VL | evaluated | 2 | 0.089 | 0% | 11% |
+| Gemini 4 / 2.5 | evaluated | 2 | 0.195 | 0% | 19% |
+| Nemotron 3.5 VL | evaluated | 2 | 0.032 | 0% | 11% |
 | Verda DeepSeek V4.1 Flash | not run | 0 | - | - | - |
 | Verda Kimi K3.1 Pro | not run | 0 | - | - | - |
-| Gemma Base | evaluated | 2 | 0.080 | 0% | 13% |
+| Gemma Base | evaluated | 2 | 0.049 | 0% | 13% |
 | Gemma Tuned | not run | 0 | - | - | - |
 
 Rows with few episodes cover only the cells that were actually played; they are not comparable

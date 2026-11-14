@@ -2,7 +2,11 @@
 
     R = 0.7 * clip[0,1]((dNet - z) / s)
       + 0.2 * (0.5 * survival_rate + 0.5 * objective_sla_rate)
-      + 0.1 * (windows_attended / windows_in_task)
+      + 0.1 * (windows_attended / windows_in_task) * clip[0,1](business / 0.10)
+
+The last factor gates attendance on real progress: turning up for every window
+and doing nothing (the absentee anchor, or an agent that only calls
+``end_window``) earns exactly zero, like not turning up at all.
 
 dNet is the growth of Net Progression Value over the episode. ``z`` is the
 absentee anchor's growth and ``s`` the gap from z to the best honest anchor in
@@ -21,6 +25,7 @@ from .tasks import TASKS
 W_BUSINESS, W_RELIABILITY, W_CONTINUITY = 0.7, 0.2, 0.1
 PROGRESS_STEP = 2.0   # a window "made progress" if the Phi high-water mark rose by this much
 IDLE_GRACE = 2        # idle windows tolerated before survival credit decays
+ATTENDANCE_GATE = 0.10  # normalized business at which attendance earns its full credit
 DENSE_CLIP = (-2.0, 1.0)
 
 # The exploit catalogue. Each entry has exactly one pinning regression test in
@@ -29,6 +34,8 @@ DENSE_CLIP = (-2.0, 1.0)
 EXPLOITS = (
     ("continuity_for_quitters", "Attend a few windows, then quit and keep the continuity ratio.",
      "Continuity's denominator is the task's full window count, never the windows played."),
+    ("attendance_farming", "Call end_window every window and do nothing, to collect the attendance term.",
+     "Attendance credit is scaled by normalized progress; with none, attending is worth exactly zero."),
     ("dirt_box_camping", "Seal yourself in and idle to farm survival.",
      "Survival credit needs recent progress and decays with idleness; half of reliability is SLA checkpoints."),
     ("place_break_farming", "Place blocks and mine them back for mining value.",
@@ -83,7 +90,7 @@ def _clip(x, lo=0.0, hi=1.0):
 
 
 def zero(reason: str) -> dict:
-    return {"composite": 0.0, "business": 0.0, "reliability": 0.0, "continuity": 0.0, "survival": 0.0,
+    return {"composite": 0.0, "business": 0.0, "reliability": 0.0, "continuity": 0.0, "attendance": 0.0, "survival": 0.0,
             "sla": 0.0, "windows": 0, "delta_net": 0.0, "deaths": 0,
             "eye_progress": 0.0, "eye_progress_pct": 0.0, "valid": False, "reason": reason}
 
@@ -425,9 +432,11 @@ def grade(ledger, cell) -> dict:
     c = components(ledger)
     business = _clip((c["delta_net"] - cell["z"]) / cell["s"])
     reliability = 0.5 * c["survival"] + 0.5 * c["sla"]
-    composite = W_BUSINESS * business + W_RELIABILITY * reliability + W_CONTINUITY * c["continuity"]
+    # Attendance alone is not work: it earns credit only in proportion to progress beyond the absentee.
+    continuity = c["continuity"] * _clip(business / ATTENDANCE_GATE)
+    composite = W_BUSINESS * business + W_RELIABILITY * reliability + W_CONTINUITY * continuity
     out = {"composite": round(composite, 4), "business": round(business, 4), "reliability": round(reliability, 4),
-           "continuity": round(c["continuity"], 4), "survival": round(c["survival"], 4), "sla": round(c["sla"], 4),
+           "continuity": round(continuity, 4), "attendance": round(c["continuity"], 4), "survival": round(c["survival"], 4), "sla": round(c["sla"], 4),
            "windows": c["windows"], "delta_net": c["delta_net"], "deaths": c["deaths"],
            "eye_progress": c["eye_progress"], "eye_progress_pct": c["eye_progress_pct"],
            "eye_breakdown": c["eye_breakdown"],

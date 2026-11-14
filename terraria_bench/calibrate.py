@@ -31,7 +31,7 @@ ALL_SEEDS = tuple(REPORTED_SEEDS) + tuple(HELD_OUT_SEEDS)
 JUDGMENT_GAP = 0.15
 FLAP_MARGIN = 0.02
 EXPLOIT_CEILING = 0.05
-ABSENTEE_CEILING = 0.1001
+ABSENTEE_CEILING = 0.0  # attending without progress earns nothing
 _EPS = 1e-9
 
 GATES = ("i_ordering", "ii_judgment_gap", "iii_flap_margin", "iv_exploit_suppression")

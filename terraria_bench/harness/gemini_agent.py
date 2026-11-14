@@ -262,11 +262,24 @@ _PARAM_CASTS = {"int": int, "float": float, "str": str}
 
 
 def _tool_catalog() -> str:
-    return "\n".join(
+    from ..engine import RECIPES
+    tools = "\n".join(
         f"- {name}({', '.join(f'{k}: {v}' for k, v in TOOL_SCHEMAS[name]['params'].items())}): "
         f"{TOOL_SCHEMAS[name]['description']}"
         for name in TOOL_NAMES
     )
+    recipes = ", ".join(sorted(RECIPES.keys()))
+    return f"{tools}\n\nEXACT RECIPE IDS (for craft_item / place_station_or_furniture):\n{recipes}"
+
+
+_ITEM_ALIASES = {
+    "work_bench": "workbench",
+    "wood_bench": "workbench",
+    "iron_anvil": "anvil",
+    "wooden_armor": "wood_armor",
+    "wooden_door": "door",
+    "wooden_platform": "wood_platform",
+}
 
 
 def sanitize_tool_args(tool: str, args: Any) -> dict[str, Any]:
@@ -284,6 +297,8 @@ def sanitize_tool_args(tool: str, args: Any) -> dict[str, Any]:
                 val = _PARAM_CASTS[base](val)
         except (TypeError, ValueError):
             continue
+        if key == "item_id" and isinstance(val, str):
+            val = _ITEM_ALIASES.get(val.strip().lower(), val)
         out[key] = val
     return out
 
@@ -343,6 +358,8 @@ class GeminiAgent:
         self._plan_window = -1
         self._replans = 0
         self._last_choice: str | None = None
+        self._failed_choices: set[str] = set()
+        self._recent_choices: list[str] = []
         self.stats = {"supervisor_calls": 0, "decision_calls": 0, "replans": 0, "low_confidence": 0}
         self.trace: list[dict[str, Any]] = []
 
@@ -414,11 +431,30 @@ class GeminiAgent:
         clean = {k: v for k, v in observation.items() if k not in ("viewport_png_b64", "text", "prompt")}
         return json.dumps(clean, sort_keys=True, default=str)[:limit]
 
+    @staticmethod
+    def _tactical_digest(observation: dict[str, Any]) -> str:
+        """Compact, never-truncated summary of HP, ops, threats, coordinates, and last action outcome."""
+        digest: dict[str, Any] = {}
+        for k in ("header", "ok", "error", "message", "tool", "window", "ops_left", "hp", "max_hp", "time_phase", "threat", "pos"):
+            if k in observation and observation[k] is not None:
+                digest[k] = observation[k]
+        for k in ("enemies", "visible_enemies", "npcs", "town_npcs", "trees", "ores", "chests", "stations", "nearby"):
+            if k in observation and observation[k]:
+                val = observation[k]
+                digest[k] = val[:6] if isinstance(val, list) else val
+        return json.dumps(digest, default=str)[:1500]
+
     def _supervise(self, observation: dict[str, Any], context: list[dict[str, Any]], ep: Episode, reason: str) -> None:
         status = ep.step("terraria_status")  # free: costs no operation
+        sla_info = getattr(ep.task, "sla", ())
+        obj_info = getattr(ep.task, "objectives", ())
         prompt_text = (
-            f"TASK\n{ep.task.prompt}\n\nTOOLS\n{_tool_catalog()}\n\n"
+            f"TASK\n{ep.task.prompt}\n\n"
+            f"OBJECTIVES & SLA DEADLINES (hit these by the specified window!)\n"
+            f"objectives={obj_info} sla={sla_info}\n\n"
+            f"TOOLS\n{_tool_catalog()}\n\n"
             f"WHY YOU ARE BEING CALLED\n{reason}\n\n"
+            f"TACTICAL DIGEST\n{self._tactical_digest(status)}\n\n"
             f"STATUS\n{self._obs_text(status)}\n\n"
             f"LAST ACTION RESULT\n{self._obs_text(observation)}\n\n"
             f"RECENT HISTORY\n{json.dumps(context[-8:], sort_keys=True, default=str)[:12000]}"
@@ -449,7 +485,9 @@ class GeminiAgent:
                 "end_window" if self._last_choice == order[-1] else order[0])
             return nxt, 1.0, {}
         criteria = {
-            cid: f"{c['tool']} {json.dumps(c['args'], sort_keys=True)} - {c['when']}" for cid, c in cands.items()
+            cid: f"{c['tool']} {json.dumps(c['args'], sort_keys=True)} - {c['when']}"
+            for cid, c in cands.items()
+            if len(cands) == 1 or cid not in self._failed_choices
         }
         criteria["end_window"] = "End the current window now: nothing on the menu is still useful this window."
         criteria["replan"] = ("Ask the supervisor for a new menu: no candidate fits the current state, or the "
@@ -457,6 +495,8 @@ class GeminiAgent:
         state = (
             f"SUPERVISOR STRATEGY\n{self._plan['strategy']}\n\n"
             f"PREVIOUS CHOICE\n{self._last_choice or 'none'}\n\n"
+            f"RECENT CHOICES\n{self._recent_choices[-4:]}\n\n"
+            f"TACTICAL DIGEST (immediate state & coordinates)\n{self._tactical_digest(observation)}\n\n"
             f"CURRENT STATE AND LAST ACTION RESULT\n{self._obs_text(observation)}"
         )
         self.stats["decision_calls"] += 1
@@ -474,28 +514,44 @@ class GeminiAgent:
         if self._plan is None or self._plan_window != window:
             self._replans = 0
             self._last_choice = None
+            self._failed_choices.clear()
+            self._recent_choices.clear()
             self._supervise(observation, context, ep, f"Window {window} is starting. Plan this window.")
+        if observation.get("ok") is False and self._last_choice:
+            self._failed_choices.add(self._last_choice)
         while True:
             choice, conf, probs = self._decide(observation)
-            playable = choice in self._plan["candidates"] or choice == "end_window"
+            # Break 2-step oscillations (A, B, A, B) or 3 identical read-only/failed choices in a row.
+            tool_name = (self._plan["candidates"].get(choice) or {}).get("tool", "")
+            read_only = tool_name in ("inspect_inventory", "list_craftable_recipes", "scan_biome_and_ores", "inspect_housing_and_arena", "terraria_status")
+            oscillating = (
+                len(self._recent_choices) >= 3
+                and self._recent_choices[-2] == choice
+                and self._recent_choices[-1] == self._recent_choices[-3]
+                and self._recent_choices[-1] != choice
+            ) or (read_only and len(self._recent_choices) >= 2 and self._recent_choices[-1] == choice and self._recent_choices[-2] == choice)
+            playable = (choice in self._plan["candidates"] and (len(self._plan["candidates"]) == 1 or choice not in self._failed_choices) and not oscillating) or choice == "end_window"
             low = conf < self.min_confidence
             if playable and not low:
                 break
             if self._replans >= self.max_replans_per_window:
                 if not playable:  # re-plan budget spent: take the likeliest real action
-                    real = {k: v for k, v in probs.items() if k in self._plan["candidates"]}
+                    real = {k: v for k, v in probs.items() if k in self._plan["candidates"] and k not in self._failed_choices}
                     choice = max(real, key=lambda k: real[k]) if real else "end_window"
                 break
             self._replans += 1
             self.stats["replans"] += 1
             self.stats["low_confidence"] += int(low)
             self._last_choice = None
+            self._failed_choices.clear()
+            self._recent_choices.clear()
             self._supervise(
                 observation, context, ep,
-                f"The decision model answered '{choice}' with confidence {conf:.2f}. Previous strategy: "
-                f"{self._plan['strategy']} Write a new menu that fits the current state.",
+                f"The decision model answered '{choice}' (oscillating={oscillating}, conf={conf:.2f}). Previous strategy: "
+                f"{self._plan['strategy']} Write a NEW menu that avoids failed/repeated actions and advances milestones.",
             )
         self._last_choice = choice
+        self._recent_choices.append(choice)
         cand = self._plan["candidates"].get(choice)
         action = {"tool": cand["tool"], "args": dict(cand["args"])} if cand else {"tool": "end_window", "args": {}}
         self.trace.append({"tier": "decision", "window": window, "choice": choice, "confidence": round(conf, 4),

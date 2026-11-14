@@ -175,6 +175,8 @@ class EyePlanner:
     _blocked: dict[str, int] = field(default_factory=dict)
     _decisions: int = 0
     _was_dead: bool = False
+    _consecutive_explores: int = 0
+    _last_explore_dir: str = "right"
 
     def __post_init__(self) -> None:
         if self.memory_path is None:
@@ -353,6 +355,14 @@ class EyePlanner:
         key = Candidate(name, args, "").key
         pos = self._pos(hud)
         ok = status == "success"
+        if name == "explore":
+            self._consecutive_explores += 1
+            self._last_explore_dir = str(args.get("dir") or self._last_explore_dir)
+            if not ok:
+                # Flip direction when an explore hits world edge or deep water.
+                self._last_explore_dir = "left" if self._last_explore_dir == "right" else "right"
+        else:
+            self._consecutive_explores = 0
         if ok:
             self._fails.pop(key, None)
         else:
@@ -412,9 +422,18 @@ class EyePlanner:
             if c.key not in seen:
                 seen.add(c.key)
                 unique.append(c)
+        if not unique and self._consecutive_explores >= 2:
+            # Break out of explore loops by clearing non-explore cooldowns and re-evaluating.
+            self._blocked = {k: v for k, v in self._blocked.items() if k.startswith("explore:")}
+            unique = [c for c in self._plan(hud) if not c.key.startswith("explore:")]
         if not unique:
             # Everything sensible is on cooldown: move somewhere new rather than stand still.
-            unique.append(Candidate("explore", {"dir": self._fresh_direction(), "tiles": 60}, "all planned steps failed recently; try new ground"))
+            pos = self._pos(hud)
+            unique.append(Candidate("explore", {"dir": self._fresh_direction(pos), "tiles": 60}, "all planned steps failed recently; try new ground"))
+        if self._consecutive_explores >= 2:
+            non_explore = [c for c in unique if c.name != "explore"]
+            if non_explore:
+                unique = non_explore
         return unique[:6]
 
     def _plan(self, hud: dict[str, Any]) -> list[Candidate]:
@@ -540,20 +559,20 @@ class EyePlanner:
         # ---- 3. Wood, bench, bow, armor.
         if not bench and not have("Work Bench"):
             if wood < 10:
-                add("chop", "wood for a Work Bench and first gear", wood=160)
+                add("chop", "wood for a Work Bench and first gear", wood=30)
             else:
                 add("craft", "every other recipe needs a Work Bench", item="Work Bench", count=1)
         elif not bench:
             add("place", "put the Work Bench down", item="Work Bench")
         if out and not underground:
-            return out + self._wood_fallback(wood)
+            return out + (self._wood_fallback(wood) if len(out) == 1 else [])
 
         missing_armor = [] if strat.armor == "none" else [
             p for p in WOOD_ARMOR if not have(p) and not any(_slot_of(w) == _slot_of(p) for w in worn)]
         wood_needed = (0 if any_bow else 10) + (0 if have("Wooden Sword") else 7) \
             + sum({"Wood Helmet": 20, "Wood Breastplate": 30, "Wood Greaves": 25}[p] for p in missing_armor)
         if bench and wood < wood_needed and not underground:
-            add("chop", "wood for bow, sword and armor", wood=wood_needed + 60)
+            add("chop", "wood for bow, sword and armor", wood=wood_needed)
         if bench and not any_bow and wood >= 10:
             at_bench("Wooden Bow", "a bow is the only safe way to damage the Eye")
         if bench and not have("Wooden Sword") and wood >= 7 and any_bow:
@@ -562,7 +581,7 @@ class EyePlanner:
             if bench and piece in missing_armor and wood >= cost and any_bow:
                 at_bench(piece, "armor before the first night")
         if out and not underground:
-            return out + self._wood_fallback(wood)
+            return out + (self._wood_fallback(wood) if len(out) == 1 else [])
 
         # ---- 4. Arrows (1 Wood + 1 Stone -> 25 at the Work Bench).
         arrow_goal = strat.arrows or (ARROWS_METAL_BOW if metal_bow else ARROWS_WOODEN_BOW)
@@ -572,7 +591,7 @@ class EyePlanner:
                 add("mine", "stone for arrows and a furnace", kind="stone", count=40)
                 add("dig_down", "no stone on the surface here: it is a few tiles down", depth=12)
             elif wood < min(batches, 12):
-                add("chop", "wood for arrows", wood=wood + 80)
+                add("chop", "wood for arrows", wood=wood + max(4, min(batches, 12)))
             else:
                 at_bench("Wooden Arrow", "ammunition for the fight", count=min(batches, stone, wood) * 25)
 
@@ -699,10 +718,15 @@ class EyePlanner:
         return out + ([] if underground else self._wood_fallback(wood))
 
     def _wood_fallback(self, wood: int) -> list[Candidate]:
-        return [Candidate("chop", {"wood": wood + 60}, "spare wood never hurts (arrows, arena floor)")] if wood < 300 else []
+        return [Candidate("chop", {"wood": min(60, wood + 25)}, "a little spare wood for arrows and platforms")] if wood < 60 else []
 
-    def _fresh_direction(self) -> str:
+    def _fresh_direction(self, pos: tuple[int, int] | None = None) -> str:
         explored = self.mem.get("explored") or {}
+        if pos is not None:
+            if pos[0] > 20 and int(explored.get("right") or 0) < 250 and self._last_explore_dir == "right":
+                return "right"
+            if pos[0] < -20 and int(explored.get("left") or 0) < 250 and self._last_explore_dir == "left":
+                return "left"
         return "right" if int(explored.get("right") or 0) <= int(explored.get("left") or 0) else "left"
 
     def _nearest_unlooted(self, pos: tuple[int, int], radius: int) -> list[int] | None:
