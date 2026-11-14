@@ -1,6 +1,6 @@
 PYTHON ?= python
 
-.PHONY: install calibrate eval test test-exploits train-gemma dashboard console bridge
+.PHONY: install calibrate eval test test-anti-cheat test-exploits train-gemma dashboard console bridge
 
 install:
 	$(PYTHON) -m pip install -e ".[dev,agents]"
@@ -13,6 +13,9 @@ eval:
 
 test:
 	$(PYTHON) -m pytest tests/ -v
+
+test-anti-cheat:
+	$(PYTHON) -m pytest tests/test_reward_integrity.py -v
 
 test-exploits:
 	$(PYTHON) -m pytest tests/test_reward_exploits.py -v

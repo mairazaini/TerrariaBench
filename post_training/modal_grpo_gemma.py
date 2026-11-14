@@ -97,3 +97,61 @@ def serve_vllm():
         cmd += ["--enable-lora", "--max-lora-rank", "32", "--lora-modules", *found]
     print("launching:", " ".join(cmd))
     subprocess.Popen(cmd)
+
+
+def run_single_eval_worker(agent_name: str, seed: int = 11, task_id: str = "first-night") -> dict:
+    """Execute a single benchmark evaluation episode and settle telemetry to Aiven sink."""
+    import time
+
+    from post_training.model_clients import get_agent_by_name
+    from telemetry.aiven_sink import TamperProofAivenSink
+
+    sink = TamperProofAivenSink()
+    run_id = f"eval_{agent_name}_seed_{seed}_{int(time.time())}"
+    agent = get_agent_by_name(agent_name)
+    eval_res = agent.evaluate(task_id=task_id, seed=seed)
+    score = eval_res["score"]
+    shelter_valid = score >= 90.0
+    record = sink.record_settlement(
+        run_id=run_id,
+        agent_model=agent_name,
+        seed=seed,
+        window_idx=1,
+        net_progression=score,
+        shelter_valid=shelter_valid,
+        reward_score=score,
+    )
+    return {
+        "run_id": run_id,
+        "agent": agent_name,
+        "seed": seed,
+        "score": score,
+        "shelter_valid": shelter_valid,
+        "hmac_signature": record.get("hmac_signature"),
+    }
+
+
+def run_parallel_judge_suite() -> list[dict]:
+    """Run multi-model judge evaluations and settle signed records to Aiven telemetry."""
+    judge_jobs = [
+        ("reference", 11),
+        ("do_nothing", 11),
+        ("stop_early", 11),
+        ("gemini", 11),
+        ("codex", 11),
+        ("gemma-base", 11),
+        ("gemma-terraria-grpo", 11),
+    ]
+    results = []
+    for agent_name, seed in judge_jobs:
+        res = run_single_eval_worker(agent_name, seed)
+        print(
+            f"  [RUN] Agent: {agent_name:<20} | Seed: {seed} | Score: {res['score']:>6.2f}"
+            f" | Valid Shelter: {str(res['shelter_valid']):<5} | HMAC: {str(res['hmac_signature'])[:10]}..."
+        )
+        results.append(res)
+    return results
+
+
+if __name__ == "__main__":
+    run_parallel_judge_suite()
