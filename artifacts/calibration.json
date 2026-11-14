@@ -1,0 +1,2168 @@
+{
+ "all_gates_passed": true,
+ "cells": {
+  "arena-architect:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2284,
+    "do-nothing": 0.0,
+    "exploiter": 0.0125,
+    "rule-based": 0.3497,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": -1.14,
+    "blast-list": 15.651763,
+    "do-nothing": -1.14,
+    "exploiter": -1.14,
+    "rule-based": 174.42,
+    "smart-triage": 849.235
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 850.375,
+   "seed": 11,
+   "task": "arena-architect",
+   "threshold": 0.6748,
+   "z": -1.14
+  },
+  "arena-architect:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2283,
+    "do-nothing": 0.0,
+    "exploiter": 0.0125,
+    "rule-based": 0.3712,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": -1.14,
+    "blast-list": 14.995882,
+    "do-nothing": -1.14,
+    "exploiter": -1.14,
+    "rule-based": 175.41,
+    "smart-triage": 820.49
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 821.63,
+   "seed": 13,
+   "task": "arena-architect",
+   "threshold": 0.6856,
+   "z": -1.14
+  },
+  "arena-architect:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2295,
+    "do-nothing": 0.0,
+    "exploiter": 0.0125,
+    "rule-based": 0.3633,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": -1.14,
+    "blast-list": 16.474011,
+    "do-nothing": -1.14,
+    "exploiter": -1.14,
+    "rule-based": 174.12,
+    "smart-triage": 823.88
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 825.02,
+   "seed": 17,
+   "task": "arena-architect",
+   "threshold": 0.6816,
+   "z": -1.14
+  },
+  "arena-architect:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2288,
+    "do-nothing": 0.0,
+    "exploiter": 0.0125,
+    "rule-based": 0.3575,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": -1.14,
+    "blast-list": 16.1892,
+    "do-nothing": -1.14,
+    "exploiter": -1.14,
+    "rule-based": 172.65,
+    "smart-triage": 850.075
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 851.215,
+   "seed": 23,
+   "task": "arena-architect",
+   "threshold": 0.6787,
+   "z": -1.14
+  },
+  "arena-architect:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2282,
+    "do-nothing": 0.0,
+    "exploiter": 0.0125,
+    "rule-based": 0.364,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": -1.14,
+    "blast-list": 14.942396,
+    "do-nothing": -1.14,
+    "exploiter": -1.14,
+    "rule-based": 174.795,
+    "smart-triage": 823.055
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 824.195,
+   "seed": 7,
+   "task": "arena-architect",
+   "threshold": 0.682,
+   "z": -1.14
+  },
+  "blood-moon-survival:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1465,
+    "do-nothing": 0.0,
+    "exploiter": 0.0125,
+    "rule-based": 0.5147,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 8.465,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 239.875,
+    "smart-triage": 630.58
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 630.58,
+   "seed": 11,
+   "task": "blood-moon-survival",
+   "threshold": 0.7573,
+   "z": 0.0
+  },
+  "blood-moon-survival:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1479,
+    "do-nothing": 0.0,
+    "exploiter": 0.0125,
+    "rule-based": 0.5758,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 8.585,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 243.37,
+    "smart-triage": 554.765
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 554.765,
+   "seed": 13,
+   "task": "blood-moon-survival",
+   "threshold": 0.7879,
+   "z": 0.0
+  },
+  "blood-moon-survival:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1499,
+    "do-nothing": 0.0,
+    "exploiter": 0.0125,
+    "rule-based": 0.5253,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 11.03,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 238.87,
+    "smart-triage": 604.025
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 604.025,
+   "seed": 17,
+   "task": "blood-moon-survival",
+   "threshold": 0.7627,
+   "z": 0.0
+  },
+  "blood-moon-survival:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1399,
+    "do-nothing": 0.0,
+    "exploiter": 0.0125,
+    "rule-based": 0.5171,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 3.85,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 236.71,
+    "smart-triage": 616.765
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 616.765,
+   "seed": 23,
+   "task": "blood-moon-survival",
+   "threshold": 0.7586,
+   "z": 0.0
+  },
+  "blood-moon-survival:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1849,
+    "do-nothing": 0.0,
+    "exploiter": 0.0125,
+    "rule-based": 0.5379,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 11.27,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 241.51,
+    "smart-triage": 606.95
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 606.95,
+   "seed": 7,
+   "task": "blood-moon-survival",
+   "threshold": 0.769,
+   "z": 0.0
+  },
+  "cavern-expedition:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1569,
+    "do-nothing": 0.0,
+    "exploiter": 0.01,
+    "rule-based": 0.521,
+    "smart-triage": 0.9875
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 0.0,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 240.235,
+    "smart-triage": 587.295
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 587.295,
+   "seed": 11,
+   "task": "cavern-expedition",
+   "threshold": 0.7543,
+   "z": 0.0
+  },
+  "cavern-expedition:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1846,
+    "do-nothing": 0.0,
+    "exploiter": 0.01,
+    "rule-based": 0.5622,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 15.97,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 243.67,
+    "smart-triage": 552.935
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 552.935,
+   "seed": 13,
+   "task": "cavern-expedition",
+   "threshold": 0.7811,
+   "z": 0.0
+  },
+  "cavern-expedition:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2382,
+    "do-nothing": 0.0,
+    "exploiter": 0.01,
+    "rule-based": 0.5194,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 49.97,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 239.23,
+    "smart-triage": 588.255
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 588.255,
+   "seed": 17,
+   "task": "cavern-expedition",
+   "threshold": 0.7597,
+   "z": 0.0
+  },
+  "cavern-expedition:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.183,
+    "do-nothing": 0.0,
+    "exploiter": 0.01,
+    "rule-based": 0.5246,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 15.19,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 237.07,
+    "smart-triage": 572.39
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 572.39,
+   "seed": 23,
+   "task": "cavern-expedition",
+   "threshold": 0.7623,
+   "z": 0.0
+  },
+  "cavern-expedition:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2082,
+    "do-nothing": 0.0,
+    "exploiter": 0.01,
+    "rule-based": 0.8003,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 13.35,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 241.63,
+    "smart-triage": 304.275
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 304.275,
+   "seed": 7,
+   "task": "cavern-expedition",
+   "threshold": 0.9002,
+   "z": 0.0
+  },
+  "eye-of-cthulhu:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1397,
+    "do-nothing": 0.0,
+    "exploiter": 0.0071,
+    "rule-based": 0.3359,
+    "smart-triage": 0.9571
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": -1.18,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 211.74,
+    "smart-triage": 924.82
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 924.82,
+   "seed": 11,
+   "task": "eye-of-cthulhu",
+   "threshold": 0.6465,
+   "z": 0.0
+  },
+  "eye-of-cthulhu:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1255,
+    "do-nothing": 0.0,
+    "exploiter": 0.0071,
+    "rule-based": 0.4615,
+    "smart-triage": 0.9642
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 3.335,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 213.345,
+    "smart-triage": 564.37
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 564.37,
+   "seed": 13,
+   "task": "eye-of-cthulhu",
+   "threshold": 0.7128,
+   "z": 0.0
+  },
+  "eye-of-cthulhu:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1237,
+    "do-nothing": 0.0,
+    "exploiter": 0.0071,
+    "rule-based": 0.4341,
+    "smart-triage": 0.95
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 2.115,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 211.38,
+    "smart-triage": 588.725
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 588.725,
+   "seed": 17,
+   "task": "eye-of-cthulhu",
+   "threshold": 0.692,
+   "z": 0.0
+  },
+  "eye-of-cthulhu:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1564,
+    "do-nothing": 0.0,
+    "exploiter": 0.0071,
+    "rule-based": 0.4266,
+    "smart-triage": 0.95
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": -2.68,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 210.075,
+    "smart-triage": 603.02
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 603.02,
+   "seed": 23,
+   "task": "eye-of-cthulhu",
+   "threshold": 0.6883,
+   "z": 0.0
+  },
+  "eye-of-cthulhu:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1376,
+    "do-nothing": 0.0,
+    "exploiter": 0.0071,
+    "rule-based": 0.4419,
+    "smart-triage": 0.95
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 0.635,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 212.175,
+    "smart-triage": 589.175
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 589.175,
+   "seed": 7,
+   "task": "eye-of-cthulhu",
+   "threshold": 0.6959,
+   "z": 0.0
+  },
+  "first-night:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1718,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.5878,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 7.67,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 236.635,
+    "smart-triage": 575.595
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 575.595,
+   "seed": 11,
+   "task": "first-night",
+   "threshold": 0.7939,
+   "z": 0.0
+  },
+  "first-night:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1787,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.8946,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 6.53,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 238.96,
+    "smart-triage": 281.31
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 281.31,
+   "seed": 13,
+   "task": "first-night",
+   "threshold": 0.9473,
+   "z": 0.0
+  },
+  "first-night:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1717,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.5873,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 7.595,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 236.74,
+    "smart-triage": 576.78
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 576.78,
+   "seed": 17,
+   "task": "first-night",
+   "threshold": 0.7936,
+   "z": 0.0
+  },
+  "first-night:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1725,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.5936,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 8.075,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 235.99,
+    "smart-triage": 562.58
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 562.58,
+   "seed": 23,
+   "task": "first-night",
+   "threshold": 0.7968,
+   "z": 0.0
+  },
+  "first-night:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.17,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.8991,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 2.99,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 239.875,
+    "smart-triage": 280.29
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 280.29,
+   "seed": 7,
+   "task": "first-night",
+   "threshold": 0.9496,
+   "z": 0.0
+  },
+  "full-progression:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.118,
+    "do-nothing": 0.0,
+    "exploiter": 0.0033,
+    "rule-based": 0.3028,
+    "smart-triage": 0.9689
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 2.025,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 213.24,
+    "smart-triage": 1066.945
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 1066.945,
+   "seed": 11,
+   "task": "full-progression",
+   "threshold": 0.6359,
+   "z": 0.0
+  },
+  "full-progression:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1238,
+    "do-nothing": 0.0,
+    "exploiter": 0.0033,
+    "rule-based": 0.3203,
+    "smart-triage": 0.9925
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 1.575,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 214.365,
+    "smart-triage": 1041.23
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 1041.23,
+   "seed": 13,
+   "task": "full-progression",
+   "threshold": 0.6564,
+   "z": 0.0
+  },
+  "full-progression:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1167,
+    "do-nothing": 0.0,
+    "exploiter": 0.0033,
+    "rule-based": 0.3084,
+    "smart-triage": 0.9837
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": -2.07,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 212.94,
+    "smart-triage": 1048.4
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 1048.4,
+   "seed": 17,
+   "task": "full-progression",
+   "threshold": 0.6461,
+   "z": 0.0
+  },
+  "full-progression:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1172,
+    "do-nothing": 0.0,
+    "exploiter": 0.0033,
+    "rule-based": 0.3061,
+    "smart-triage": 0.9908
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 2.22,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 211.47,
+    "smart-triage": 1058.31
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 1058.31,
+   "seed": 23,
+   "task": "full-progression",
+   "threshold": 0.6484,
+   "z": 0.0
+  },
+  "full-progression:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1313,
+    "do-nothing": 0.0,
+    "exploiter": 0.0033,
+    "rule-based": 0.3106,
+    "smart-triage": 0.9806
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": -0.165,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 214.155,
+    "smart-triage": 1037.925
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 1037.925,
+   "seed": 7,
+   "task": "full-progression",
+   "threshold": 0.6456,
+   "z": 0.0
+  },
+  "goblin-siege:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2514,
+    "do-nothing": 0.0,
+    "exploiter": 0.0095,
+    "rule-based": 0.6278,
+    "smart-triage": 0.9289
+   },
+   "delta_net": {
+    "absentee": -1.8,
+    "blast-list": 30.655,
+    "do-nothing": -1.8,
+    "exploiter": -1.43,
+    "rule-based": 132.175,
+    "smart-triage": 221.765
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 223.565,
+   "seed": 11,
+   "task": "goblin-siege",
+   "threshold": 0.7783,
+   "z": -1.8
+  },
+  "goblin-siege:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1387,
+    "do-nothing": 0.0,
+    "exploiter": 0.0094,
+    "rule-based": 0.6323,
+    "smart-triage": 0.9521
+   },
+   "delta_net": {
+    "absentee": -1.8,
+    "blast-list": 4.515,
+    "do-nothing": -1.8,
+    "exploiter": -1.43,
+    "rule-based": 135.175,
+    "smart-triage": 238.385
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 240.185,
+   "seed": 13,
+   "task": "goblin-siege",
+   "threshold": 0.7922,
+   "z": -1.8
+  },
+  "goblin-siege:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2531,
+    "do-nothing": 0.0,
+    "exploiter": 0.0095,
+    "rule-based": 0.6239,
+    "smart-triage": 0.9289
+   },
+   "delta_net": {
+    "absentee": -1.8,
+    "blast-list": 30.595,
+    "do-nothing": -1.8,
+    "exploiter": -1.43,
+    "rule-based": 131.5,
+    "smart-triage": 222.71
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 224.51,
+   "seed": 17,
+   "task": "goblin-siege",
+   "threshold": 0.7764,
+   "z": -1.8
+  },
+  "goblin-siege:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2812,
+    "do-nothing": 0.0,
+    "exploiter": 0.0095,
+    "rule-based": 0.6137,
+    "smart-triage": 0.937
+   },
+   "delta_net": {
+    "absentee": -1.8,
+    "blast-list": 35.285,
+    "do-nothing": -1.8,
+    "exploiter": -1.43,
+    "rule-based": 128.92,
+    "smart-triage": 223.895
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 225.695,
+   "seed": 23,
+   "task": "goblin-siege",
+   "threshold": 0.7753,
+   "z": -1.8
+  },
+  "goblin-siege:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2451,
+    "do-nothing": 0.0,
+    "exploiter": 0.0094,
+    "rule-based": 0.6265,
+    "smart-triage": 0.949
+   },
+   "delta_net": {
+    "absentee": -1.8,
+    "blast-list": 30.325,
+    "do-nothing": -1.8,
+    "exploiter": -1.43,
+    "rule-based": 133.255,
+    "smart-triage": 238.52
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 240.32,
+   "seed": 7,
+   "task": "goblin-siege",
+   "threshold": 0.7877,
+   "z": -1.8
+  },
+  "ore-rush:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2244,
+    "do-nothing": 0.0,
+    "exploiter": 0.0173,
+    "rule-based": 0.6883,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": -2.37,
+    "blast-list": 17.485,
+    "do-nothing": -2.37,
+    "exploiter": -1.97,
+    "rule-based": 238.515,
+    "smart-triage": 422.78
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 425.15,
+   "seed": 11,
+   "task": "ore-rush",
+   "threshold": 0.8441,
+   "z": -2.37
+  },
+  "ore-rush:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2263,
+    "do-nothing": 0.0,
+    "exploiter": 0.0172,
+    "rule-based": 0.6006,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": -2.37,
+    "blast-list": 18.91,
+    "do-nothing": -2.37,
+    "exploiter": -1.97,
+    "rule-based": 240.495,
+    "smart-triage": 563.23
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 565.6,
+   "seed": 13,
+   "task": "ore-rush",
+   "threshold": 0.8003,
+   "z": -2.37
+  },
+  "ore-rush:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2283,
+    "do-nothing": 0.0,
+    "exploiter": 0.0172,
+    "rule-based": 0.5829,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": -2.37,
+    "blast-list": 20.935,
+    "do-nothing": -2.37,
+    "exploiter": -1.97,
+    "rule-based": 237.51,
+    "smart-triage": 574.175
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 576.545,
+   "seed": 17,
+   "task": "ore-rush",
+   "threshold": 0.7914,
+   "z": -2.37
+  },
+  "ore-rush:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2301,
+    "do-nothing": 0.0,
+    "exploiter": 0.0172,
+    "rule-based": 0.5885,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": -2.37,
+    "blast-list": 21.73,
+    "do-nothing": -2.37,
+    "exploiter": -1.97,
+    "rule-based": 235.35,
+    "smart-triage": 558.205
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 560.575,
+   "seed": 23,
+   "task": "ore-rush",
+   "threshold": 0.7943,
+   "z": -2.37
+  },
+  "ore-rush:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2209,
+    "do-nothing": 0.0,
+    "exploiter": 0.0172,
+    "rule-based": 0.6414,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": -2.37,
+    "blast-list": 18.43,
+    "do-nothing": -2.37,
+    "exploiter": -1.97,
+    "rule-based": 240.39,
+    "smart-triage": 495.33
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 497.7,
+   "seed": 7,
+   "task": "ore-rush",
+   "threshold": 0.8207,
+   "z": -2.37
+  },
+  "shelter-crunch:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1747,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.8644,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 5.06,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 234.01,
+    "smart-triage": 290.215
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 290.215,
+   "seed": 11,
+   "task": "shelter-crunch",
+   "threshold": 0.9322,
+   "z": 0.0
+  },
+  "shelter-crunch:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1783,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.8977,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 5.855,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 221.965,
+    "smart-triage": 259.955
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 259.955,
+   "seed": 13,
+   "task": "shelter-crunch",
+   "threshold": 0.9488,
+   "z": 0.0
+  },
+  "shelter-crunch:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1761,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.9379,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 5.06,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 236.74,
+    "smart-triage": 259.805
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 259.805,
+   "seed": 17,
+   "task": "shelter-crunch",
+   "threshold": 0.9689,
+   "z": 0.0
+  },
+  "shelter-crunch:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1775,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.9291,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 5.615,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 235.105,
+    "smart-triage": 261.62
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 261.62,
+   "seed": 23,
+   "task": "shelter-crunch",
+   "threshold": 0.9646,
+   "z": 0.0
+  },
+  "shelter-crunch:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1775,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.7925,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 4.73,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 155.675,
+    "smart-triage": 221.255
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 221.255,
+   "seed": 7,
+   "task": "shelter-crunch",
+   "threshold": 0.8962,
+   "z": 0.0
+  },
+  "slime-rain:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2261,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.6288,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 16.33,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 236.635,
+    "smart-triage": 437.295
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 437.295,
+   "seed": 11,
+   "task": "slime-rain",
+   "threshold": 0.8144,
+   "z": 0.0
+  },
+  "slime-rain:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2486,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.9044,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 17.755,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 238.96,
+    "smart-triage": 255.6
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 255.6,
+   "seed": 13,
+   "task": "slime-rain",
+   "threshold": 0.9522,
+   "z": 0.0
+  },
+  "slime-rain:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.1765,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.8159,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 0.63,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 236.74,
+    "smart-triage": 292.82
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 292.82,
+   "seed": 17,
+   "task": "slime-rain",
+   "threshold": 0.908,
+   "z": 0.0
+  },
+  "slime-rain:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2429,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.785,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 18.91,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 235.99,
+    "smart-triage": 308.8
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 308.8,
+   "seed": 23,
+   "task": "slime-rain",
+   "threshold": 0.8925,
+   "z": 0.0
+  },
+  "slime-rain:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.236,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.7847,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 16.15,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 239.56,
+    "smart-triage": 313.625
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 313.625,
+   "seed": 7,
+   "task": "slime-rain",
+   "threshold": 0.8923,
+   "z": 0.0
+  },
+  "wall-of-flesh:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2585,
+    "do-nothing": 0.0,
+    "exploiter": 0.0083,
+    "rule-based": 0.3576,
+    "smart-triage": 0.9758
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 51.495,
+    "do-nothing": 0.0,
+    "exploiter": -0.05,
+    "rule-based": 99.995,
+    "smart-triage": 429.02389
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 429.02389,
+   "seed": 11,
+   "task": "wall-of-flesh",
+   "threshold": 0.6667,
+   "z": 0.0
+  },
+  "wall-of-flesh:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.25,
+    "do-nothing": 0.0,
+    "exploiter": 0.0083,
+    "rule-based": 0.3514,
+    "smart-triage": 0.9758
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 50.685,
+    "do-nothing": 0.0,
+    "exploiter": -0.05,
+    "rule-based": 102.455,
+    "smart-triage": 424.214546
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 424.214546,
+   "seed": 13,
+   "task": "wall-of-flesh",
+   "threshold": 0.6636,
+   "z": 0.0
+  },
+  "wall-of-flesh:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2592,
+    "do-nothing": 0.0,
+    "exploiter": 0.0083,
+    "rule-based": 0.3078,
+    "smart-triage": 0.9758
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 52.815,
+    "do-nothing": 0.0,
+    "exploiter": -0.05,
+    "rule-based": 98.465,
+    "smart-triage": 436.531896
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 436.531896,
+   "seed": 17,
+   "task": "wall-of-flesh",
+   "threshold": 0.6418,
+   "z": 0.0
+  },
+  "wall-of-flesh:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2704,
+    "do-nothing": 0.0,
+    "exploiter": 0.0083,
+    "rule-based": 0.3197,
+    "smart-triage": 0.9758
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 56.805,
+    "do-nothing": 0.0,
+    "exploiter": -0.05,
+    "rule-based": 95.615,
+    "smart-triage": 414.447897
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 414.447897,
+   "seed": 23,
+   "task": "wall-of-flesh",
+   "threshold": 0.6478,
+   "z": 0.0
+  },
+  "wall-of-flesh:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2651,
+    "do-nothing": 0.0,
+    "exploiter": 0.0083,
+    "rule-based": 0.3792,
+    "smart-triage": 0.9758
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 54.135,
+    "do-nothing": 0.0,
+    "exploiter": -0.05,
+    "rule-based": 101.33,
+    "smart-triage": 418.227933
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 418.227933,
+   "seed": 7,
+   "task": "wall-of-flesh",
+   "threshold": 0.6775,
+   "z": 0.0
+  },
+  "woodland-scramble:11": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2202,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.7233,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 11.245,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 235.225,
+    "smart-triage": 388.96
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 388.96,
+   "seed": 11,
+   "task": "woodland-scramble",
+   "threshold": 0.8617,
+   "z": 0.0
+  },
+  "woodland-scramble:13": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2316,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.9298,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 11.785,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 234.625,
+    "smart-triage": 260.78
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 260.78,
+   "seed": 13,
+   "task": "woodland-scramble",
+   "threshold": 0.9649,
+   "z": 0.0
+  },
+  "woodland-scramble:17": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2337,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.9362,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 12.535,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 236.74,
+    "smart-triage": 260.465
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 260.465,
+   "seed": 17,
+   "task": "woodland-scramble",
+   "threshold": 0.9681,
+   "z": 0.0
+  },
+  "woodland-scramble:23": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.2295,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.8445,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 12.745,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 235.045,
+    "smart-triage": 302.145
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 302.145,
+   "seed": 23,
+   "task": "woodland-scramble",
+   "threshold": 0.9223,
+   "z": 0.0
+  },
+  "woodland-scramble:7": {
+   "anchors": {
+    "absentee": 0.1,
+    "blast-list": 0.232,
+    "do-nothing": 0.0,
+    "exploiter": 0.025,
+    "rule-based": 0.9495,
+    "smart-triage": 1.0
+   },
+   "delta_net": {
+    "absentee": 0.0,
+    "blast-list": 11.68,
+    "do-nothing": 0.0,
+    "exploiter": -0.045,
+    "rule-based": 237.01,
+    "smart-triage": 255.44
+   },
+   "gates": {
+    "i_ordering": true,
+    "ii_judgment_gap": true,
+    "iii_flap_margin": true,
+    "iv_exploit_suppression": true
+   },
+   "gates_passed": true,
+   "s": 255.44,
+   "seed": 7,
+   "task": "woodland-scramble",
+   "threshold": 0.9748,
+   "z": 0.0
+  }
+ },
+ "held_out_seeds": [
+  17,
+  23
+ ],
+ "seeds": [
+  7,
+  11,
+  13
+ ],
+ "sha256": "c9cee749e0153f5e64eb13bb1a0f4be4bd89d515b5e63c0549b6de2baf9f9ab9",
+ "source_hash": "8a6eeb0ff67b26830f204d6219c8af1cee7c73678898c832c772e874d8216c9d",
+ "summary": {
+  "absentee": {
+   "mean_composite": 0.1,
+   "pass_rate": 0.0
+  },
+  "blast-list": {
+   "mean_composite": 0.1967,
+   "pass_rate": 0.0
+  },
+  "do-nothing": {
+   "mean_composite": 0.0,
+   "pass_rate": 0.0
+  },
+  "exploiter": {
+   "mean_composite": 0.015,
+   "pass_rate": 0.0
+  },
+  "rule-based": {
+   "mean_composite": 0.588,
+   "pass_rate": 0.0
+  },
+  "smart-triage": {
+   "mean_composite": 0.9875,
+   "pass_rate": 1.0
+  }
+ },
+ "tasks": {
+  "arena-architect": {
+   "11": {
+    "s": 850.375,
+    "threshold": 0.6748,
+    "z": -1.14
+   },
+   "13": {
+    "s": 821.63,
+    "threshold": 0.6856,
+    "z": -1.14
+   },
+   "17": {
+    "s": 825.02,
+    "threshold": 0.6816,
+    "z": -1.14
+   },
+   "23": {
+    "s": 851.215,
+    "threshold": 0.6787,
+    "z": -1.14
+   },
+   "7": {
+    "s": 824.195,
+    "threshold": 0.682,
+    "z": -1.14
+   }
+  },
+  "blood-moon-survival": {
+   "11": {
+    "s": 630.58,
+    "threshold": 0.7573,
+    "z": 0.0
+   },
+   "13": {
+    "s": 554.765,
+    "threshold": 0.7879,
+    "z": 0.0
+   },
+   "17": {
+    "s": 604.025,
+    "threshold": 0.7627,
+    "z": 0.0
+   },
+   "23": {
+    "s": 616.765,
+    "threshold": 0.7586,
+    "z": 0.0
+   },
+   "7": {
+    "s": 606.95,
+    "threshold": 0.769,
+    "z": 0.0
+   }
+  },
+  "cavern-expedition": {
+   "11": {
+    "s": 587.295,
+    "threshold": 0.7543,
+    "z": 0.0
+   },
+   "13": {
+    "s": 552.935,
+    "threshold": 0.7811,
+    "z": 0.0
+   },
+   "17": {
+    "s": 588.255,
+    "threshold": 0.7597,
+    "z": 0.0
+   },
+   "23": {
+    "s": 572.39,
+    "threshold": 0.7623,
+    "z": 0.0
+   },
+   "7": {
+    "s": 304.275,
+    "threshold": 0.9002,
+    "z": 0.0
+   }
+  },
+  "eye-of-cthulhu": {
+   "11": {
+    "s": 924.82,
+    "threshold": 0.6465,
+    "z": 0.0
+   },
+   "13": {
+    "s": 564.37,
+    "threshold": 0.7128,
+    "z": 0.0
+   },
+   "17": {
+    "s": 588.725,
+    "threshold": 0.692,
+    "z": 0.0
+   },
+   "23": {
+    "s": 603.02,
+    "threshold": 0.6883,
+    "z": 0.0
+   },
+   "7": {
+    "s": 589.175,
+    "threshold": 0.6959,
+    "z": 0.0
+   }
+  },
+  "first-night": {
+   "11": {
+    "s": 575.595,
+    "threshold": 0.7939,
+    "z": 0.0
+   },
+   "13": {
+    "s": 281.31,
+    "threshold": 0.9473,
+    "z": 0.0
+   },
+   "17": {
+    "s": 576.78,
+    "threshold": 0.7936,
+    "z": 0.0
+   },
+   "23": {
+    "s": 562.58,
+    "threshold": 0.7968,
+    "z": 0.0
+   },
+   "7": {
+    "s": 280.29,
+    "threshold": 0.9496,
+    "z": 0.0
+   }
+  },
+  "full-progression": {
+   "11": {
+    "s": 1066.945,
+    "threshold": 0.6359,
+    "z": 0.0
+   },
+   "13": {
+    "s": 1041.23,
+    "threshold": 0.6564,
+    "z": 0.0
+   },
+   "17": {
+    "s": 1048.4,
+    "threshold": 0.6461,
+    "z": 0.0
+   },
+   "23": {
+    "s": 1058.31,
+    "threshold": 0.6484,
+    "z": 0.0
+   },
+   "7": {
+    "s": 1037.925,
+    "threshold": 0.6456,
+    "z": 0.0
+   }
+  },
+  "goblin-siege": {
+   "11": {
+    "s": 223.565,
+    "threshold": 0.7783,
+    "z": -1.8
+   },
+   "13": {
+    "s": 240.185,
+    "threshold": 0.7922,
+    "z": -1.8
+   },
+   "17": {
+    "s": 224.51,
+    "threshold": 0.7764,
+    "z": -1.8
+   },
+   "23": {
+    "s": 225.695,
+    "threshold": 0.7753,
+    "z": -1.8
+   },
+   "7": {
+    "s": 240.32,
+    "threshold": 0.7877,
+    "z": -1.8
+   }
+  },
+  "ore-rush": {
+   "11": {
+    "s": 425.15,
+    "threshold": 0.8441,
+    "z": -2.37
+   },
+   "13": {
+    "s": 565.6,
+    "threshold": 0.8003,
+    "z": -2.37
+   },
+   "17": {
+    "s": 576.545,
+    "threshold": 0.7914,
+    "z": -2.37
+   },
+   "23": {
+    "s": 560.575,
+    "threshold": 0.7943,
+    "z": -2.37
+   },
+   "7": {
+    "s": 497.7,
+    "threshold": 0.8207,
+    "z": -2.37
+   }
+  },
+  "shelter-crunch": {
+   "11": {
+    "s": 290.215,
+    "threshold": 0.9322,
+    "z": 0.0
+   },
+   "13": {
+    "s": 259.955,
+    "threshold": 0.9488,
+    "z": 0.0
+   },
+   "17": {
+    "s": 259.805,
+    "threshold": 0.9689,
+    "z": 0.0
+   },
+   "23": {
+    "s": 261.62,
+    "threshold": 0.9646,
+    "z": 0.0
+   },
+   "7": {
+    "s": 221.255,
+    "threshold": 0.8962,
+    "z": 0.0
+   }
+  },
+  "slime-rain": {
+   "11": {
+    "s": 437.295,
+    "threshold": 0.8144,
+    "z": 0.0
+   },
+   "13": {
+    "s": 255.6,
+    "threshold": 0.9522,
+    "z": 0.0
+   },
+   "17": {
+    "s": 292.82,
+    "threshold": 0.908,
+    "z": 0.0
+   },
+   "23": {
+    "s": 308.8,
+    "threshold": 0.8925,
+    "z": 0.0
+   },
+   "7": {
+    "s": 313.625,
+    "threshold": 0.8923,
+    "z": 0.0
+   }
+  },
+  "wall-of-flesh": {
+   "11": {
+    "s": 429.02389,
+    "threshold": 0.6667,
+    "z": 0.0
+   },
+   "13": {
+    "s": 424.214546,
+    "threshold": 0.6636,
+    "z": 0.0
+   },
+   "17": {
+    "s": 436.531896,
+    "threshold": 0.6418,
+    "z": 0.0
+   },
+   "23": {
+    "s": 414.447897,
+    "threshold": 0.6478,
+    "z": 0.0
+   },
+   "7": {
+    "s": 418.227933,
+    "threshold": 0.6775,
+    "z": 0.0
+   }
+  },
+  "woodland-scramble": {
+   "11": {
+    "s": 388.96,
+    "threshold": 0.8617,
+    "z": 0.0
+   },
+   "13": {
+    "s": 260.78,
+    "threshold": 0.9649,
+    "z": 0.0
+   },
+   "17": {
+    "s": 260.465,
+    "threshold": 0.9681,
+    "z": 0.0
+   },
+   "23": {
+    "s": 302.145,
+    "threshold": 0.9223,
+    "z": 0.0
+   },
+   "7": {
+    "s": 255.44,
+    "threshold": 0.9748,
+    "z": 0.0
+   }
+  }
+ }
+}
