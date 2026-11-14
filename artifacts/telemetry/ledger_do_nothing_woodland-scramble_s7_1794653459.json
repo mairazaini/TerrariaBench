@@ -1,0 +1,409 @@
+{
+  "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+  "agent_name": "do_nothing",
+  "ticks_count": 20,
+  "final_signature": "1c230eee86ea0424433f86f44c5d123f27eab93e9bee431d13730a532abbf1b3",
+  "transactions": [
+    {
+      "step": 0,
+      "timestamp": 1794653459.1066802,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "8f2b016c4dfec6629b81cc08633ca0a6e79fa9e5447b1e57cc0ab4add8ffe8ad",
+      "prev_signature": "0000000000000000000000000000000000000000000000000000000000000000",
+      "tamper_flag": 0
+    },
+    {
+      "step": 1,
+      "timestamp": 1794653459.10757,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "2e972ed6b798d58c26e968c4971414b13dead804f188db71035dc74a1c78816f",
+      "prev_signature": "8f2b016c4dfec6629b81cc08633ca0a6e79fa9e5447b1e57cc0ab4add8ffe8ad",
+      "tamper_flag": 0
+    },
+    {
+      "step": 2,
+      "timestamp": 1794653459.108041,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "06420dc163470ec0c2d04933bbedb861d5e1f12b05047914385c7dbf0709bcaa",
+      "prev_signature": "2e972ed6b798d58c26e968c4971414b13dead804f188db71035dc74a1c78816f",
+      "tamper_flag": 0
+    },
+    {
+      "step": 3,
+      "timestamp": 1794653459.108447,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "5ebca5ef29e290c8fa869b8d3a5dc5a1b7e2d487cdb978bf89cadcbba0833e42",
+      "prev_signature": "06420dc163470ec0c2d04933bbedb861d5e1f12b05047914385c7dbf0709bcaa",
+      "tamper_flag": 0
+    },
+    {
+      "step": 4,
+      "timestamp": 1794653459.108835,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "0f06fb8d7c688d575a590968bd9ffedbd1ce06268d998008b1b95f77eaced8db",
+      "prev_signature": "5ebca5ef29e290c8fa869b8d3a5dc5a1b7e2d487cdb978bf89cadcbba0833e42",
+      "tamper_flag": 0
+    },
+    {
+      "step": 5,
+      "timestamp": 1794653459.109236,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "60d3d66caa92f2ef7f14852968f6ccd56af09b40825603309d786a250ed23294",
+      "prev_signature": "0f06fb8d7c688d575a590968bd9ffedbd1ce06268d998008b1b95f77eaced8db",
+      "tamper_flag": 0
+    },
+    {
+      "step": 6,
+      "timestamp": 1794653459.109646,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "d3d2ee2428e27582457dd2a8adea2bbec956309a0a392b8ff3b971e41d34e045",
+      "prev_signature": "60d3d66caa92f2ef7f14852968f6ccd56af09b40825603309d786a250ed23294",
+      "tamper_flag": 0
+    },
+    {
+      "step": 7,
+      "timestamp": 1794653459.110027,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "b5ca05f0204bc7a09e95522bfd75427d95fdee3e0064713524560665ddef7863",
+      "prev_signature": "d3d2ee2428e27582457dd2a8adea2bbec956309a0a392b8ff3b971e41d34e045",
+      "tamper_flag": 0
+    },
+    {
+      "step": 8,
+      "timestamp": 1794653459.110413,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "70a8a9a8ae871c109ec435951624f555279273c6b85cf5ebd4860b3fccd1e792",
+      "prev_signature": "b5ca05f0204bc7a09e95522bfd75427d95fdee3e0064713524560665ddef7863",
+      "tamper_flag": 0
+    },
+    {
+      "step": 9,
+      "timestamp": 1794653459.110789,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "775cecb89c41fdbda9047e26b7d69af1668086e73c4a448ef5e07f2e0fe6e498",
+      "prev_signature": "70a8a9a8ae871c109ec435951624f555279273c6b85cf5ebd4860b3fccd1e792",
+      "tamper_flag": 0
+    },
+    {
+      "step": 10,
+      "timestamp": 1794653459.11115,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "e0b78220ffb7f6b69766aad9807651cfb9ad3d2c56182b29b0be603faee4bdb1",
+      "prev_signature": "775cecb89c41fdbda9047e26b7d69af1668086e73c4a448ef5e07f2e0fe6e498",
+      "tamper_flag": 0
+    },
+    {
+      "step": 11,
+      "timestamp": 1794653459.111508,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "2656f4dcd275525489cbb6fa3f48f047c1ac40d8341d2109e1c43f33621d1b2f",
+      "prev_signature": "e0b78220ffb7f6b69766aad9807651cfb9ad3d2c56182b29b0be603faee4bdb1",
+      "tamper_flag": 0
+    },
+    {
+      "step": 12,
+      "timestamp": 1794653459.111865,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "80590528c14683da99d483713d7294c9d9eac19dc72bc8b145222dc74d73b06f",
+      "prev_signature": "2656f4dcd275525489cbb6fa3f48f047c1ac40d8341d2109e1c43f33621d1b2f",
+      "tamper_flag": 0
+    },
+    {
+      "step": 13,
+      "timestamp": 1794653459.112215,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "c12f8116f1ab61de3790cc5b6824ba5744e5543e3a11edcdf5ec54776902b5ff",
+      "prev_signature": "80590528c14683da99d483713d7294c9d9eac19dc72bc8b145222dc74d73b06f",
+      "tamper_flag": 0
+    },
+    {
+      "step": 14,
+      "timestamp": 1794653459.1126132,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "ce02752695d8c88e55c6dbcca5d4ec8453f2c8f1e3612f0ba6446248595ed305",
+      "prev_signature": "c12f8116f1ab61de3790cc5b6824ba5744e5543e3a11edcdf5ec54776902b5ff",
+      "tamper_flag": 0
+    },
+    {
+      "step": 15,
+      "timestamp": 1794653459.1130528,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "55eaeac961cd3ab0f7d2e0668937278a36695f9cc839dc2cb72f080eb273972a",
+      "prev_signature": "ce02752695d8c88e55c6dbcca5d4ec8453f2c8f1e3612f0ba6446248595ed305",
+      "tamper_flag": 0
+    },
+    {
+      "step": 16,
+      "timestamp": 1794653459.113527,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "cbaf802864a0131bc64c4b13f89331e3e1c8221c965e7632503c4821c1a44647",
+      "prev_signature": "55eaeac961cd3ab0f7d2e0668937278a36695f9cc839dc2cb72f080eb273972a",
+      "tamper_flag": 0
+    },
+    {
+      "step": 17,
+      "timestamp": 1794653459.113931,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "5cdb1c0dd3b45eb36a793dd4b99e6b24539bb40921b56c2e1bf840853ed46cbd",
+      "prev_signature": "cbaf802864a0131bc64c4b13f89331e3e1c8221c965e7632503c4821c1a44647",
+      "tamper_flag": 0
+    },
+    {
+      "step": 18,
+      "timestamp": 1794653459.1143029,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "9b08cc6a34118fee265e4dcde34eb93e697b80f79d047885660eb8657af9cb07",
+      "prev_signature": "5cdb1c0dd3b45eb36a793dd4b99e6b24539bb40921b56c2e1bf840853ed46cbd",
+      "tamper_flag": 0
+    },
+    {
+      "step": 19,
+      "timestamp": 1794653459.114689,
+      "player_x": 100,
+      "player_y": 25,
+      "hp": 100,
+      "net_wood": 0,
+      "obsidian_bridged": false,
+      "housing_valid": false,
+      "reward_score": 0.48,
+      "action": {
+        "type": "step",
+        "agent": "do_nothing"
+      },
+      "run_id": "do_nothing_woodland-scramble_s7_1794653459",
+      "agent_name": "do_nothing",
+      "hmac_signature": "1c230eee86ea0424433f86f44c5d123f27eab93e9bee431d13730a532abbf1b3",
+      "prev_signature": "9b08cc6a34118fee265e4dcde34eb93e697b80f79d047885660eb8657af9cb07",
+      "tamper_flag": 0
+    }
+  ],
+  "integrity_verified": true
+}

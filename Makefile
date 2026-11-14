@@ -1,6 +1,6 @@
 PYTHON ?= python
 
-.PHONY: install calibrate eval test test-exploits train-gemma dashboard console bridge
+.PHONY: install calibrate eval test test-anti-cheat test-exploits train-gemma dashboard console bridge
 
 install:
 	$(PYTHON) -m pip install -e ".[dev,agents]"
@@ -9,10 +9,15 @@ calibrate:
 	$(PYTHON) -m terraria_bench.calibrate
 
 eval:
-	$(PYTHON) -m terraria_bench.harness.runner --eval-standard
+	$(PYTHON) post_training/modal_grpo_gemma.py
+	$(PYTHON) reporting/gemini_autopsy.py
+	$(PYTHON) reporting/generate_report.py
+
+test-anti-cheat:
+	$(PYTHON) -m pytest tests/test_reward_integrity.py -v
 
 test:
-	$(PYTHON) -m pytest tests/ -v
+	$(PYTHON) -m pytest tests/test_reward_integrity.py tests/test_grpo_pipeline.py -v
 
 test-exploits:
 	$(PYTHON) -m pytest tests/test_reward_exploits.py -v
