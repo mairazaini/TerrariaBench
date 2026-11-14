@@ -1,7 +1,7 @@
 """TerrariaBench multi-model agent evaluation & RL training harness."""
 from __future__ import annotations
 
-from .gemini_agent import GeminiAgent, GeminiDecisionsWrapper, synthesize_blueprint_matrix
+from .gemini_agent import GeminiAgent, GeminiDecisionsWrapper, GeminiLiveError, synthesize_blueprint_matrix
 from .nemotron_agent import NemotronAgent, build_multimodal_messages, call_with_backoff
 
 _RUNNER_EXPORTS = (
@@ -31,6 +31,7 @@ __all__ = [
     "EpisodeRunner",
     "GeminiAgent",
     "GeminiDecisionsWrapper",
+    "GeminiLiveError",
     "NemotronAgent",
     "build_multimodal_messages",
     "call_with_backoff",

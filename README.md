@@ -6,6 +6,43 @@ Everything runnable — the headless world simulator, 24-tool MCP surface, port 
 
 ---
 
+## Harbor tasks (OpenCode harness)
+
+The eight evaluation scenarios ship as [Harbor](https://github.com/laude-institute/harbor) tasks in `harbor/tasks/`, each with `instruction.md`, `task.toml`, `environment/Dockerfile`, `tests/` and `solution/`.
+
+```bash
+harbor run -p harbor/tasks/terraria-first-night -a opencode -m gemini/gemini-4-carbon \
+    --api-key-name GEMINI_API_KEY --env-file .env
+harbor run -p harbor/tasks/terraria-first-night -a oracle   # reference solution
+harbor run -p harbor/tasks -a opencode -m <provider/model>  # all eight scenarios
+```
+
+`.env` holds the model provider's API key (for Google models, `GEMINI_API_KEY`). Harbor's provider prefix for Google is `gemini/`, and `--api-key-name` is needed for model ids its registry does not know yet. Docker is required: each task is a two-container environment.
+
+**What the agent has to do.** Play a Terraria-like survival world to the end of a scenario: survive the first night, dig to the caverns, hold off a goblin siege or a blood moon, build a boss arena, fight the Eye of Cthulhu or the Wall of Flesh, or do all of it in one 30-window marathon. The agent acts only through 24 game tools (scan, navigate, chop, mine, craft, build, equip, fight, retreat, and so on), offered both as an MCP server and as a `terraria` shell command. Time is metered in operations rather than wall-clock: each 12-hour day or night window allows a fixed number of tool calls, and when they run out the rest of the window plays out with the player wherever it was left standing.
+
+**Why it is hard.**
+
+- *Long horizon, one attempt.* A scenario is 80 to 360 metered calls against a single world that never resets. A night spent outside, or a death that drops half the player's materials, compounds through every later window.
+- *Scarce actions.* Looking costs the same as doing. An agent that inspects everything runs out of operations before it has built anything.
+- *Deadlines it is not told.* Each scenario has unlisted deadlines (shelter before the first dusk, armour before the siege, an arena before the boss). The agent has to infer what will be needed from the brief and the world, and prepare ahead of time.
+- *Dependent progress.* Gear follows a tech tree (wood, then ore, furnace, anvil, armour), bosses need an arena and a summoning item, and the Underworld needs depth and a bridge. Steps done out of order are wasted.
+- *No shortcuts.* The simulator, the calibration and the score ledger live in a sidecar container the agent cannot read or restart. Eleven known reward exploits (free tiles, kill farming, sell-and-rebuy loops, quitting early, and others) are closed and regression-tested in `tests/test_reward_exploits.py`.
+
+**How it is scored.** When the agent stops, the verifier asks the game server to settle any windows the agent did not play (with the player idle) and to grade the sealed episode ledger. It writes one number between 0 and 1 to `/logs/verifier/reward.txt`, with the breakdown in `grade.json` and the full ledger in `ledger.json` beside it:
+
+```
+reward = 0.7 * clip((growth - z) / s, 0, 1)                       # progress
+       + 0.2 * (0.5 * survival_rate + 0.5 * deadlines_met_rate)   # reliability
+       + 0.1 * (windows_attended / windows_in_task)               # continuity
+```
+
+`growth` is the increase in Net Progression Value (crafted gear, structures, depth, events survived, boss damage). `z` is what an absent player gets on that world and `s` is the gap from there to the best scripted policy, both taken from a sealed calibration file, so 0 means "no better than doing nothing" and 1 means "as good as the best scripted policy". Partial credit is the norm. The reference solution replays that scripted policy and scores between 0.95 and 1.0 depending on the scenario; an agent that does nothing scores 0.
+
+Tasks are generated from `harbor/template/` by `python harbor/build_tasks.py`. Re-run it after changing `terraria_bench/` or `artifacts/`; `tests/test_harbor_tasks.py` fails if the copies drift.
+
+---
+
 ## Quickstart (Windows PowerShell & POSIX)
 
 Windows laptops without `make` can invoke every workflow directly via `python -m` (or `uv run`):
