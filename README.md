@@ -6,6 +6,66 @@ Everything runnable — the headless world simulator, 24-tool MCP surface, port 
 
 ---
 
+## Reproduce the results
+
+```bash
+uv run python reporting/generate_report.py     # re-runs the six scripted anchors, rewrites EVAL_RESULTS.md
+uv run --extra dev --extra agents pytest       # gates, exploit regressions, determinism, planner
+harbor run -p harbor/tasks/terraria-first-night -a oracle      # reference run through Harbor
+harbor run -p harbor/tasks/terraria-first-night -a opencode -m <provider/model> --env-file .env
+```
+
+`EVAL_RESULTS.md` holds only numbers that these commands regenerate or that come from sealed ledgers of live
+runs in `artifacts/runs/`. A model with no saved ledger is listed as "not run".
+
+## Two scores
+
+| Score | Where it is the reward | What it measures |
+| :--- | :--- | :--- |
+| **Composite** (0..1) | Simulator and Harbor tasks (`reward.txt`) | Calibrated progress, reliability and attendance, see below. 0 = an absent player, 1 = the best scripted policy. |
+| **Eye progress** (0..100%) | Real-Terraria sessions; also reported in every simulator `grade.json` | How far the run got toward killing the Eye of Cthulhu. |
+
+Eye progress (`terraria_bench.grader.compute_eye_progress`):
+
+| Part | Weight | Earned by |
+| :--- | ---: | :--- |
+| Health | 10% | Max HP gained over the starting value (full at +80, four Life Crystals) |
+| Armor | 10% | Best armor actually worn, over the starting armor (full at 8 defense); potions do not count |
+| Tasks on the way | 35% | Wood, Work Bench, shelter, weapons, arrows, stone/ore, furnace, anvil, metal gear, lenses, altar, arena, summoning item |
+| Fighting the Eye | 25% | 5% for damaging it, plus 20% scaled by the lowest Eye health reached |
+| Killing the Eye | to 100% | A kill is always exactly 100%; without one the score is capped at 80% |
+
+All parts are high-water marks, so dropping, re-crafting or re-summoning cannot add credit. Doing nothing scores 0%
+on every task, including the ones where the Eye appears by itself or the player starts with a strong kit
+(`tests/test_reward_exploits.py`).
+
+## Real Terraria: who decides what
+
+The tModLoader mod (`mod/TerrariaRLBridge/`) executes *skills*: closed-loop programs (chop, mine, craft, hunt, build
+an arena, fight, wall in for the night) that press the same keys a person would, 60 times a second. Python decides
+which skill runs next, in two layers (`terraria_bench/eye_planner.py`):
+
+1. **Long-term plan.** Before the first skill, the strategy model writes a `Strategy` for the run: wooden or metal
+   bow, armor tier, how many Life Crystals to look for, how many arrows, whether to wall in on unarmed nights. It is
+   stored with the run, shown as a numbered roadmap with the current step, and revised after a death. Each choice
+   trades preparation time against the odds of winning a fight that must finish before dawn.
+2. **Next step.** The planner lists the skills that are possible right now under that plan; the decision model picks
+   one. `TERRARIA_AUTOPILOT=1` runs the scripted reference plan with no model calls: that is the reference run.
+
+Every tick reports which tier produced what. A tier reads LIVE only when its model actually answered; the
+structured `world_view` the mod sends in skill mode is not counted as vision.
+
+## Smaller model trained on environment experience
+
+`post_training/` builds 652 turn-by-turn examples from the expert policy on the four training tasks (each source
+episode is replayed and kept only if it grades at least 0.95 with zero deaths), trains a rank-32 LoRA on
+`google/gemma-4-E4B-it`, and evaluates base against tuned with the official composite. Results are in
+`EVAL_RESULTS.md` (mean 0.249 base, 0.720 tuned over 8 cells, one episode each). The adapter itself is on a Modal
+volume, not in this repository; `modal deploy post_training/modal_grpo_gemma.py` serves it, and setting
+`GEMMA_TUNED_BASE_URL` to that endpoint lets `runner --play gemma_tuned --live` use it.
+
+---
+
 ## Harbor tasks (OpenCode harness)
 
 The eight evaluation scenarios ship as [Harbor](https://github.com/laude-institute/harbor) tasks in `harbor/tasks/`, each with `instruction.md`, `task.toml`, `environment/Dockerfile`, `tests/` and `solution/`.

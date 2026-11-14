@@ -501,9 +501,21 @@ def _build_agent(agent_name: str, live: bool) -> Any:
     if agent_name == "gemma_base":
         return GemmaAgent(config=GemmaConfig(), live=live)
     if agent_name == "gemma_tuned":
+        # A run may only be recorded as "tuned" when tuned weights are really in use: a local adapter,
+        # or an endpoint that serves one (see post_training/modal_grpo_gemma.py::serve_vllm).
         ckpt = ARTIFACTS_DIR / "checkpoints" / "gemma_grpo_final"
-        cfg = GemmaConfig(adapter_path=str(ckpt) if ckpt.exists() else None)
-        agent = GemmaAgent(config=cfg, live=live)
+        served = os.environ.get("GEMMA_TUNED_BASE_URL", "")
+        if ckpt.exists():
+            agent = GemmaAgent(config=GemmaConfig(adapter_path=str(ckpt)), live=live)
+        elif served:
+            cfg = GemmaConfig(model_name_or_path=os.environ.get("GEMMA_TUNED_MODEL", "gemma-terraria-bc"))
+            agent = GemmaAgent(config=cfg, live=live, base_url=served)
+        elif live:
+            raise ValueError(
+                "no tuned Gemma to run: set GEMMA_TUNED_BASE_URL to an endpoint serving the adapter, "
+                f"or place a LoRA checkpoint at {ckpt}")
+        else:
+            agent = GemmaAgent(config=GemmaConfig(), live=False)
         agent.name = "gemma_tuned"
         return agent
     raise ValueError(f"unknown agent '{agent_name}'")
@@ -549,11 +561,16 @@ def run_eval_standard(live: bool = False) -> dict[str, Any]:
                             )
             if os.environ.get("FEATHERLESS_API_KEY") or os.environ.get("MODAL_BASE_URL"):
                 gb = _build_agent("gemma_base", True)
-                gt = _build_agent("gemma_tuned", True)
+                try:
+                    gt = _build_agent("gemma_tuned", True)
+                except ValueError as exc:
+                    gt = None
+                    print(f"Gemma Tuned skipped: {exc}", file=sys.stderr)
                 for task_id in EVAL_TASKS:
                     for seed in REPORTED_SEEDS:
                         run_agent_episode(gb, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "gemma_base")
-                        run_agent_episode(gt, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "gemma_tuned")
+                        if gt is not None:
+                            run_agent_episode(gt, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "gemma_tuned")
     finally:
         provenance.git_commit = orig_git_commit
 
