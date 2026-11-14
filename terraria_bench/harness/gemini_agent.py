@@ -360,24 +360,53 @@ class GeminiAgent:
                 self.decisions.client = self._client
         return self._client
 
-    def _call_supervisor_model(self, prompt_text: str, png_b64: str | None) -> str:
+    def _call_supervisor_model(
+        self,
+        prompt_text: str,
+        png_b64: str | None,
+        system: str | None = None,
+        model: str | None = None,
+        thinking_level: str | None = None,
+    ) -> str:
+        """Call a generate_content model with a JSON response. ``system``/``model`` default to the supervisor's.
+
+        ``thinking_level`` (e.g. "low") is a latency hint. If the model rejects it, it is dropped for the rest of
+        the run and the call is repeated without it.
+        """
         from google.genai import types
 
+        model = model or self.model
+        system = system or SUPERVISOR_SYSTEM
         client = self._genai_client()
         parts: list[Any] = [prompt_text]
         if png_b64:
             parts.append(types.Part.from_bytes(data=base64.b64decode(png_b64), mime_type="image/png"))
+        rejected = self.__dict__.setdefault("_thinking_rejected", set())
+        if thinking_level and (model, thinking_level) not in rejected:
+            try:
+                resp = client.models.generate_content(
+                    model=model,
+                    contents=parts,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system,
+                        response_mime_type="application/json",
+                        thinking_config=types.ThinkingConfig(thinking_level=thinking_level),
+                    ),
+                )
+                return resp.text or ""
+            except Exception:
+                rejected.add((model, thinking_level))
         try:
             resp = _retry(lambda: client.models.generate_content(
-                model=self.model,
+                model=model,
                 contents=parts,
                 config=types.GenerateContentConfig(
-                    system_instruction=SUPERVISOR_SYSTEM,
+                    system_instruction=system,
                     response_mime_type="application/json",
                 ),
             ))
         except Exception as exc:
-            raise GeminiLiveError(f"supervisor model '{self.model}' call failed: {type(exc).__name__}: {exc}") from exc
+            raise GeminiLiveError(f"model '{model}' call failed: {type(exc).__name__}: {exc}") from exc
         return resp.text or ""
 
     @staticmethod
