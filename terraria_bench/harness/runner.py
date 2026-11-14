@@ -17,7 +17,16 @@ from ..provenance import ARTIFACTS_DIR, CALIBRATION_PATH, ProvenanceError, load_
 from ..tasks import EVAL_TASKS, REPORTED_SEEDS, TASKS
 from ..tools import Episode
 from .gemini_agent import GeminiAgent, GeminiLiveError
-from .nemotron_agent import NemotronAgent
+from .gemma_agent import AgentConfig as GemmaConfig, GemmaAgent
+from .nemotron_agent import (
+    DEFAULT_VERDA_DEEPSEEK_MODEL,
+    DEFAULT_VERDA_KIMI_MODEL,
+    VERDA_INFERENCE_BASE_URL,
+    NemotronAgent,
+    load_dotenv_if_present,
+)
+
+load_dotenv_if_present()
 
 MAX_TURNS = 150
 COMPACT_TOKEN_THRESHOLD = 65_000
@@ -360,8 +369,12 @@ def _reference_calibration() -> dict[str, Any]:
 def _aggregate_graded(rows: list[dict[str, Any]]) -> dict[str, Any]:
     n = len(rows)
     if n == 0:
-        return {"episodes": 0, "composite": None, "pass_rate": None, "business": None, "reliability": None, "continuity": None}
+        return {
+            "episodes": 0, "composite": None, "pass_rate": None,
+            "business": None, "reliability": None, "continuity": None, "eye_progress": None,
+        }
     passed = [r["passed"] for r in rows if "passed" in r]
+    eye_vals = [r.get("eye_progress") for r in rows if r.get("eye_progress") is not None]
     return {
         "episodes": n,
         "composite": round(sum(r["composite"] for r in rows) / n, 4),
@@ -372,6 +385,7 @@ def _aggregate_graded(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "survival": round(sum(r["survival"] for r in rows) / n, 4),
         "sla": round(sum(r["sla"] for r in rows) / n, 4),
         "windows": round(sum(r["windows"] for r in rows) / n, 2),
+        "eye_progress": round(sum(eye_vals) / len(eye_vals), 4) if eye_vals else None,
     }
 
 
@@ -461,8 +475,41 @@ def _print_leaderboards(table1: list[dict[str, Any]], table3: list[dict[str, Any
         )
 
 
+def _build_agent(agent_name: str, live: bool) -> Any:
+    load_dotenv_if_present()
+    if agent_name == "gemini":
+        return GeminiAgent(live=live)
+    if agent_name == "nemotron":
+        return NemotronAgent(live=live)
+    verda_models = {
+        "verda_deepseek": ("TERRARIA_VERDA_DEEPSEEK_MODEL", DEFAULT_VERDA_DEEPSEEK_MODEL),
+        "verda_kimi": ("TERRARIA_VERDA_KIMI_MODEL", DEFAULT_VERDA_KIMI_MODEL),
+    }
+    if agent_name in verda_models:
+        if live and not os.environ.get("VERDA_INFERENCE_API_KEY"):
+            raise ValueError("VERDA_INFERENCE_API_KEY is required for live Verda model runs")
+        model_env, default_model = verda_models[agent_name]
+        agent = NemotronAgent(
+            model=os.environ.get(model_env, default_model),
+            base_url=os.environ.get("VERDA_INFERENCE_BASE_URL", VERDA_INFERENCE_BASE_URL),
+            live=live,
+        )
+        agent.name = agent_name
+        return agent
+    if agent_name == "gemma_base":
+        return GemmaAgent(config=GemmaConfig(), live=live)
+    if agent_name == "gemma_tuned":
+        ckpt = ARTIFACTS_DIR / "checkpoints" / "gemma_grpo_final"
+        cfg = GemmaConfig(adapter_path=str(ckpt) if ckpt.exists() else None)
+        agent = GemmaAgent(config=cfg, live=live)
+        agent.name = "gemma_tuned"
+        return agent
+    raise ValueError(f"unknown agent '{agent_name}'")
+
+
 def run_eval_standard(live: bool = False) -> dict[str, Any]:
     """Execute StoreBench judging protocol over EVAL_TASKS x REPORTED_SEEDS."""
+    load_dotenv_if_present()
     orig_git_commit = provenance.git_commit
     provenance.git_commit = functools.lru_cache(maxsize=1)(orig_git_commit)
     try:
@@ -480,15 +527,31 @@ def run_eval_standard(live: bool = False) -> dict[str, Any]:
 
         if live:
             if os.environ.get("GEMINI_API_KEY"):
-                gem = GeminiAgent(live=True)
+                gem = _build_agent("gemini", True)
                 for task_id in EVAL_TASKS:
                     for seed in REPORTED_SEEDS:
                         run_agent_episode(gem, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "gemini")
-            if os.environ.get("NVIDIA_API_KEY") or os.environ.get("OPENROUTER_API_KEY"):
-                nem = NemotronAgent(live=True)
+            if any(os.environ.get(k) for k in ("VERDA_INFERENCE_KEY", "VERDA_API_KEY", "NVIDIA_API_KEY", "OPENROUTER_API_KEY")):
+                nem = _build_agent("nemotron", True)
                 for task_id in EVAL_TASKS:
                     for seed in REPORTED_SEEDS:
                         run_agent_episode(nem, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "nemotron")
+            if os.environ.get("VERDA_INFERENCE_API_KEY"):
+                for model_key in ("verda_deepseek", "verda_kimi"):
+                    verda = _build_agent(model_key, True)
+                    for task_id in EVAL_TASKS:
+                        for seed in REPORTED_SEEDS:
+                            run_agent_episode(
+                                verda, task_id, seed, calibration=cal,
+                                save_dir=ARTIFACTS_DIR / "runs" / model_key,
+                            )
+            if os.environ.get("FEATHERLESS_API_KEY") or os.environ.get("MODAL_BASE_URL"):
+                gb = _build_agent("gemma_base", True)
+                gt = _build_agent("gemma_tuned", True)
+                for task_id in EVAL_TASKS:
+                    for seed in REPORTED_SEEDS:
+                        run_agent_episode(gb, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "gemma_base")
+                        run_agent_episode(gt, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "gemma_tuned")
     finally:
         provenance.git_commit = orig_git_commit
 
@@ -496,6 +559,8 @@ def run_eval_standard(live: bool = False) -> dict[str, Any]:
         ("human", "Human experts"),
         ("gemini", "Gemini 4 / 2.5"),
         ("nemotron", "Nemotron 3.5 VL"),
+        ("verda_deepseek", "Verda DeepSeek V4.1 Flash"),
+        ("verda_kimi", "Verda Kimi K3.1 Pro"),
         ("gemma_base", "Gemma Base"),
         ("gemma_tuned", "Gemma Tuned"),
     ):
@@ -508,7 +573,12 @@ def run_eval_standard(live: bool = False) -> dict[str, Any]:
         {"name": "Gemma Tuned", "status": "evaluated" if _load_saved_runs("gemma_tuned", cal) else "not run", **_aggregate_graded(_load_saved_runs("gemma_tuned", cal))},
     ]
     _print_leaderboards(table1, table3)
-    return {"table1": table1, "table3": table3, "calibration_source": cal.get("source", "sealed")}
+    report = {"table1": table1, "table3": table3, "calibration_source": cal.get("source", "sealed")}
+    if live:
+        out_path = ARTIFACTS_DIR / "runs" / "eval_standard.json"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    return report
 
 
 def play_episode(
@@ -521,7 +591,7 @@ def play_episode(
     verbose: bool = True,
 ) -> dict[str, Any]:
     """Play one episode with a named agent, printing each turn. Returns the run dict."""
-    agent = {"gemini": GeminiAgent, "nemotron": NemotronAgent}[agent_name](live=live)
+    agent = _build_agent(agent_name, live=live)
     try:
         cal: dict[str, Any] | None = _reference_calibration()
     except Exception:
@@ -536,6 +606,10 @@ def play_episode(
     print(f"== {agent_name} | {task_id} seed {seed} | {mode} ==")
     if live and agent_name == "gemini":
         print(f"supervisor={agent.model} decision={agent.decisions.model}")
+    elif live and (agent_name == "nemotron" or agent_name.startswith("verda_")):
+        print(f"provider={agent.provider} base_url={agent.base_url} model={agent.model}")
+    elif live and agent_name.startswith("gemma"):
+        print(f"provider={agent.provider} base_url={agent.base_url} model={agent.config.model_name_or_path}")
     save_dir = (ARTIFACTS_DIR / "runs" / agent_name) if (save and live) else None
     out = run_agent_episode(agent, task_id, seed, calibration=cal, max_turns=max_turns,
                             save_dir=save_dir, on_turn=show if verbose else None)
@@ -552,7 +626,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="TerrariaBench Multi-Model Evaluation Harness")
     parser.add_argument("--eval-standard", action="store_true", help="Run StoreBench standard evaluation protocol")
     parser.add_argument("--live", action="store_true", help="Invoke live API models when API keys are set")
-    parser.add_argument("--play", choices=["gemini", "nemotron"], help="Play one episode with this agent and print each turn")
+    parser.add_argument("--play", choices=["gemini", "nemotron", "verda_deepseek", "verda_kimi", "gemma_base", "gemma_tuned"], help="Play one episode with this agent and print each turn")
     parser.add_argument("--task", default="first-night", choices=sorted(TASKS))
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--max-turns", type=int, default=MAX_TURNS)

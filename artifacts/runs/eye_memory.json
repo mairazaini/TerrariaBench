@@ -1,0 +1,24 @@
+{
+ "altar_digs": 0,
+ "altars": [],
+ "arena": null,
+ "chests": {},
+ "deaths": [],
+ "explored": {
+  "left": 45,
+  "right": 10
+ },
+ "eye_defeated": false,
+ "life_crystals": [],
+ "log": [
+  "chop {\"wood\": 160}: success - have 161 wood",
+  "craft {\"count\": 1, \"item\": \"Work Bench\"}: success - crafted Work Bench x1",
+  "place {\"item\": \"Work Bench\"}: failed - no flat free spot 2 wide on this floor within reach to place Work Bench; move a few tiles and retry",
+  "place {\"item\": \"Work Bench\"}: failed - no flat free spot 2 wide on this floor within reach to place Work Bench; move a few tiles and retry"
+ ],
+ "ore_attempts": 0,
+ "ore_given_up": false,
+ "stations": {},
+ "summoned": false,
+ "world": "The Mountain of Defecation"
+}

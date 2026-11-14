@@ -1,0 +1,85 @@
+{
+ "deaths": 2,
+ "manifest": {
+  "calibration_sha256": "8e063c2ad16aaa41ccaddf1ebd6f8bec563d4d7219510022e0c3c4a2e265a6f5",
+  "image_digest": "unpinned-local-run",
+  "python": "3.12.13",
+  "seed_data_sha256": "66a7464ee3e833d5d5129f4fc911cc1977c23a7c975362b160e694d54efd8133",
+  "source_commit": "36e4cbd5dfe9a0f75b7d5c176980bc8ee8ae8baf",
+  "source_hash": "ed14799f8b1ecbdff0d7b3b3434c0c82aa0cb954c8816d17b63cb35351d12875"
+ },
+ "milestones": [
+  "CRAFT:door",
+  "CRAFT:wood_armor",
+  "CRAFT:workbench",
+  "WORKBENCH"
+ ],
+ "phi0": 0.48,
+ "phi_final": -0.63,
+ "seed": 7,
+ "sha256": "9997e30256f0c56c5a389c5e68924c6ae5cd6f511ea863c7bf6b325efeaa6bbf",
+ "state_hash": "b64eb3f2373d2b8868c8fd42ada65c1be18059269cb84a87f1e88053302423ad",
+ "task": "first-night",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 9,
+   "phi": 10.61,
+   "sheltered": false,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 12,
+   "phi": 0.48,
+   "sheltered": false,
+   "sla": [
+    [
+     "shelter",
+     false
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 7,
+   "phi": 0.18,
+   "sheltered": false,
+   "sla": [
+    [
+     "tier:1",
+     false
+    ]
+   ],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 3,
+   "phi": -0.63,
+   "sheltered": false,
+   "sla": [
+    [
+     "shelter",
+     false
+    ]
+   ],
+   "w": 4
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

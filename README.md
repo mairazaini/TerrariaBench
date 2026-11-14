@@ -19,6 +19,28 @@ harbor run -p harbor/tasks -a opencode -m <provider/model>  # all eight scenario
 
 `.env` holds the model provider's API key (for Google models, `GEMINI_API_KEY`). Harbor's provider prefix for Google is `gemini/`, and `--api-key-name` is needed for model ids its registry does not know yet. Docker is required: each task is a two-container environment.
 
+### Verda Inference models
+
+The live Python harness also supports Verda's OpenAI-compatible endpoint. Put `VERDA_INFERENCE_API_KEY` in `.env` or the process environment; the harness defaults to `https://inference.verda.com/v1`. The model IDs are `deepseek-4-1-flash-1017` and `kimi-k3-1-pro`.
+
+```powershell
+# Run one live episode with either model
+python -m terraria_bench.harness.runner --play verda_deepseek --live --task eye-of-cthulhu
+python -m terraria_bench.harness.runner --play verda_kimi --live --task eye-of-cthulhu
+
+# Run both models across the standard evaluation set and add their saved scores to the leaderboard
+python -m terraria_bench.harness.runner --eval-standard --live
+```
+
+Standard evaluation saves each model under `artifacts/runs/verda_deepseek/` and `artifacts/runs/verda_kimi/`. Override model IDs with `TERRARIA_VERDA_DEEPSEEK_MODEL` or `TERRARIA_VERDA_KIMI_MODEL`, and the endpoint with `VERDA_INFERENCE_BASE_URL`.
+
+For Harbor/OpenCode runs, merge the [Verda OpenCode provider config](docs/opencode-verda.jsonc) into `~/.config/opencode/opencode.jsonc`, then select either `verda/deepseek-4-1-flash-1017` or `verda/kimi-k3-1-pro`:
+
+```powershell
+harbor run -p harbor/tasks/terraria-eye-of-cthulhu -a opencode -m verda/deepseek-4-1-flash-1017 --api-key-name VERDA_INFERENCE_API_KEY --env-file .env
+harbor run -p harbor/tasks/terraria-eye-of-cthulhu -a opencode -m verda/kimi-k3-1-pro --api-key-name VERDA_INFERENCE_API_KEY --env-file .env
+```
+
 **What the agent has to do.** Play a Terraria-like survival world to the end of a scenario: survive the first night, dig to the caverns, hold off a goblin siege or a blood moon, build a boss arena, fight the Eye of Cthulhu or the Wall of Flesh, or do all of it in one 30-window marathon. The agent acts only through 24 game tools (scan, navigate, chop, mine, craft, build, equip, fight, retreat, and so on), offered both as an MCP server and as a `terraria` shell command. Time is metered in operations rather than wall-clock: each 12-hour day or night window allows a fixed number of tool calls, and when they run out the rest of the window plays out with the player wherever it was left standing.
 
 **Why it is hard.**

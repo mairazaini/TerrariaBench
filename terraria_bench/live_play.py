@@ -16,6 +16,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from .engine import H, W
+from .grader import EyeProgressTracker, compute_eye_progress
 from .harness.gemini_agent import GeminiAgent, GeminiDecisionsWrapper
 from .human_recorder import BridgeSession
 from .provenance import ARTIFACTS_DIR
@@ -1157,6 +1158,16 @@ def run_recorded_episode(
 
     clips = build_failure_clips(frames)
     ledger = ep.finalize()
+    eye_prog = compute_eye_progress({
+        **ledger,
+        "max_hp": ep.world.max_hp,
+        "defense": ep.world.defense,
+        "wood": ep.world.inv.get("wood", 0),
+        "arrows": ep.world.inv.get("wooden_arrow", 0),
+        "lenses": ep.world.inv.get("lens", 0),
+        "eye_min_hp_ratio": ep.world.boss_min.get("eye", 1.0),
+        "eye_fought": "eye" in ep.world.boss_min or "KILL:eye" in ledger.get("milestones", []),
+    })
     recording = {
         "run_id": rid,
         "task_id": task_id,
@@ -1167,7 +1178,15 @@ def run_recorded_episode(
         "decision_model": decision_model,
         "final_deaths": ep.world.deaths,
         "stats": controller.agent.stats,
-        "score": {"windows": len(ledger["windows"]), "phi_final": ledger["phi_final"], "deaths": ledger["deaths"]},
+        "score": {
+            "windows": len(ledger["windows"]),
+            "phi_final": ledger["phi_final"],
+            "deaths": ledger["deaths"],
+            "composite": eye_prog["eye_progress_score"],
+            "eye_progress_pct": eye_prog["eye_progress_pct"],
+            "eye_breakdown": eye_prog,
+            "passed": eye_prog["eye_killed"],
+        },
         "failure_clips": clips,
         "frames": frames,
     }
@@ -1208,9 +1227,12 @@ def create_live_app(
     bridge = BridgeSession(task_id="first-night", seed=7)
     real_frames: list[dict[str, Any]] = []
     real_lock = threading.Lock()
+    eye_tracker = EyeProgressTracker()
+    latest_eye_prog: list[dict[str, Any]] = [compute_eye_progress({})]
     app = FastAPI(title="TerrariaBench Live Play Studio & tModLoader Bridge (8765)")
     app.state.bridge = bridge
     app.state.controller = controller
+    app.state.eye_tracker = eye_tracker
 
     @app.get("/", response_class=HTMLResponse)
     @app.get("/theater", response_class=HTMLResponse)
@@ -1276,6 +1298,9 @@ def create_live_app(
             cur_deaths = _as_int(referee.get("deaths"), 0)
             prev_hp = real_frames[-1]["state"]["hp"] if real_frames else cur_hp
             prev_deaths = real_frames[-1]["state"]["deaths"] if real_frames else cur_deaths
+            eye_prog = eye_tracker.update(hud, referee, controller.real.eye_planner.mem)
+            latest_eye_prog[0] = eye_prog
+            milestones = eye_tracker.unlocked_milestones()
             fails: list[dict[str, Any]] = []
             if cur_deaths > prev_deaths:
                 fails.append({"tag": "DEATH", "severity": "critical", "title": "Died in Real Terraria", "description": "Player health dropped to 0."})
@@ -1298,11 +1323,20 @@ def create_live_app(
                 except (OSError, ValueError):
                     frame_url = ""
             view = hud.get("view") if isinstance(hud.get("view"), dict) else {}
+            ok_sources = (
+                "decisions_api",
+                "decisions_api_routine",
+                "decisions_api_skill",
+                "skill_running",
+                "eye_planner",
+                "eye_planner_fallback",
+                "skill_complete",
+            )
             frame = {
                 "turn": turn_idx,
                 "tool": decision["macro"]["tool"],
                 "args": decision["macro"]["args"],
-                "result_ok": decision["source"] in ("decisions_api", "decisions_api_routine"),
+                "result_ok": decision["source"] in ok_sources,
                 "result_summary": {"source": decision["source"], **decision["hud"]},
                 "hp_delta": cur_hp - prev_hp,
                 "controls": decision["controls"],
@@ -1323,14 +1357,16 @@ def create_live_app(
                     "ops_budget": turn_idx,
                     "hp": cur_hp,
                     "max_hp": _as_int(hud.get("max_hp"), 100),
-                    "defense": _as_int(referee.get("defense"), 0),
-                    "phi": 0.0,
-                    "tech_tier": 0,
-                    "sheltered": False,
-                    "threat": "n/a",
+                    "defense": _as_int(referee.get("defense") if referee.get("defense") is not None else hud.get("defense"), 0),
+                    "phi": eye_prog["eye_progress_score"],
+                    "eye_progress_pct": eye_prog["eye_progress_pct"],
+                    "eye_breakdown": eye_prog,
+                    "tech_tier": 1 if eye_tracker.metal_bow else (0),
+                    "sheltered": eye_tracker.shelter,
+                    "threat": "BOSS" if referee.get("boss_active") or hud.get("boss") else "n/a",
                     "deaths": cur_deaths,
-                    "equipped": {},
-                    "milestones": [],
+                    "equipped": {"armor": list(hud.get("equipment_now") or [])},
+                    "milestones": milestones,
                     "ascii_grid": [],
                     "frame_url": frame_url,
                     "px_per_tile": view.get("px_per_tile"),
@@ -1344,12 +1380,12 @@ def create_live_app(
             real_frames.append(frame)
             if len(real_frames) > REAL_FRAMES_KEPT:
                 del real_frames[:-REAL_FRAMES_KEPT]
-            if turn_idx == 1 or turn_idx % 5 == 0 or fails:
+            if turn_idx == 1 or turn_idx % 5 == 0 or fails or eye_prog["eye_killed"]:
                 RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
                 rec = {
                     "run_id": "real_terraria_live",
                     "task_id": "real-terraria",
-                    "task_title": "Live tModLoader Session (human-parity, protocol 2)",
+                    "task_title": "Live tModLoader Session (Eye of Cthulhu Skill Runner, protocol 2)",
                     "seed": 0,
                     "live": controller.live,
                     "supervisor_model": controller.agent.model,
@@ -1358,13 +1394,21 @@ def create_live_app(
                     "tiers": tiers,
                     "final_deaths": cur_deaths,
                     "stats": controller.agent.stats,
-                    "score": {"windows": 1, "phi_final": 0.0, "deaths": cur_deaths},
+                    "score": {
+                        "windows": 1,
+                        "composite": eye_prog["eye_progress_score"],
+                        "phi_final": eye_prog["eye_progress_pct"],
+                        "eye_progress_pct": eye_prog["eye_progress_pct"],
+                        "eye_breakdown": eye_prog,
+                        "passed": eye_prog["eye_killed"],
+                        "deaths": cur_deaths,
+                    },
                     "failure_clips": build_failure_clips(real_frames),
                     "frames": real_frames,
                 }
                 (RECORDINGS_DIR / "real_terraria_live.json").write_text(json.dumps(rec, default=str), encoding="utf-8")
                 (RECORDINGS_DIR / "real_terraria_live.html").write_text(render_player_html(rec), encoding="utf-8")
-        return decision
+        return {**decision, "eye_progress": eye_prog}
 
     @app.get("/status")
     async def status() -> dict[str, Any]:
@@ -1377,6 +1421,7 @@ def create_live_app(
             "done": bridge.ep.done,
             "header": bridge.ep.header(),
             "real_frames": len(real_frames),
+            "eye_progress": latest_eye_prog[0],
         }
 
     @app.post("/")

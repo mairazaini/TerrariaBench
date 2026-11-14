@@ -1,0 +1,29 @@
+// Merge this provider block into ~/.config/opencode/opencode.jsonc.
+// Set VERDA_INFERENCE_API_KEY in the environment used by OpenCode and Harbor.
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "verda/deepseek-4-1-flash-1017",
+  "provider": {
+    "verda": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://inference.verda.com/v1",
+        "apiKey": "{env:VERDA_INFERENCE_API_KEY}"
+      },
+      "models": {
+        "deepseek-4-1-flash-1017": {
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          }
+        },
+        "kimi-k3-1-pro": {
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          }
+        }
+      }
+    }
+  }
+}

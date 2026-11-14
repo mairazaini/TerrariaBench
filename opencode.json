@@ -1,0 +1,30 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "verda-nemotron": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Verda Cloud",
+      "options": {
+        "baseURL": "https://containers.datacrunch.io/nemotron-3-5-super-vl-b300/v1",
+        "apiKey": "{env:VERDA_INFERENCE_KEY}"
+      },
+      "models": {
+        "nemotron": {
+          "id": "nemotron-3.5-super-vl",
+          "name": "NVIDIA Nemotron 3.5 Super VL",
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          },
+          "options": {
+            "compatibility": {
+              "max_tokens": true,
+              "reasoning_content": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "model": "verda-nemotron/nemotron"
+}

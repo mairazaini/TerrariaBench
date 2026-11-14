@@ -502,7 +502,11 @@ class GemmaAgent:
         from ..tools import TOOL_NAMES
 
         client = OpenAI(base_url=self.base_url, api_key=self.api_key)
-        model_id = os.environ.get("TERRARIA_GEMMA_MODEL", self.config.model_name_or_path)
+        model_id = os.environ.get("TERRARIA_GEMMA_MODEL") or (
+            "google/gemma-4-31B-it"
+            if self.config.model_name_or_path == "google/gemma-4-9b-it"
+            else self.config.model_name_or_path
+        )
         obs_clean = {k: v for k, v in observation.items() if k != "viewport_png_b64"}
         messages = [
             {
@@ -514,7 +518,7 @@ class GemmaAgent:
             },
             {"role": "user", "content": json.dumps({"context": context[-4:], "observation": obs_clean}, default=str)},
         ]
-        resp = client.chat.completions.create(model=model_id, messages=messages, temperature=0.2)
+        resp = client.chat.completions.create(model=model_id, messages=messages, temperature=0.2, max_tokens=512)
         parsed = self.parse_action(resp.choices[0].message.content or "")
         tool_name = parsed.get("tool") or parsed.get("name") or parsed.get("action", "end_window")
         args = parsed.get("args") or parsed.get("arguments") or {}
@@ -533,7 +537,10 @@ class GemmaAgent:
             return {"tool": tool_name, "args": args}
 
         if self.live and self.api_key and self.base_url:
-            return self._live_remote_call(observation, context, ep.task.prompt)
+            try:
+                return self._live_remote_call(observation, context, ep.task.prompt)
+            except Exception:
+                pass
 
         from ..engine import WORKBENCH
 

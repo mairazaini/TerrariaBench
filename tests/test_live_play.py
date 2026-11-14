@@ -711,3 +711,113 @@ def test_simulated_vision_ignores_roof_enemies_without_los_and_never_rebuilds_va
     assert "build_house_frame" not in criteria2
     assert "furnish_house" not in criteria2
     assert d2["vision_report"]["reaction"]["recommended_routine"] not in ("build_house_frame", "furnish_house")
+
+
+def test_skill_mode_lifecycle_and_eye_progress_scoring(tmp_path: Path, monkeypatch):
+    import pytest
+    import terraria_bench.live_play as lp
+    from terraria_bench.grader import EyeProgressTracker, compute_eye_progress
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+    monkeypatch.setenv("TERRARIA_EYE_MEMORY", str(tmp_path / "eye_mem.json"))
+    app = create_live_app(live_models=False)
+    _wire_mock_models(app, {"skill": "s0"})
+    app.state.controller.real.eye_planner = app.state.controller.real.eye_planner.__class__(memory_path=tmp_path / "eye_mem.json")
+    client = TestClient(app)
+
+    # Tick 1: Skill mode payload arrives (has hud.skill + hud.pos) -> picks first skill ("chop").
+    p1 = _payload(
+        skill={"id": 0, "name": "", "status": "idle", "reason": "", "ticks": 0, "detail": ""},
+        pos={"x": 0, "y": 0},
+        defense=0,
+        clock=12.0,
+        evil_biome=False,
+        world="TestWorld",
+        boss=None,
+        backpack={"Wood": 0},
+    )
+    p1["referee"]["defense"] = 0
+    r1 = client.post("/real_game_tick", json=p1).json()
+    assert r1["source"] in ("eye_planner", "eye_planner_fallback", "decisions_api_skill")
+    s1 = r1["controls"]["skill"]
+    assert s1["name"] == "chop"
+    assert r1["eye_progress"]["eye_progress_pct"] == 0.0
+
+    # Tick 2: Same skill still running -> bridge returns running quickly without starting a new skill.
+    p2 = _payload(
+        skill={"id": s1["id"], "name": s1["name"], "status": "running", "reason": "", "ticks": 45, "detail": "24/160 Wood"},
+        pos={"x": 12, "y": 0},
+        defense=0,
+        clock=12.2,
+        evil_biome=False,
+        world="TestWorld",
+        boss=None,
+        backpack={"Wood": 24},
+    )
+    r2 = client.post("/real_game_tick", json=p2).json()
+    assert r2["source"] == "skill_running"
+    assert r2["controls"]["skill"]["id"] == s1["id"]
+
+    # Tick 3: Chop succeeded with 50 Wood, Work Bench placed, Wood Armor equipped (defense 3), Boss fought down to 25% HP!
+    p3 = _payload(
+        max_hp=180,
+        skill={"id": s1["id"], "name": s1["name"], "status": "success", "reason": "wood target reached", "ticks": 300, "detail": ""},
+        pos={"x": 5, "y": 0},
+        defense=3,
+        clock=21.0,
+        time_phase="Night",
+        evil_biome=False,
+        world="TestWorld",
+        equipment_now=["Wood Helmet", "Wood Breastplate", "Wood Greaves"],
+        boss={"name": "Eye of Cthulhu", "hp": 700, "max_hp": 2800, "dx": 8.0, "dy": -4.0},
+        backpack={"Wood": 60, "Work Bench": 1, "Wooden Bow": 1, "Wooden Arrow": 200, "Lens": 6},
+    )
+    p3["referee"]["defense"] = 3
+    r3 = client.post("/real_game_tick", json=p3).json()
+    assert r3["controls"]["skill"]["name"] == "fight"
+    prog3 = r3["eye_progress"]
+    assert prog3["eye_fought"] is True
+    assert prog3["eye_min_hp_ratio"] == pytest.approx(0.25)
+    assert prog3["eye_killed"] is False
+    assert 40.0 < prog3["eye_progress_pct"] < 85.0
+
+    # Resummoning later at higher Eye HP cannot inflate or reduce boss_fight_score (monotonic high-water mark).
+    p4 = _payload(
+        max_hp=180,
+        skill={"id": r3["controls"]["skill"]["id"], "name": "fight", "status": "running", "reason": "", "ticks": 10, "detail": ""},
+        pos={"x": 5, "y": 0},
+        defense=3,
+        clock=22.0,
+        time_phase="Night",
+        evil_biome=False,
+        world="TestWorld",
+        boss={"name": "Eye of Cthulhu", "hp": 2500, "max_hp": 2800, "dx": 5.0, "dy": -2.0},
+        backpack={"Wood": 10},
+    )
+    r4 = client.post("/real_game_tick", json=p4).json()
+    assert r4["eye_progress"]["eye_min_hp_ratio"] == pytest.approx(0.25)
+
+    # Tick 5: Killing the Eye of Cthulhu awards 100% progress.
+    p5 = _payload(
+        max_hp=180,
+        skill={"id": r3["controls"]["skill"]["id"], "name": "fight", "status": "success", "reason": "Eye of Cthulhu defeated", "ticks": 900, "detail": ""},
+        pos={"x": 5, "y": 0},
+        defense=3,
+        clock=23.0,
+        time_phase="Night",
+        evil_biome=False,
+        world="TestWorld",
+        boss=None,
+        backpack={"Wood": 10},
+    )
+    p5["referee"]["downed_eye"] = True
+    r5 = client.post("/real_game_tick", json=p5).json()
+    assert r5["eye_progress"]["eye_killed"] is True
+    assert r5["eye_progress"]["eye_progress_score"] == 1.0
+    assert r5["eye_progress"]["eye_progress_pct"] == 100.0
+    latest = client.get("/api/real/latest").json()["latest"]
+    assert latest["state"]["phi"] == 1.0
+    assert latest["state"]["eye_progress_pct"] == 100.0
+    assert compute_eye_progress({})["eye_progress_score"] == 0.0
+    assert EyeProgressTracker().as_dict()["eye_min_hp_ratio"] == 1.0
+

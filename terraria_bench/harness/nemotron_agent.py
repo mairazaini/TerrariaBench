@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any, Callable, TypeVar
@@ -18,6 +19,11 @@ NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 FEATHERLESS_BASE_URL = "https://api.featherless.ai/v1"
 VERDA_BASE_URL = "https://api.datacrunch.io/v1"
+VERDA_INFERENCE_BASE_URL = "https://inference.verda.com/v1"
+VERDA_NEMOTRON_BASE_URL = "https://containers.datacrunch.io/nemotron-3-5-super-vl-b300/v1"
+DEFAULT_NEMOTRON_MODEL = "nemotron-3.5-super-vl"
+DEFAULT_VERDA_DEEPSEEK_MODEL = "deepseek-4-1-flash-1017"
+DEFAULT_VERDA_KIMI_MODEL = "kimi-k3-1-pro"
 MODAL_BASE_URL = os.environ.get("MODAL_BASE_URL", "")
 
 _DOTENV_LOADED = False
@@ -50,14 +56,35 @@ def load_dotenv_if_present(path: str | Path | None = None, force: bool = False) 
     return loaded
 
 
+def resolve_nemotron_endpoint(base_url: str | None = None, api_key: str | None = None) -> dict[str, str]:
+    """Resolve endpoint for NVIDIA Nemotron 3.5 Super VL (Verda Cloud container first)."""
+    load_dotenv_if_present()
+    if base_url or api_key:
+        res = resolve_inference_provider(base_url=base_url, api_key=api_key)
+        return {**res, "fallback_key": ""}
+
+    verda_inf = os.environ.get("VERDA_INFERENCE_KEY", "")
+    verda_api = os.environ.get("VERDA_API_KEY", "")
+    if verda_inf or verda_api:
+        return {
+            "provider": "verda-nemotron",
+            "base_url": os.environ.get("VERDA_NEMOTRON_BASE_URL", VERDA_NEMOTRON_BASE_URL),
+            "api_key": verda_inf or verda_api,
+            "fallback_key": verda_api if verda_inf and verda_api != verda_inf else "",
+        }
+    return {**resolve_inference_provider(), "fallback_key": ""}
+
+
 def resolve_inference_provider(base_url: str | None = None, api_key: str | None = None) -> dict[str, str]:
     """Resolve active OpenAI-compatible inference provider across Modal, Featherless, Verda, NIM, OpenRouter."""
     load_dotenv_if_present()
     if base_url:
         key = (
             api_key
+            or os.environ.get("VERDA_INFERENCE_API_KEY")
             or os.environ.get("MODAL_API_KEY")
             or os.environ.get("FEATHERLESS_API_KEY")
+            or os.environ.get("VERDA_INFERENCE_KEY")
             or os.environ.get("VERDA_API_KEY")
             or os.environ.get("NVIDIA_API_KEY")
             or os.environ.get("OPENROUTER_API_KEY")
@@ -66,6 +93,13 @@ def resolve_inference_provider(base_url: str | None = None, api_key: str | None 
         return {"provider": "custom", "base_url": base_url, "api_key": key}
     if api_key:
         return {"provider": "custom", "base_url": os.environ.get("NVIDIA_BASE_URL", NVIDIA_BASE_URL), "api_key": api_key}
+
+    if os.environ.get("VERDA_INFERENCE_API_KEY"):
+        return {
+            "provider": "verda-inference",
+            "base_url": os.environ.get("VERDA_INFERENCE_BASE_URL", VERDA_INFERENCE_BASE_URL),
+            "api_key": os.environ["VERDA_INFERENCE_API_KEY"],
+        }
 
     modal_url = os.environ.get("MODAL_BASE_URL", "")
     if modal_url:
@@ -172,7 +206,7 @@ def build_multimodal_messages(
 
 
 class NemotronAgent:
-    """NVIDIA Nemotron 3.5 Super VL agent via NVIDIA NIM / OpenRouter fallback."""
+    """NVIDIA Nemotron 3.5 Super VL agent via Verda Cloud container / NIM / OpenRouter fallback."""
 
     def __init__(
         self,
@@ -183,33 +217,75 @@ class NemotronAgent:
     ):
         load_dotenv_if_present()
         self.name = "nemotron"
-        self.model = model or os.environ.get("TERRARIA_NEMOTRON_MODEL", "nvidia/nemotron-3.5-super-vl")
-        resolved = resolve_inference_provider(base_url=base_url, api_key=api_key)
+        self.model = model or os.environ.get("TERRARIA_NEMOTRON_MODEL", DEFAULT_NEMOTRON_MODEL)
+        resolved = resolve_nemotron_endpoint(base_url=base_url, api_key=api_key)
         self.provider = resolved["provider"]
         self.base_url = resolved["base_url"]
         self.api_key = resolved["api_key"]
+        self.fallback_key = resolved.get("fallback_key", "")
         self.live = live
         self._observed_window: int = -1
+        self.stats: dict[str, Any] = {"live_calls": 0, "live_errors": 0, "last_error": ""}
+
+    @staticmethod
+    def _parse_text_tool_call(text: str | None) -> dict[str, Any] | None:
+        if not text:
+            return None
+        for match in re.finditer(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", text, re.S):
+            try:
+                parsed = json.loads(match.group(0))
+            except Exception:
+                continue
+            if not isinstance(parsed, dict):
+                continue
+            tool = parsed.get("tool") or parsed.get("name")
+            if isinstance(tool, str) and tool in TOOL_NAMES:
+                args = parsed.get("args") or parsed.get("arguments") or {}
+                return {"tool": tool, "args": args if isinstance(args, dict) else {}}
+        return None
 
     def _live_call(self, observation: dict[str, Any], context: list[dict[str, Any]], prompt: str) -> dict[str, Any]:
         from openai import OpenAI
 
-        client = OpenAI(base_url=self.base_url, api_key=self.api_key)
         messages, tools = build_multimodal_messages(prompt, observation, context)
-        resp = call_with_backoff(
-            lambda: client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                tools=tools,
-                tool_choice="auto",
-                temperature=0.2,
+
+        def _invoke(key: str) -> Any:
+            client = OpenAI(base_url=self.base_url, api_key=key)
+            return call_with_backoff(
+                lambda: client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    tools=tools,
+                    tool_choice="auto",
+                    temperature=0.2,
+                    max_tokens=2048,
+                )
             )
-        )
+
+        try:
+            resp = _invoke(self.api_key)
+        except Exception as exc:
+            code = getattr(exc, "status_code", None)
+            if code in (401, 403) and self.fallback_key and self.fallback_key != self.api_key:
+                resp = _invoke(self.fallback_key)
+                self.api_key = self.fallback_key
+            else:
+                raise
+
+        self.stats["live_calls"] += 1
         msg = resp.choices[0].message
         if getattr(msg, "tool_calls", None):
             tc = msg.tool_calls[0]
             args = json.loads(tc.function.arguments or "{}")
             return {"tool": tc.function.name, "args": args if isinstance(args, dict) else {}}
+        for field in (
+            getattr(msg, "content", None),
+            getattr(msg, "reasoning_content", None),
+            getattr(msg, "reasoning", None),
+        ):
+            parsed = self._parse_text_tool_call(field)
+            if parsed is not None:
+                return parsed
         return {"tool": "end_window", "args": {}}
 
     def next_action(self, observation: dict[str, Any], context: list[dict[str, Any]], ep: Episode) -> dict[str, Any] | None:
@@ -218,8 +294,9 @@ class NemotronAgent:
         if self.live and self.api_key:
             try:
                 return self._live_call(observation, context, ep.task.prompt)
-            except Exception:
-                pass
+            except Exception as exc:
+                self.stats["live_errors"] += 1
+                self.stats["last_error"] = f"{type(exc).__name__}: {exc}"[:300]
 
         w = ep.world
         if self._observed_window != w.window and ep.ops_left >= 6:

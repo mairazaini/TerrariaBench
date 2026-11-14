@@ -32,6 +32,7 @@ from typing import Any, Callable
 
 from .harness.gemini_agent import GeminiAgent
 from .context_crawler import DEFAULT_OUTPUT_DIR, retrieve_wiki_context
+from .eye_planner import EyePlanner, new_skill_id_seed
 
 PROTOCOL = 2
 DEFAULT_GOAL = "Survive, gather resources, build a shelter, gear up, then summon and defeat the Eye of Cthulhu."
@@ -42,6 +43,7 @@ HUD_KEYS = (
     "selected_slot", "held_item", "hotbar", "backpack", "equipment_now", "craftable_now",
     "buffs", "inventory_open", "inventory", "equipment", "craftable", "chest_open", "chest",
     "cursor", "events", "view", "visible_enemies", "world_view",
+    "skill", "pos", "defense", "clock", "evil_biome", "world", "boss",
 )
 
 CURSOR_X = (-20, -12, -8, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 8, 12, 20)
@@ -967,6 +969,11 @@ class RealGameController:
         self._queue_name = ""
         self._queue_len = 0
         self._queue_hp = 0
+        self.eye_planner = EyePlanner()
+        self._skill_id = new_skill_id_seed()
+        self._active_skill: dict[str, Any] | None = None
+        self._last_completed_skill_id = -1
+        self._skill_decisions_done = 0
 
     # ------------------------------------------------------------------ tiers
     def _see(self, shot: str | None, hud: dict[str, Any], shot_error: str | None, tick: int) -> dict[str, Any]:
@@ -1178,6 +1185,141 @@ class RealGameController:
             }
         return out
 
+    # ------------------------------------------------------------------ skill mode
+    @staticmethod
+    def _is_skill_mode(hud: dict[str, Any]) -> bool:
+        """Detect payloads from the upgraded Skills.cs bridge (includes ``hud.skill`` or ``hud.pos``)."""
+        return isinstance(hud.get("skill"), dict) or isinstance(hud.get("pos"), dict)
+
+    def _tick_skill_mode(self, hud: dict[str, Any], shot: str | None, shot_error: str | None) -> dict[str, Any]:
+        """Drive the 60Hz C# SkillRunner using ``EyePlanner`` + optional Decision API choice."""
+        tick = self.ticks
+        self.eye_planner.observe(hud)
+        if isinstance(hud.get("world_view"), dict):
+            vision = self._look(shot, hud, shot_error, tick)
+        else:
+            vision = {
+                "lighting": str(hud.get("time_phase") or "Day"),
+                "surroundings": f"pos={hud.get('pos')} hp={hud.get('hp')}/{hud.get('max_hp')} defense={hud.get('defense', 0)}",
+                "notes": "Skill-runner HUD mode",
+                "age_s": 0.0,
+            }
+            self.tiers["vision"].ok(tick, 0.0)
+
+        mod_skill = hud.get("skill") if isinstance(hud.get("skill"), dict) else {}
+        mod_id = int(mod_skill.get("id") or 0)
+        mod_status = str(mod_skill.get("status") or "idle")
+        mod_reason = str(mod_skill.get("reason") or "")
+        mod_detail = str(mod_skill.get("detail") or "")
+        mod_ticks = int(mod_skill.get("ticks") or 0)
+
+        if hud.get("dead"):
+            self._active_skill = None
+            return self._reply(
+                idle_controls(), vision, self._plan, "skill_waiting_respawn",
+                note="Player is dead — waiting for respawn...",
+            )
+
+        if self._active_skill is not None and mod_id == self._active_skill["id"]:
+            if mod_status == "running":
+                ctrl = {**idle_controls(), "skill": dict(self._active_skill)}
+                ctrl["active_keys"] = [f"SKILL:{self._active_skill['name']}"]
+                detail_s = f" | {mod_detail}" if mod_detail else ""
+                return self._reply(
+                    ctrl, vision, self._plan, "skill_running",
+                    note=f"skill #{mod_id} {self._active_skill['name']} running ({mod_ticks}t){detail_s}",
+                    confidence=1.0,
+                )
+            if mod_status in ("success", "failed"):
+                if self._last_completed_skill_id != mod_id:
+                    self.eye_planner.record_result(
+                        self._active_skill["name"],
+                        self._active_skill.get("args") or {},
+                        mod_status,
+                        mod_reason,
+                        hud,
+                    )
+                    self._last_completed_skill_id = mod_id
+                    self._history.append(
+                        f"#{tick}: skill {self._active_skill['name']} -> {mod_status}: {mod_reason}"
+                    )
+                self._active_skill = None
+
+        cands = self.eye_planner.candidates(hud)
+        if not cands:
+            note = "Eye of Cthulhu defeated!" if self.eye_planner.mem.get("eye_defeated") else "No skill candidates."
+            return self._reply(idle_controls(), vision, self._plan, "skill_complete", note=note)
+
+        chosen = cands[0]
+        source = "eye_planner"
+        conf = 1.0
+        brief = self.eye_planner.briefing(hud)
+        autopilot = os.environ.get("TERRARIA_AUTOPILOT", "0") in ("1", "true", "yes")
+
+        if self.live and len(cands) > 1 and not autopilot:
+            questions = {
+                "skill": {
+                    "type": "choice",
+                    "instructions": (
+                        "Pick the best next closed-loop skill to progress toward defeating the Eye of Cthulhu."
+                    ),
+                    "criteria": {f"s{i}": c.label() for i, c in enumerate(cands)},
+                }
+            }
+            context = f"GOAL\n{self.goal}\n\nEYE PROGRESSION BRIEF\n{brief}"
+            self.last_prompts["decision"] = context
+            tier = self.tiers["decision"]
+            started = time.time()
+            try:
+                res = self.agent.decisions.decide(
+                    questions,
+                    context,
+                    viewport_png_b64=shot if self.decision_sees_frame else None,
+                )
+                ans = (res.get("answers") or {}).get("skill") or {}
+                pick_key = str(ans.get("value") or "")
+                if res.get("source") == "decisions_api" and pick_key.startswith("s") and pick_key[1:].isdigit():
+                    idx = int(pick_key[1:])
+                    if 0 <= idx < len(cands):
+                        chosen = cands[idx]
+                        source = "decisions_api_skill"
+                        conf = float(ans.get("confidence") or 0.9)
+                        tier.ok(tick, time.time() - started)
+                        self.agent.stats["decision_calls"] += 1
+                    else:
+                        source = "eye_planner_fallback"
+                else:
+                    source = "eye_planner_fallback"
+            except Exception as exc:
+                tier.fail(exc)
+                source = "eye_planner_fallback"
+
+        if self._plan is None or self._skill_decisions_done % 8 == 0:
+            self._plan = {
+                "phase": "eye_of_cthulhu",
+                "strategy": f"Tech-graph EyePlanner ({len(cands)} candidates): {chosen.reason}",
+                "objective": chosen.label()[:380],
+            }
+            self._plan_no += 1
+            self._plan_tick = tick
+            self.tiers["supervisor"].ok(tick, 0.0)
+
+        self._skill_id += 1
+        self._skill_decisions_done += 1
+        self._active_skill = {
+            "id": self._skill_id,
+            "name": chosen.name,
+            "args": dict(chosen.args),
+        }
+        ctrl = {**idle_controls(), "skill": dict(self._active_skill)}
+        ctrl["active_keys"] = [f"SKILL:{chosen.name}"]
+        self._history.append(f"#{tick}: started {chosen.label()}")
+        return self._reply(
+            ctrl, vision, self._plan, source,
+            note=f"#{self._skill_id} {chosen.label()}",
+            confidence=conf,
+        )
+
     # ------------------------------------------------------------------ tick
     def tick(self, payload: dict[str, Any]) -> dict[str, Any]:
         self.ticks += 1
@@ -1201,6 +1343,9 @@ class RealGameController:
         if not self.live:
             return self._reply(idle_controls(), {}, None, "offline_no_models",
                                note="NO MODELS CONNECTED (no API key / offline mode): player idle")
+
+        if self._is_skill_mode(hud):
+            return self._tick_skill_mode(hud, shot, payload.get("screenshot_error"))
 
         vision = self._look(shot, hud, payload.get("screenshot_error"), tick)
         self._maybe_supervise(hud, vision, shot)
@@ -1294,7 +1439,15 @@ class RealGameController:
             self._signatures.clear()
         return self._reply(controls, vision, plan, "decisions_api")
 
-    def _reply(self, controls: dict[str, Any], vision: dict[str, Any], plan: dict[str, Any] | None, source: str, note: str = "") -> dict[str, Any]:
+    def _reply(
+        self,
+        controls: dict[str, Any],
+        vision: dict[str, Any],
+        plan: dict[str, Any] | None,
+        source: str,
+        note: str = "",
+        confidence: float = 0.0,
+    ) -> dict[str, Any]:
         tick = self.ticks
         sup, vis, dec = (self.tiers[k] for k in ("supervisor", "vision", "decision"))
         tiers = {k: tier.as_dict(tick) for k, tier in self.tiers.items()}
@@ -1309,15 +1462,26 @@ class RealGameController:
                         + f"] light={vision.get('lighting', '?')}; {vision.get('surroundings', '')}")
         else:
             vis_line = f"{vis.model} [{vis_state['status']}]" + (f" - {vis_state['last_error']}" if vis_state['last_error'] else "")
-        if source == "decisions_api_routine":
+        skill = controls.get("skill") if isinstance(controls.get("skill"), dict) else None
+        if skill:
+            dec_line = f"{dec.model} [{dec_state['status']}] {note}"
+            macro_obj = {"tool": f"skill:{skill.get('name', '')}", "args": dict(skill.get("args") or {}), "stage": self._plan_no}
+            choice_str = str(skill.get("name") or "skill")
+        elif source == "decisions_api_routine":
             dec_line = f"{dec.model} [LIVE {dec_state['last_latency_s']}s] {note} | {' '.join(controls['active_keys']) or 'no keys'}"
+            macro_obj = {"tool": "direct_controls", "args": {}, "stage": 0}
+            choice_str = "direct_controls"
         elif source == "decisions_api":
             dec_line = (
                 f"{dec.model} [LIVE {dec_state['last_latency_s']}s] {' '.join(controls['active_keys']) or 'no keys'} | "
                 f"cursor ({controls['cursor_dx']:+g},{controls['cursor_dy']:+g}) | hold {controls['hold_ticks']}t"
             )
+            macro_obj = {"tool": "direct_controls", "args": {}, "stage": 0}
+            choice_str = "direct_controls"
         else:
             dec_line = f"{dec.model} [{dec_state['status']}] {note}" + (f" - {dec_state['last_error']}" if dec_state['last_error'] else "")
+            macro_obj = {"tool": "direct_controls", "args": {}, "stage": 0}
+            choice_str = "direct_controls"
         return {
             "ok": True,
             "protocol": PROTOCOL,
@@ -1330,9 +1494,9 @@ class RealGameController:
             "source": source,
             "note": note,
             # Legacy keys kept for the recording pipeline.
-            "macro": {"tool": "direct_controls", "args": {}, "stage": 0},
-            "choice": "direct_controls",
-            "confidence": 0.0,
+            "macro": macro_obj,
+            "choice": choice_str,
+            "confidence": round(float(confidence), 4),
             "strategy": (plan or {}).get("strategy", "") or note,
             "hud_text": dec_line,
         }
