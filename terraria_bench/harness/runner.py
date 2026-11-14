@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import argparse
+import functools
 import importlib
 import json
 import os
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
+from .. import provenance
 from ..engine import AIR, CAMPFIRE, DOOR, WORKBENCH
 from ..grader import components, grade
 from ..provenance import ARTIFACTS_DIR, CALIBRATION_PATH, ProvenanceError, load_sealed, verify_seal, write_sealed
@@ -442,29 +444,34 @@ def _print_leaderboards(table1: list[dict[str, Any]], table3: list[dict[str, Any
 
 def run_eval_standard(live: bool = False) -> dict[str, Any]:
     """Execute StoreBench judging protocol over EVAL_TASKS x REPORTED_SEEDS."""
-    cal = _reference_calibration()
-    table1: list[dict[str, Any]] = []
+    orig_git_commit = provenance.git_commit
+    provenance.git_commit = functools.lru_cache(maxsize=1)(orig_git_commit)
+    try:
+        cal = _reference_calibration()
+        table1: list[dict[str, Any]] = []
 
-    for policy in ANCHORS:
-        rows = []
-        for task_id in EVAL_TASKS:
-            for seed in REPORTED_SEEDS:
-                ledger = _run_builtin_anchor(policy, task_id, seed, calibration=cal)
-                rows.append(grade(ledger, cal["cells"][f"{task_id}:{seed}"]))
-        agg = _aggregate_graded(rows)
-        table1.append({"name": policy, "status": "anchor", **agg})
-
-    if live:
-        if os.environ.get("GEMINI_API_KEY"):
-            gem = GeminiAgent(live=True)
+        for policy in ANCHORS:
+            rows = []
             for task_id in EVAL_TASKS:
                 for seed in REPORTED_SEEDS:
-                    run_agent_episode(gem, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "gemini")
-        if os.environ.get("NVIDIA_API_KEY") or os.environ.get("OPENROUTER_API_KEY"):
-            nem = NemotronAgent(live=True)
-            for task_id in EVAL_TASKS:
-                for seed in REPORTED_SEEDS:
-                    run_agent_episode(nem, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "nemotron")
+                    ledger = _run_builtin_anchor(policy, task_id, seed, calibration=cal)
+                    rows.append(grade(ledger, cal["cells"][f"{task_id}:{seed}"]))
+            agg = _aggregate_graded(rows)
+            table1.append({"name": policy, "status": "anchor", **agg})
+
+        if live:
+            if os.environ.get("GEMINI_API_KEY"):
+                gem = GeminiAgent(live=True)
+                for task_id in EVAL_TASKS:
+                    for seed in REPORTED_SEEDS:
+                        run_agent_episode(gem, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "gemini")
+            if os.environ.get("NVIDIA_API_KEY") or os.environ.get("OPENROUTER_API_KEY"):
+                nem = NemotronAgent(live=True)
+                for task_id in EVAL_TASKS:
+                    for seed in REPORTED_SEEDS:
+                        run_agent_episode(nem, task_id, seed, calibration=cal, save_dir=ARTIFACTS_DIR / "runs" / "nemotron")
+    finally:
+        provenance.git_commit = orig_git_commit
 
     for model_key, label in (
         ("human", "Human experts"),

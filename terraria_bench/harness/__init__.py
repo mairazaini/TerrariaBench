@@ -11,6 +11,10 @@ _RUNNER_EXPORTS = (
     "run_agent_episode",
     "run_eval_standard",
 )
+_OPTIONAL_TRACK3_EXPORTS = {
+    "GemmaAgent": ".gemma_agent",
+    "compute_group_advantages": ".train_grpo",
+}
 
 __all__ = [
     "AgentProtocol",
@@ -32,4 +36,9 @@ def __getattr__(name: str):
         from . import runner
 
         return getattr(runner, name)
+    if name in _OPTIONAL_TRACK3_EXPORTS:
+        import importlib
+
+        mod = importlib.import_module(_OPTIONAL_TRACK3_EXPORTS[name], __name__)
+        return getattr(mod, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
