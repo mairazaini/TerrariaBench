@@ -1,0 +1,83 @@
+{
+ "deaths": 0,
+ "manifest": {
+  "calibration_sha256": "none",
+  "image_digest": "unpinned-local-run",
+  "python": "3.11.15",
+  "seed_data_sha256": "none",
+  "source_commit": "1e2f7e62ec8c4421283d7ffe4ced1de28cb58e0c",
+  "source_hash": "56edbd302f52699b87032eb8dba6f5ae2e39e124a54c51be2e175bf6b63c092d"
+ },
+ "milestones": [
+  "CRAFT:wood_armor",
+  "CRAFT:wooden_sword",
+  "CRAFT:workbench",
+  "SHELTER",
+  "T1",
+  "WORKBENCH"
+ ],
+ "phi0": 0.48,
+ "phi_final": 81.33,
+ "seed": 7,
+ "sha256": "5845cca8e0d683d9ceb7c7e7d2ba3fe4fadb2aa100b8cd003b8a873b984a495e",
+ "state_hash": "75b026104e7a1c4cd7bc54c2a74194880e6124a9608f9d9c59052b92b548ca11",
+ "task": "first-night",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 7,
+   "phi": 81.33,
+   "sheltered": true,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 1,
+   "phi": 81.33,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 1,
+   "phi": 81.33,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:1",
+     true
+    ]
+   ],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 1,
+   "phi": 81.33,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 4
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

@@ -32,8 +32,8 @@ Assign one document in `docs/` to each teammate (zero overlapping files):
    - **Files:** `terraria_bench/mcp_server.py`, `terraria_bench/harness/__init__.py`, `terraria_bench/harness/runner.py`, `terraria_bench/harness/gemini_agent.py`, `terraria_bench/harness/nemotron_agent.py`
 3. **[Teammate 3 — Open-Weight Gemma 4 Agent & GRPO + LoRA Post-Training Pipeline](file:///C:/Users/natha/dev/TerrariaBench/docs/teammate_3_gemma_and_grpo_training.md)**
    - **Files:** `terraria_bench/harness/gemma_agent.py`, `terraria_bench/harness/train_grpo.py`, `tests/test_grpo_pipeline.py`
-4. **[Teammate 4 — Real Game Bridge (`tModLoader` C# Mod), Human Telemetry Recorder, Operator Web Console, Leaderboard Dashboard & Packaging](file:///C:/Users/natha/dev/TerrariaBench/docs/teammate_4_bridge_recorder_ui_and_ops.md)**
-   - **Files:** `mod/TerrariaRLBridge/{build.txt,description.txt,TerrariaRLBridge.cs}`, `terraria_bench/human_recorder.py`, `terraria_bench/web_console.py`, `dashboard/app.py`, `Makefile`, `Dockerfile`, `README.md`
+4. **[Teammate 4 — Game Bridge, Human Telemetry Recorder, Operator Web Console, Leaderboard Dashboard & Packaging](file:///C:/Users/natha/dev/TerrariaBench/docs/teammate_4_bridge_recorder_ui_and_ops.md)** *(**COMPLETED & VERIFIED**)*
+   - **Files:** `terraria_bench/human_recorder.py`, `terraria_bench/web_console.py`, `dashboard/__init__.py`, `dashboard/app.py`, `mod/TerrariaRLBridge/{build.txt,description.txt,TerrariaRLBridge.cs}`, `Makefile`, `Dockerfile`, `README.md`, `tests/test_teammate4_bridge_and_ui.py`
 
 ---
 

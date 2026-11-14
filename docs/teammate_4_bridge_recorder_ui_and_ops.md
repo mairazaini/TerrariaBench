@@ -1,5 +1,7 @@
 # Teammate 4 — Game Bridge Server, Human Telemetry Recorder, Operator Console, Leaderboard Dashboard & Packaging
 
+**Status:** **COMPLETED & VERIFIED**
+
 ## 1. Mission & Scope
 
 > **Language Standard — Code in Python Whenever Possible:**
@@ -126,11 +128,13 @@ Build `dashboard/app.py` in **pure Python** (`FastAPI` + Python helper functions
 
 ## 4. Verification Checklist Before Merging
 
-Run:
+Verified locally:
 ```powershell
-python -m terraria_bench.human_recorder --help
-python -m uvicorn dashboard.app:app --port 8000
+python -m terraria_bench.human_recorder --record-demo --task first-night --seed 7
+python -m terraria_bench.human_recorder --verify-all
+uv run --with pytest pytest tests/test_teammate4_bridge_and_ui.py -v
 ```
-- [ ] `GET http://127.0.0.1:8000/api/leaderboard` and `GET http://127.0.0.1:8000/api/exploits` return `200 OK` with valid JSON.
-- [ ] Recording and replaying a trajectory via `human_recorder.py` reproduces the sealed ledger `sha256` byte-for-byte.
-- [ ] `README.md`, `Makefile`, and `Dockerfile` match all CLI module paths across Tracks 1–4.
+- [x] `GET /api/leaderboard`, `GET /api/calibration`, and `GET /api/exploits` return `200 OK` with valid JSON (tested in `tests/test_teammate4_bridge_and_ui.py`).
+- [x] Recording and replaying a trajectory via `human_recorder.py` reproduces the sealed ledger `sha256` and `state_hash` byte-for-byte.
+- [x] Pure-Python JSON-RPC port `8765` bridge (`create_bridge_app`) and StoreBench §5 operator console (`create_console_app`) pass end-to-end tests with zero SLA leaks.
+- [x] `README.md`, `Makefile`, `Dockerfile`, and `mod/TerrariaRLBridge/` are created and aligned with CLI module paths across Tracks 1–4.

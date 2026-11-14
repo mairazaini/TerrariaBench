@@ -20,9 +20,31 @@ from .provenance import (
 from .tasks import EVAL_TASKS, HELD_OUT_SEEDS, REPORTED_SEEDS, TASKS, TRAIN_TASKS, Task
 from .tools import TOOL_NAMES, TOOL_SCHEMAS, Episode
 
+_LAZY_EXPORTS = {
+    "BridgeSession": ".human_recorder",
+    "create_bridge_app": ".human_recorder",
+    "record_from_bridge": ".human_recorder",
+    "record_trajectory": ".human_recorder",
+    "replay_trajectory": ".human_recorder",
+    "verify_all_trajectories": ".human_recorder",
+    "ConsoleState": ".web_console",
+    "create_console_app": ".web_console",
+}
+
+
+def __getattr__(name: str):
+    if name in _LAZY_EXPORTS:
+        import importlib
+
+        mod = importlib.import_module(_LAZY_EXPORTS[name], __name__)
+        return getattr(mod, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 __all__ = [
     "BOSSES",
+    "BridgeSession",
     "CALIBRATION_PATH",
+    "ConsoleState",
     "EVAL_TASKS",
     "EXPLOITS",
     "HELD_OUT_SEEDS",
@@ -40,16 +62,22 @@ __all__ = [
     "Task",
     "World",
     "components",
+    "create_bridge_app",
+    "create_console_app",
     "dense_rewards",
     "grade",
     "load_calibration",
     "load_sealed",
+    "record_from_bridge",
+    "record_trajectory",
+    "replay_trajectory",
     "run_manifest",
     "seal",
     "sla_met",
     "source_hash",
     "stream",
     "training_reward",
+    "verify_all_trajectories",
     "verify_seal",
     "verify_trial",
     "world_hash",
