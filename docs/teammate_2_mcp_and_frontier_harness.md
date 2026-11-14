@@ -93,19 +93,24 @@ Must support two execution modes so it works everywhere even if the `mcp` packag
 
 ### 3.3 `terraria_bench/harness/gemini_agent.py` — Gemini 4 + Image Blueprint + Decisions API
 
-Must integrate three capabilities via `google-genai` (`from google import genai`):
-1. **Multimodal Tool Agent (`GeminiAgent`)**:
-   - Configurable model ID via `os.environ.get("TERRARIA_GEMINI_MODEL", "gemini-2.5-pro")` (supporting `gemini-4` aliases).
-   - Sends the task prompt, 1-line status header, JSON tool output, and when `observe_viewport` was called, decodes `viewport_png_b64` into an inline `types.Part.from_bytes(data=..., mime_type="image/png")` alongside the `61x35` ASCII grid.
+Must integrate three capabilities via `google-genai>=3.2` (`from google import genai`):
+1. **Two-tier Tool Agent (`GeminiAgent`)**:
+   - **Supervisor (strategy)**: a large model, ID from `os.environ.get("TERRARIA_GEMINI_MODEL", "gemini-2.5-pro")`. Called once at the start of every window and again on each re-plan. Receives the task prompt, the 24-tool catalog, a free `terraria_status`, the last tool result, recent history, and the viewport PNG (`types.Part.from_bytes`) when one was observed. Returns JSON `{"strategy", "candidates": [{"id", "tool", "args", "when"}]}` (up to 12 candidates); unknown tools are dropped and arguments are filtered/coerced against `TOOL_SCHEMAS`.
+   - **Decision model (per-step action)**: the Decisions API. Every turn one `choice` question picks a candidate id, `end_window`, or `replan` from the latest state. `replan`, an off-menu answer, or confidence below `min_confidence` (0.35) sends control back to the supervisor, at most `max_replans_per_window` (3) times per window.
+   - **Live mode is strict**: a missing `GEMINI_API_KEY`, a failed call (after backoff on 429/5xx), or an unusable plan raises `GeminiLiveError`. It never falls back to the scripted policy, so a saved "gemini" ledger is always a real model run. `agent.stats` / `agent.trace` record calls and choices.
+   - `live=False` is a deterministic scripted stand-in for tests (no network, not a Gemini result).
+   - Play one episode: `python -m terraria_bench.harness.runner --play gemini --task first-night --seed 7 --live [--save]`.
 2. **Gemini Image Blueprint Synthesizer (`synthesize_blueprint_matrix`)**:
    - Configurable image model via `os.environ.get("TERRARIA_GEMINI_IMAGE_MODEL", "gemini-2.5-flash-image-preview")`.
    - When the agent calls `build_blueprint` for a custom structure, prompts the image/spatial model to generate a structural schematic and parses it into a valid 2D tile matrix (`WOOD=3`, `PLATFORM=4`, `DOOR=19`, `WORKBENCH=12`, `TORCH=16`, `CAMPFIRE=15`, `AIR=0`), verifying flood-fill closure before placement.
 3. **Gemini Decisions API Wrapper (`GeminiDecisionsWrapper`)**:
    - Uses `client = genai.Client(http_options={"api_version": "v1beta"})` and model `os.environ.get("TERRARIA_GEMINI_DECISION_MODEL", "gemini-decision-1")`.
-   - Calls `client.decisions.create(model=..., input=[...], questions={...})` with question types:
-     - `"choice"` (2–255 candidate macro-actions, returning winner + normalized probability distribution + confidence `0..1`),
-     - `"score"` (rubric evaluation of shelter/boss-readiness risk from `0..N`),
-     - `"bool"` (yes/no readiness check, e.g., whether to summon Eye of Cthulhu tonight; gracefully falls back to `generate_content` with structured JSON schema if the `decisions` endpoint is unavailable on the user's API tier).
+   - Calls `client.decisions.create(model=..., input=[...], questions={...})`. `input` is a list of blocks: `{"type": "text", "text": ...}` and `{"type": "image", "data": <base64>, "mime_type": "image/png", "resolution": "low"}`. Each question is `{"type", "instructions", "criteria"}`:
+     - `"choice"`: `criteria` maps option id -> description (2–255 options); answer has `.choice`, `.probabilities`, `.confidence`,
+     - `"score"`: `criteria` is the ordered list of level descriptions; answer has `.score`, `.confidence`,
+     - `"noul"`: yes/no likelihood, no criteria; answer has `.noul` (0.01–0.99), `.confidence`.
+   - The wrapper also accepts the legacy `"bool"` / `choices` / `max_score` spellings and converts them, and normalises every answer to `{type, value, confidence[, probabilities]}`.
+   - Without a key it uses a deterministic local stand-in (`source: "deterministic_fallback"`); with `strict=True` it raises `GeminiLiveError` instead.
    - Logs decision confidence and risk/utility trade-offs via `record_tactical_checkpoint`.
 
 ---

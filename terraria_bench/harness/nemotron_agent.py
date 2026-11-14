@@ -4,16 +4,102 @@ from __future__ import annotations
 import json
 import os
 import time
+from pathlib import Path
 from typing import Any, Callable, TypeVar
 
 from ..engine import WORKBENCH
 from ..mcp_server import tool_json_schema
+from ..provenance import REPO_DIR
 from ..tools import TOOL_NAMES, TOOL_SCHEMAS, Episode
 
 T = TypeVar("T")
 
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+FEATHERLESS_BASE_URL = "https://api.featherless.ai/v1"
+VERDA_BASE_URL = "https://api.datacrunch.io/v1"
+MODAL_BASE_URL = os.environ.get("MODAL_BASE_URL", "")
+
+_DOTENV_LOADED = False
+
+
+def load_dotenv_if_present(path: str | Path | None = None, force: bool = False) -> dict[str, str]:
+    """Load key=value pairs from ``REPO_DIR / '.env'`` once without overwriting existing env vars."""
+    global _DOTENV_LOADED
+    if path is None and _DOTENV_LOADED and not force:
+        return {}
+    env_path = Path(path) if path is not None else (REPO_DIR / ".env")
+    loaded: dict[str, str] = {}
+    if path is None:
+        _DOTENV_LOADED = True
+    if env_path.exists():
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, val = line.split("=", 1)
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = val
+                loaded[key] = val
+    if os.environ.get("GEMINI_API_KEY") and not os.environ.get("GOOGLE_GENERATIVE_AI_API_KEY"):
+        os.environ["GOOGLE_GENERATIVE_AI_API_KEY"] = os.environ["GEMINI_API_KEY"]
+    elif os.environ.get("GOOGLE_GENERATIVE_AI_API_KEY") and not os.environ.get("GEMINI_API_KEY"):
+        os.environ["GEMINI_API_KEY"] = os.environ["GOOGLE_GENERATIVE_AI_API_KEY"]
+    return loaded
+
+
+def resolve_inference_provider(base_url: str | None = None, api_key: str | None = None) -> dict[str, str]:
+    """Resolve active OpenAI-compatible inference provider across Modal, Featherless, Verda, NIM, OpenRouter."""
+    load_dotenv_if_present()
+    if base_url:
+        key = (
+            api_key
+            or os.environ.get("MODAL_API_KEY")
+            or os.environ.get("FEATHERLESS_API_KEY")
+            or os.environ.get("VERDA_API_KEY")
+            or os.environ.get("NVIDIA_API_KEY")
+            or os.environ.get("OPENROUTER_API_KEY")
+            or ""
+        )
+        return {"provider": "custom", "base_url": base_url, "api_key": key}
+    if api_key:
+        return {"provider": "custom", "base_url": os.environ.get("NVIDIA_BASE_URL", NVIDIA_BASE_URL), "api_key": api_key}
+
+    modal_url = os.environ.get("MODAL_BASE_URL", "")
+    if modal_url:
+        token_id = os.environ.get("MODAL_TOKEN_ID", "")
+        token_secret = os.environ.get("MODAL_TOKEN_SECRET", "")
+        m_key = os.environ.get("MODAL_API_KEY") or (f"{token_id}:{token_secret}" if (token_id and token_secret) else "EMPTY")
+        return {"provider": "modal", "base_url": modal_url, "api_key": m_key}
+
+    if os.environ.get("FEATHERLESS_API_KEY"):
+        return {
+            "provider": "featherless",
+            "base_url": os.environ.get("FEATHERLESS_BASE_URL", FEATHERLESS_BASE_URL),
+            "api_key": os.environ["FEATHERLESS_API_KEY"],
+        }
+
+    if os.environ.get("VERDA_API_KEY"):
+        return {
+            "provider": "verda",
+            "base_url": os.environ.get("VERDA_BASE_URL", VERDA_BASE_URL),
+            "api_key": os.environ["VERDA_API_KEY"],
+        }
+
+    if os.environ.get("NVIDIA_API_KEY"):
+        return {
+            "provider": "nvidia",
+            "base_url": os.environ.get("NVIDIA_BASE_URL", NVIDIA_BASE_URL),
+            "api_key": os.environ["NVIDIA_API_KEY"],
+        }
+
+    return {
+        "provider": "openrouter",
+        "base_url": OPENROUTER_BASE_URL,
+        "api_key": os.environ.get("OPENROUTER_API_KEY", ""),
+    }
 
 
 def _is_retryable(exc: Exception) -> bool:
@@ -95,19 +181,13 @@ class NemotronAgent:
         api_key: str | None = None,
         live: bool = False,
     ):
+        load_dotenv_if_present()
         self.name = "nemotron"
         self.model = model or os.environ.get("TERRARIA_NEMOTRON_MODEL", "nvidia/nemotron-3.5-super-vl")
-        nv_key = api_key or os.environ.get("NVIDIA_API_KEY", "")
-        or_key = os.environ.get("OPENROUTER_API_KEY", "")
-        if base_url:
-            self.base_url = base_url
-            self.api_key = nv_key or or_key
-        elif nv_key:
-            self.base_url = os.environ.get("NVIDIA_BASE_URL", NVIDIA_BASE_URL)
-            self.api_key = nv_key
-        else:
-            self.base_url = OPENROUTER_BASE_URL
-            self.api_key = or_key
+        resolved = resolve_inference_provider(base_url=base_url, api_key=api_key)
+        self.provider = resolved["provider"]
+        self.base_url = resolved["base_url"]
+        self.api_key = resolved["api_key"]
         self.live = live
         self._observed_window: int = -1
 

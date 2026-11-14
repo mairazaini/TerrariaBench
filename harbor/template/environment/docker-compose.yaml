@@ -1,0 +1,23 @@
+# Merged on top of Harbor's base compose config. `main` is the agent container;
+# `game` holds the simulator, the calibration and the episode ledger.
+services:
+  main:
+    depends_on:
+      game:
+        condition: service_healthy
+
+  game:
+    build:
+      context: ./game
+    environment:
+      TERRARIA_TASK: "__TASK_ID__"
+      TERRARIA_SEED: "__SEED__"
+      TERRARIA_VERIFIER_TOKEN: "__TOKEN__"
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s

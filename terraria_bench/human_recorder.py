@@ -19,6 +19,7 @@ from .provenance import (
     CALIBRATION_PATH,
     ProvenanceError,
     load_sealed,
+    seal,
     verify_seal,
     write_sealed,
 )
@@ -156,9 +157,8 @@ def replay_trajectory(jsonl_path: str | Path, calibration: dict | None = None) -
         or replayed["windows"] != recorded_ledger["windows"]
     ):
         raise ProvenanceError(f"replay mismatch against recorded ledger in {path}")
-    if calibration is None and recorded_ledger.get("manifest", {}).get("calibration_sha256") == "none":
-        if replayed["sha256"] != recorded_ledger["sha256"]:
-            raise ProvenanceError(f"ledger sha256 mismatch on replay for {path}")
+    if seal({**replayed, "manifest": recorded_ledger["manifest"]})["sha256"] != recorded_ledger["sha256"]:
+        raise ProvenanceError(f"ledger sha256 mismatch on replay for {path}")
 
     cal = _load_calibration_for_replay(calibration)
     cell = (cal or {}).get("cells", {}).get(f"{ep.task.id}:{ep.seed}")
@@ -168,7 +168,7 @@ def replay_trajectory(jsonl_path: str | Path, calibration: dict | None = None) -
         "task": ep.task.id,
         "seed": ep.seed,
         "state_hash": replayed["state_hash"],
-        "ledger_sha256": replayed["sha256"],
+        "ledger_sha256": recorded_ledger["sha256"],
         "metrics": metrics,
         "ledger": replayed,
     }

@@ -13,6 +13,7 @@ from terraria_bench.harness import (
     CompactHistory,
     GeminiAgent,
     GeminiDecisionsWrapper,
+    GeminiLiveError,
     NemotronAgent,
     build_multimodal_messages,
     call_with_backoff,
@@ -96,13 +97,22 @@ def test_compact_history_and_early_quitter_runner(tmp_path: Path):
     assert capped["turns"] == 5
 
 
-def test_gemini_blueprint_decisions_and_episode():
+def test_gemini_blueprint_decisions_and_episode(monkeypatch):
     ep = Episode("first-night", 7, redact_seed=True)
-    ep.step("chop_trees", radius=40, max_trees=4)
     mat = synthesize_blueprint_matrix("shelter")
+    ep.step("chop_trees", radius=40, max_trees=4)
+    ep.step("navigate_to", x=ep.world.home[0], y=ep.world.home[1], budget=300)
+    # matrix tiles are paid from inventory: wood alone no longer makes a house
+    probe = Episode("first-night", 7, redact_seed=True)
+    probe.step("chop_trees", radius=40, max_trees=4)
+    assert probe.step("build_blueprint", matrix=mat, origin_dx=-4, origin_dy=-4)["housing"]["valid"] is False
+    ep.step("craft_item", item_id="workbench")
+    ep.step("place_station_or_furniture", item_id="workbench", dx=-2, dy=0)
+    ep.step("craft_item", item_id="door")
     res = ep.step("build_blueprint", matrix=mat, origin_dx=-4, origin_dy=-4)
-    assert res["housing"]["valid"] is True
+    assert res["housing"]["valid"] is True and res["tiles_skipped"] == 0
 
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     decisions = GeminiDecisionsWrapper()
     dec = decisions.decide(
         {"next_step": {"type": "choice", "choices": ["build_shelter", "mine_ore"]}},
@@ -117,6 +127,125 @@ def test_gemini_blueprint_decisions_and_episode():
     out = run_agent_episode(agent, "first-night", 7, max_turns=150)
     assert out["ledger"]["windows"][-1]["w"] == TASKS["first-night"].windows
     assert out["score"]["sla"] > 0.5
+    assert "SHELTER" in out["ledger"]["milestones"]
+
+
+class _FakeDecisions:
+    """Stands in for ``client.decisions`` and records what the wrapper sends."""
+
+    def __init__(self, script):
+        self.script = list(script)
+        self.requests = []
+
+    def create(self, *, model, input, questions):
+        self.requests.append({"model": model, "input": input, "questions": questions})
+        pick = self.script.pop(0) if self.script else "end_window"
+        opts = list(questions["next_action"]["criteria"])
+        probs = {o: (0.9 if o == pick else 0.1 / max(1, len(opts) - 1)) for o in opts}
+
+        class _Ans:
+            choice = pick
+            confidence = 0.9
+            probabilities = probs
+
+        class _Resp:
+            answers = {"next_action": _Ans()}
+
+        return _Resp()
+
+
+class _FakeClient:
+    def __init__(self, script):
+        self.decisions = _FakeDecisions(script)
+
+
+_PLAN = json.dumps({
+    "strategy": "Chop wood, then rest.",
+    "candidates": [
+        {"id": "chop", "tool": "chop_trees", "args": {"radius": "40", "max_trees": 2, "bogus": 1},
+         "when": "wood is low"},
+        {"id": "status", "tool": "terraria_status", "args": {}, "when": "state unclear"},
+        {"id": "nope", "tool": "not_a_tool", "args": {}, "when": "never"},
+    ],
+})
+
+
+def test_gemini_two_tier_supervisor_plans_decision_model_acts():
+    prompts = []
+
+    def supervisor(prompt_text, png_b64):
+        prompts.append(prompt_text)
+        return "```json\n" + _PLAN + "\n```"
+
+    client = _FakeClient(["replan", "chop", "not_on_menu", "chop"])
+    agent = GeminiAgent(live=True, supervisor_fn=supervisor,
+                        decisions=GeminiDecisionsWrapper(client=client, strict=True))
+    seen = []
+    out = run_agent_episode(agent, "first-night", 7, max_turns=60,
+                            on_turn=lambda turn, tool, args, res: seen.append((tool, args)))
+
+    windows = TASKS["first-night"].windows
+    assert out["ledger"]["windows"][-1]["w"] == windows
+    # window 1: plan, "replan" -> new plan, chop, off-menu answer -> new plan, chop, end_window
+    assert seen[:3] == [("chop_trees", {"radius": 40, "max_trees": 2})] * 2 + [("end_window", {})]
+    assert agent.stats["replans"] == 2
+    assert agent.stats["supervisor_calls"] == windows + 2
+    assert agent.stats["decision_calls"] == len(client.decisions.requests) == 5 + (windows - 1)
+    assert "chop_trees(" in prompts[0] and "Window 1 is starting" in prompts[0]
+
+    req = client.decisions.requests[0]
+    assert req["model"] == "gemini-decision-1"
+    assert req["input"][0]["type"] == "text" and "Chop wood" in req["input"][0]["text"]
+    q = req["questions"]["next_action"]
+    assert q["type"] == "choice" and q["instructions"]
+    assert list(q["criteria"]) == ["chop", "status", "end_window", "replan"]
+    assert [t["tier"] for t in agent.trace[:3]] == ["supervisor", "supervisor", "decision"]
+
+
+def test_gemini_live_mode_never_falls_back_to_scripted_policy(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    ep = Episode("first-night", 7, redact_seed=True)
+    with pytest.raises(GeminiLiveError, match="GEMINI_API_KEY"):
+        GeminiAgent(live=True).next_action({"ok": True}, [], ep)
+    assert ep.world.window == 1 and not ep.world.milestones
+
+    # a supervisor that never returns a usable plan is an error, not a silent end_window
+    bad = GeminiAgent(live=True, supervisor_fn=lambda text, png: "no json here",
+                      decisions=GeminiDecisionsWrapper(client=_FakeClient([]), strict=True))
+    with pytest.raises(GeminiLiveError, match="no usable plan"):
+        bad.next_action({"ok": True}, [], ep)
+
+    class _Boom:
+        class decisions:
+            @staticmethod
+            def create(**kwargs):
+                raise RuntimeError("400 bad question")
+
+    strict = GeminiDecisionsWrapper(client=_Boom(), strict=True)
+    with pytest.raises(GeminiLiveError, match="400 bad question"):
+        strict.decide({"q": {"type": "bool", "instructions": "Is it night?"}}, "state")
+    lenient = GeminiDecisionsWrapper(client=_Boom())
+    assert lenient.decide({"q": {"type": "bool", "instructions": "Is it night?"}}, "state")["source"] == "deterministic_fallback"
+    assert "400 bad question" in lenient.last_error
+
+
+def test_runner_reports_bad_tool_calls_instead_of_crashing():
+    class Sloppy:
+        name = "sloppy"
+        calls = 0
+
+        def next_action(self, observation, context, episode):
+            self.calls += 1
+            if self.calls == 1:
+                return {"tool": "chop_trees", "args": {"no_such_arg": 1}}
+            if self.calls == 2:
+                self.saw = observation
+            return {"tool": "end_window", "args": {}}
+
+    agent = Sloppy()
+    out = run_agent_episode(agent, "first-night", 7, max_turns=3)
+    assert out["turns"] == 3
+    assert agent.saw["ok"] is False and "invalid call chop_trees" in agent.saw["error"]
 
 
 def test_nemotron_backoff_multimodal_and_eval_standard():

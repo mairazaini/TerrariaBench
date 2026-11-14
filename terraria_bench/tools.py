@@ -145,6 +145,12 @@ TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
 }
 
 
+# Tile code -> inventory item charged by ``build_blueprint(matrix=...)``. Any
+# other non-AIR code (ores, chests, crystals, trees, lava, ...) is not buildable.
+MATRIX_TILE_ITEMS = {WOOD: "wood", PLATFORM: "wood_platform", STONE: "stone",
+                     **{tile: item for item, tile in PLACEABLE.items()}}
+
+
 class Episode:
     """Metered tool session over a seeded World that records and seals the episode ledger."""
 
@@ -612,26 +618,36 @@ class Episode:
         w = self.world
         px, py = w.pos
         if matrix is not None:
-            # Explicit 2D tile matrix placement (used by blueprint synthesis or partial-enclosure tests)
-            placed_count = 0
+            # Explicit 2D tile matrix placement (used by blueprint synthesis or partial-enclosure tests).
+            # Every non-AIR tile is paid for from inventory; a cell is skipped when the
+            # item is missing, the code is not a buildable tile, or it is malformed.
+            if not isinstance(matrix, (list, tuple)):
+                return {"ok": False, "error": "matrix must be a 2D list of tile codes"}
+            placed_count, skipped = 0, 0
             for r_idx, row in enumerate(matrix):
+                if not isinstance(row, (list, tuple)):
+                    continue
                 for c_idx, t in enumerate(row):
-                    tx, ty = px + int(origin_dx) + c_idx, py + int(origin_dy) + r_idx
-                    if not (1 <= tx < W - 1 and 1 <= ty < H - 2) or t < 0:
+                    if isinstance(t, bool) or not isinstance(t, int) or t < 0:
                         continue
-                    if t == WOOD:
-                        if not w.has("wood", 1):
+                    tx, ty = px + int(origin_dx) + c_idx, py + int(origin_dy) + r_idx
+                    if not (1 <= tx < W - 1 and 1 <= ty < H - 2):
+                        continue
+                    if t != AIR:
+                        if w.g[ty][tx] == t:
+                            continue  # already built: nothing to pay, nothing to place
+                        item = MATRIX_TILE_ITEMS.get(t)
+                        if item is None or not w.has(item, 1):
+                            skipped += 1
                             continue
-                        w.take("wood", 1)
-                    elif t == PLATFORM:
-                        if not w.has("wood_platform", 1):
-                            continue
-                        w.take("wood_platform", 1)
-                    w.set_tile(tx, ty, int(t), placed=(t != AIR))
+                        w.take(item, 1)
+                        if item in ("workbench", "furnace", "anvil"):
+                            w.milestones.add(item.upper())
+                    w.set_tile(tx, ty, t, placed=(t != AIR))
                     placed_count += 1
             w.tick += 120
             w.refresh()
-            return {"ok": True, "mode": "matrix", "tiles_set": placed_count, "housing": w.housing(), "arena": w.arena()}
+            return {"ok": True, "mode": "matrix", "tiles_set": placed_count, "tiles_skipped": skipped, "housing": w.housing(), "arena": w.arena()}
 
         if preset == "shelter":
             # Need at least 20 wood (or existing workbench + wood) to build a 9x6 enclosed cabin (7x4=28 interior tiles)

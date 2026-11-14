@@ -1,0 +1,63 @@
+{"tool": "chop_trees", "args": {"radius": 60, "max_trees": 4}}
+{"tool": "build_blueprint", "args": {"preset": "shelter"}}
+{"tool": "craft_item", "args": {"item_id": "wooden_sword", "quantity": 1}}
+{"tool": "equip_item", "args": {"item_id": "wooden_sword"}}
+{"tool": "craft_item", "args": {"item_id": "wood_armor", "quantity": 1}}
+{"tool": "equip_item", "args": {"item_id": "wood_armor"}}
+{"tool": "mine_vein", "args": {"tile_type": "stone", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "stone", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "stone", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 46, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 46, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "craft_item", "args": {"item_id": "furnace", "quantity": 1}}
+{"tool": "place_station_or_furniture", "args": {"item_id": "furnace", "dx": 2, "dy": 0}}
+{"tool": "craft_item", "args": {"item_id": "iron_bar", "quantity": 16}}
+{"tool": "craft_item", "args": {"item_id": "anvil", "quantity": 1}}
+{"tool": "place_station_or_furniture", "args": {"item_id": "anvil", "dx": -1, "dy": 0}}
+{"tool": "craft_item", "args": {"item_id": "iron_bow", "quantity": 1}}
+{"tool": "equip_item", "args": {"item_id": "iron_bow"}}
+{"tool": "craft_item", "args": {"item_id": "iron_armor", "quantity": 1}}
+{"tool": "equip_item", "args": {"item_id": "iron_armor"}}
+{"tool": "explore_cavern", "args": {"target_depth": 46, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 46, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 58, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 51, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 45, "auto_torch": false}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "craft_item", "args": {"item_id": "iron_bar", "quantity": 1}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 46, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 46, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 47, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "loot_container_or_crystal", "args": {"kind": "life_crystal"}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "craft_item", "args": {"item_id": "iron_bar", "quantity": 3}}
+{"tool": "craft_item", "args": {"item_id": "iron_pickaxe", "quantity": 1}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 64, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 64, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "craft_item", "args": {"item_id": "silver_bar", "quantity": 4}}
+{"tool": "craft_item", "args": {"item_id": "silver_bow", "quantity": 1}}
+{"tool": "equip_item", "args": {"item_id": "silver_bow"}}
+{"tool": "end_window", "args": {}}

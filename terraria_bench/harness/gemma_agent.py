@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -98,13 +99,34 @@ class GemmaAgent:
         config: Optional[AgentConfig] = None,
         model: Optional[Any] = None,
         tokenizer: Optional[Any] = None,
+        live: bool = False,
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
     ):
         self.config = config or AgentConfig()
+        self.name: str = "gemma_tuned" if self.config.adapter_path else "gemma_base"
+        self.live = live
         self.device = self._resolve_device(self.config.device)
         self.dtype = self._resolve_dtype(self.config.torch_dtype)
 
         self._model = model
         self._tokenizer = tokenizer
+
+        try:
+            from .nemotron_agent import load_dotenv_if_present, resolve_inference_provider
+
+            load_dotenv_if_present()
+            resolved = resolve_inference_provider(
+                base_url=base_url or os.environ.get("GEMMA_BASE_URL") or None,
+                api_key=api_key,
+            )
+            self.provider = resolved["provider"]
+            self.base_url = resolved["base_url"]
+            self.api_key = resolved["api_key"]
+        except ImportError:
+            self.provider = "local"
+            self.base_url = base_url or ""
+            self.api_key = api_key or ""
 
         if self._model is not None and self.config.adapter_path:
             self.load_adapter(self.config.adapter_path)
@@ -473,6 +495,59 @@ class GemmaAgent:
                 "info": info,
             },
         )
+
+    def _live_remote_call(self, observation: dict[str, Any], context: list[dict[str, Any]], prompt: str) -> dict[str, Any]:
+        from openai import OpenAI
+
+        from ..tools import TOOL_NAMES
+
+        client = OpenAI(base_url=self.base_url, api_key=self.api_key)
+        model_id = os.environ.get("TERRARIA_GEMMA_MODEL", self.config.model_name_or_path)
+        obs_clean = {k: v for k, v in observation.items() if k != "viewport_png_b64"}
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    f"{prompt}\nAvailable MCP tools: {', '.join(TOOL_NAMES)}. "
+                    "Respond strictly with JSON: {\"tool\": \"...\", \"args\": {...}}."
+                ),
+            },
+            {"role": "user", "content": json.dumps({"context": context[-4:], "observation": obs_clean}, default=str)},
+        ]
+        resp = client.chat.completions.create(model=model_id, messages=messages, temperature=0.2)
+        parsed = self.parse_action(resp.choices[0].message.content or "")
+        tool_name = parsed.get("tool") or parsed.get("name") or parsed.get("action", "end_window")
+        args = parsed.get("args") or parsed.get("arguments") or {}
+        return {"tool": tool_name, "args": args if isinstance(args, dict) else {}}
+
+    def next_action(self, observation: dict[str, Any], context: list[dict[str, Any]], ep: Any) -> dict[str, Any]:
+        """EpisodeRunner-compatible 24-tool decision entrypoint for StoreBench Table 3."""
+        if self._model is not None:
+            rec = self.act(observation, deterministic=True)
+            tool_name = (
+                rec.parsed_tool_call.get("tool")
+                or rec.parsed_tool_call.get("name")
+                or rec.parsed_tool_call.get("action", "end_window")
+            )
+            args = rec.parsed_tool_call.get("args") or rec.parsed_tool_call.get("arguments") or {}
+            return {"tool": tool_name, "args": args}
+
+        if self.live and self.api_key and self.base_url:
+            return self._live_remote_call(observation, context, ep.task.prompt)
+
+        from ..engine import WORKBENCH
+
+        w = ep.world
+        if "SHELTER" not in w.milestones:
+            if w.inv.get("wood", 0) < 25 and any(tx not in w.withered for tx in w.trees) and ep.ops_left > 1:
+                return {"tool": "chop_trees", "args": {"radius": 40, "max_trees": 4}}
+            if w.inv.get("wood", 0) >= 20 and ep.ops_left > 1:
+                return {"tool": "build_blueprint", "args": {"preset": "shelter"}}
+        if not w.has("wooden_sword") and w.has("wood", 7) and w.near_tile(WORKBENCH, 4) and ep.ops_left > 1:
+            return {"tool": "craft_item", "args": {"item_id": "wooden_sword"}}
+        if w.has("wooden_sword") and w.eq.get("weapon") != "wooden_sword" and ep.ops_left > 1:
+            return {"tool": "equip_item", "args": {"item_id": "wooden_sword"}}
+        return {"tool": "end_window", "args": {}}
 
 
 def evaluate_agent(

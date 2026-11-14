@@ -1,0 +1,84 @@
+{"tool": "build_blueprint", "args": {"preset": "shelter"}}
+{"tool": "chop_trees", "args": {"radius": 60, "max_trees": 4}}
+{"tool": "chop_trees", "args": {"radius": 60, "max_trees": 4}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "end_window", "args": {}}
+{"tool": "chop_trees", "args": {"radius": 60, "max_trees": 4}}
+{"tool": "chop_trees", "args": {"radius": 60, "max_trees": 4}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "end_window", "args": {}}
+{"tool": "end_window", "args": {}}
+{"tool": "end_window", "args": {}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 90, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 90, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 90, "auto_torch": false}}
+{"tool": "build_blueprint", "args": {"preset": "hellbridge"}}
+{"tool": "end_window", "args": {}}
+{"tool": "engage_combat_burst", "args": {"target_id": "un7_0", "kite_distance": 18, "dodge_priority": 0.5}}
+{"tool": "engage_combat_burst", "args": {"target_id": "un7_1", "kite_distance": 18, "dodge_priority": 0.5}}
+{"tool": "consume_buff_or_heal", "args": {"item_id": "ironskin_potion"}}
+{"tool": "summon_or_trigger_boss", "args": {"boss": "wall_of_flesh"}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "engage_combat_burst", "args": {"target_id": "boss_wall_of_flesh", "kite_distance": 18, "dodge_priority": 0.5, "vertical_platform_use": true}}
+{"tool": "consume_buff_or_heal", "args": {"item_id": "lesser_healing_potion"}}
+{"tool": "end_window", "args": {}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 72, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 72, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 72, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "gold_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "gold_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 72, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 72, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "gold_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 72, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "gold_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 82, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 72, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "gold_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 82, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "gold_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 86, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "gold_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 72, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "gold_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 82, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "gold_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 86, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "gold_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "end_window", "args": {}}
