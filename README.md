@@ -9,10 +9,11 @@ Everything runnable — the headless world simulator, 24-tool MCP surface, port 
 ## Reproduce the results
 
 ```bash
-uv run python reporting/generate_report.py     # re-runs the six scripted anchors, rewrites EVAL_RESULTS.md
-uv run --extra dev --extra agents pytest       # gates, exploit regressions, determinism, planner
-harbor run -p harbor/tasks/terraria-first-night -a oracle      # reference run through Harbor
-harbor run -p harbor/tasks/terraria-first-night -a opencode -m <provider/model> --env-file .env
+uv run python reporting/generate_report.py     # re-runs all 6 scripted anchors (incl. do-nothing, absentee/stop-early, exploiter, smart-triage) & rewrites EVAL_RESULTS.md
+uv run --extra dev --extra agents pytest       # calibration gates, 11+ exploit regressions, determinism, Harbor task sync
+harbor run -p harbor/tasks/terraria-eye-of-cthulhu -a oracle   # reference run through Harbor (0.950 composite, 100% Eye progress)
+harbor run -p harbor/tasks/terraria-eye-of-cthulhu -a nop      # do-nothing baseline through Harbor (0.000)
+harbor run -p harbor/tasks/terraria-eye-of-cthulhu -a opencode -m <provider/model> --env-file .env -n 3
 ```
 
 `EVAL_RESULTS.md` holds only numbers that these commands regenerate or that come from sealed ledgers of live
@@ -71,10 +72,11 @@ volume, not in this repository; `modal deploy post_training/modal_grpo_gemma.py`
 The eight evaluation scenarios ship as [Harbor](https://github.com/laude-institute/harbor) tasks in `harbor/tasks/`, each with `instruction.md`, `task.toml`, `environment/Dockerfile`, `tests/` and `solution/`.
 
 ```bash
-harbor run -p harbor/tasks/terraria-first-night -a opencode -m gemini/gemini-4-carbon \
+harbor run -p harbor/tasks/terraria-eye-of-cthulhu -a opencode -m gemini/gemini-4-carbon \
     --api-key-name GEMINI_API_KEY --env-file .env
-harbor run -p harbor/tasks/terraria-first-night -a oracle   # reference solution
-harbor run -p harbor/tasks -a opencode -m <provider/model>  # all eight scenarios
+harbor run -p harbor/tasks/terraria-eye-of-cthulhu -a oracle   # reference solution (0.950)
+harbor run -p harbor/tasks/terraria-first-night -a oracle      # quick 4-window smoke test
+harbor run -p harbor/tasks -a opencode -m <provider/model>     # all eight scenarios
 ```
 
 `.env` holds the model provider's API key (for Google models, `GEMINI_API_KEY`). Harbor's provider prefix for Google is `gemini/`, and `--api-key-name` is needed for model ids its registry does not know yet. Docker is required: each task is a two-container environment.
