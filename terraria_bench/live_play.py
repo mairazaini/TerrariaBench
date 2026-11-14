@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import html
 import json
@@ -12,22 +13,20 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 
-from .engine import H, TILE_CHARS, W
-from .harness.gemini_agent import (
-    SUPERVISOR_SYSTEM,
-    GeminiAgent,
-    GeminiDecisionsWrapper,
-    parse_supervisor_plan,
-)
+from .engine import H, W
+from .harness.gemini_agent import GeminiAgent, GeminiDecisionsWrapper
 from .human_recorder import BridgeSession
 from .provenance import ARTIFACTS_DIR
+from .real_game import RealGameController, sanitize_hud
 from .tasks import TASKS
-from .tools import TOOL_NAMES, TOOL_SCHEMAS, Episode, _encode_png
+from .tools import Episode
 from .web_console import _readonly_viewport
 
 RECORDINGS_DIR = ARTIFACTS_DIR / "recordings"
+REAL_FRAMES_DIRNAME = "real_terraria_live_frames"
+REAL_FRAMES_KEPT = 300
 DEFAULT_SUPERVISOR_MODEL = "gemini-4-hydrogen"
 DEFAULT_DECISION_MODEL = "gemini-decision-1"
 
@@ -110,23 +109,6 @@ CONTROL_QUESTIONS: dict[str, dict[str, Any]] = {
     },
 }
 
-_REAL_GAME_FALLBACK_PLAN: dict[str, Any] = {
-    "strategy": "5-stage run to Eye of Cthulhu: (1) chop wood & gel, (2) build shelter + workbench/bow/armor, (3) mine ore + smelt furnace/anvil + forge metal gear, (4) build 2-tier platform arena + campfire, (5) summon & kite Eye of Cthulhu at night.",
-    "candidates": {
-        "chop_trees": {"tool": "chop_trees", "args": {"radius": 35, "max_trees": 4}, "when": "Stage 1: Need wood (< 80 Wood) or standing near trees"},
-        "build_shelter": {"tool": "build_blueprint", "args": {"preset": "shelter"}, "when": "Stage 2: Have wood and need enclosed wood shelter with workbench, door, torches"},
-        "craft_workbench": {"tool": "craft_item", "args": {"item_id": "wooden_sword", "quantity": 1}, "when": "Stage 2: Craft workbench, wood armor, wooden bow & arrows"},
-        "mine_ore": {"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 10}, "when": "Stage 3: Need stone/iron/gold ore for furnace, anvil, and metal gear"},
-        "explore_down": {"tool": "explore_cavern", "args": {"target_depth": 58, "auto_torch": True}, "when": "Stage 3: Descend underground to gather ore and Life Crystals"},
-        "forge_gear": {"tool": "craft_item", "args": {"item_id": "gold_broadsword", "quantity": 1}, "when": "Stage 3: Smelt bars at furnace & forge metal sword/bow/armor at anvil"},
-        "build_arena": {"tool": "build_blueprint", "args": {"preset": "arena"}, "when": "Stage 4: Build multi-tier platform arena + campfire before Eye of Cthulhu"},
-        "summon_eye": {"tool": "summon_or_trigger_boss", "args": {"boss": "eye_of_cthulhu"}, "when": "Stage 5: Arena + gear ready — craft/use Suspicious Looking Eye at night"},
-        "engage_combat": {"tool": "engage_combat_burst", "args": {"kite_distance": 14.0, "dodge_priority": 0.75}, "when": "Enemies or Eye of Cthulhu active nearby"},
-        "retreat_heal": {"tool": "retreat_and_stabilize", "args": {"use_potion": True}, "when": "HP below 50% or surrounded"},
-    },
-}
-
-
 def _as_int(val: Any, default: int = 0) -> int:
     """Coerce int, float, numeric str, or tModLoader DefenseStat dict into an int."""
     if isinstance(val, bool):
@@ -146,81 +128,6 @@ def _as_int(val: Any, default: int = 0) -> int:
     return default
 
 
-def _find_grid_target_dx(ascii_grid: list[str] | None, target_chars: str) -> int | None:
-    """Return horizontal tile offset from player center '@' to nearest matching char."""
-    if not ascii_grid:
-        return None
-    cy = len(ascii_grid) // 2
-    cx = len(ascii_grid[0]) // 2 if ascii_grid[0] else 30
-    best_dx: int | None = None
-    best_d2 = 10**9
-    for r, row in enumerate(ascii_grid):
-        for c, ch in enumerate(row):
-            if ch not in target_chars:
-                continue
-            dx, dy = c - cx, r - cy
-            d2 = dx * dx + dy * dy
-            if d2 < best_d2:
-                best_d2 = d2
-                best_dx = dx
-    return best_dx
-
-
-_SOLID_TILE_CHARS = frozenset("dsWcivga")
-
-
-def _detect_trapped_or_blocked(ascii_grid: list[str] | None) -> tuple[bool, str, bool, bool]:
-    """Check if the player is boxed in by solid tiles and pick the clearer escape side.
-
-    Returns ``(trapped, escape_dir, left_blocked, right_blocked)``.
-    """
-    if not ascii_grid or not ascii_grid[0]:
-        return (False, "right", False, False)
-    rows = len(ascii_grid)
-    cols = len(ascii_grid[0])
-    cy, cx = rows // 2, cols // 2
-
-    def solid(r: int, c: int) -> bool:
-        if 0 <= r < rows and 0 <= c < len(ascii_grid[r]):
-            return ascii_grid[r][c] in _SOLID_TILE_CHARS
-        return False
-
-    def is_air(r: int, c: int) -> bool:
-        if 0 <= r < rows and 0 <= c < len(ascii_grid[r]):
-            return ascii_grid[r][c] == "."
-        return False
-
-    roof_blocked = any(solid(cy + dr, cx + dc) for dr in (-3, -2, -1) for dc in (-1, 0, 1))
-    left_blocked = any(solid(cy + dr, cx + dc) for dr in (-1, 0) for dc in (-2, -1))
-    right_blocked = any(solid(cy + dr, cx + dc) for dr in (-1, 0) for dc in (1, 2))
-
-    left_air = sum(1 for dr in range(-4, 0) for dc in range(-6, 0) if is_air(cy + dr, cx + dc))
-    right_air = sum(1 for dr in range(-4, 0) for dc in range(1, 7) if is_air(cy + dr, cx + dc))
-    escape_dir = "left" if left_air > right_air else "right"
-    trapped = roof_blocked or (left_blocked and right_blocked)
-    return (trapped, escape_dir, left_blocked, right_blocked)
-
-
-def _infer_real_stage(state: dict[str, Any], tool: str, args: dict[str, Any]) -> int:
-    """Determine 5-stage progression toward Eye of Cthulhu from live telemetry."""
-    explicit = _as_int(state.get("stage"), 0)
-    if 1 <= explicit <= 5:
-        return explicit
-    enemies = state.get("nearby_enemies") or []
-    if state.get("boss_active") or any("eye of cthulhu" in str(e.get("name", "")).lower() for e in enemies):
-        return 5
-    inv = state.get("inventory") or {}
-    if inv.get("Suspicious Looking Eye", 0) > 0 or tool in ("summon_or_trigger_boss", "engage_combat_burst", "deploy_combat_arena_tactics"):
-        return 5
-    if (tool == "build_blueprint" and args.get("preset") == "arena") or inv.get("Wood Platform", 0) >= 20:
-        return 4
-    if tool in ("mine_vein", "explore_cavern") or inv.get("Work Bench", 0) > 0 or inv.get("Furnace", 0) > 0:
-        return 3
-    if tool in ("build_blueprint", "place_station_or_furniture", "craft_item") or inv.get("Wood", 0) >= 60:
-        return 2
-    return 1
-
-
 def load_dotenv_if_needed(env_path: Path | None = None) -> None:
     """Populate missing env vars from local ``.env`` without printing secrets."""
     path = env_path or (Path(__file__).resolve().parents[1] / ".env")
@@ -232,19 +139,6 @@ def load_dotenv_if_needed(env_path: Path | None = None) -> None:
             continue
         k, v = line.split("=", 1)
         os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
-
-
-def _ascii_grid_to_png_b64(ascii_grid: list[str] | None) -> str | None:
-    if not ascii_grid:
-        return None
-    char_to_idx = {ch: idx for idx, ch in enumerate(TILE_CHARS)}
-    char_to_idx["@"] = 21
-    h = len(ascii_grid)
-    w = max((len(r) for r in ascii_grid), default=0)
-    if w == 0 or h == 0:
-        return None
-    rows = [bytes(char_to_idx.get(ch, 0) for ch in row.ljust(w, ".")) for row in ascii_grid]
-    return _encode_png(rows, w, h)
 
 
 def _format_active_keys(ctrl: dict[str, Any]) -> list[str]:
@@ -400,6 +294,7 @@ class DecisionController:
         supervisor_model: str = DEFAULT_SUPERVISOR_MODEL,
         decision_model: str = DEFAULT_DECISION_MODEL,
         live: bool = False,
+        vision_model: str | None = None,
         min_confidence: float = 0.35,
         max_replans_per_window: int = 3,
     ):
@@ -411,11 +306,7 @@ class DecisionController:
             min_confidence=min_confidence,
             max_replans_per_window=max_replans_per_window,
         )
-        self._real_lock = threading.Lock()
-        self._real_plan: dict[str, Any] = dict(_REAL_GAME_FALLBACK_PLAN)
-        self._real_tick_count = 0
-        self._real_last_choice: str | None = None
-        self._real_supervising = False
+        self.real = RealGameController(self.agent, live=live, vision_model=vision_model)
 
     def decide_turn(self, obs: dict[str, Any], context: list[dict[str, Any]], ep: Episode) -> dict[str, Any]:
         vp = _readonly_viewport(ep)
@@ -534,180 +425,9 @@ class DecisionController:
             "replan_triggered": replan_triggered,
         }
 
-    def _refresh_real_plan_async(self, state_summary: str, vp_png: str | None) -> None:
-        with self._real_lock:
-            if self._real_supervising:
-                return
-            self._real_supervising = True
-
-        def worker() -> None:
-            try:
-                catalog = "\n".join(
-                    f"- {n}({', '.join(f'{k}: {v}' for k, v in TOOL_SCHEMAS[n]['params'].items())}): {TOOL_SCHEMAS[n]['description']}"
-                    for n in TOOL_NAMES
-                )
-                prompt = (
-                    "REAL TERRARIA LIVE PLAY (Full Run to Eye of Cthulhu)\n"
-                    "Guide progression across 5 stages:\n"
-                    "1) chop_trees for >=80 Wood & fight Slimes for Gel.\n"
-                    "2) build_blueprint(preset='shelter') + craft_item Wood Armor/Sword/Bow + Workbench.\n"
-                    "3) mine_vein / explore_cavern for Stone, Iron/Gold Ore, Heart Crystals; craft Furnace/Anvil & metal gear.\n"
-                    "4) build_blueprint(preset='arena') for a 2-tier wood platform arena + Campfire.\n"
-                    "5) summon_or_trigger_boss(boss='eye_of_cthulhu') at Night, then engage_combat_burst + retreat_and_stabilize.\n"
-                    f"AVAILABLE MACROS\n{catalog}\n\nLIVE STATE\n{state_summary}\n"
-                    "Return JSON strategy + 4-8 candidate macro actions focused on the current stage and Eye of Cthulhu."
-                )
-                if self.live:
-                    raw = self.agent._call_supervisor_model(prompt, vp_png)
-                    plan = parse_supervisor_plan(raw)
-                    self.agent.stats["supervisor_calls"] += 1
-                    with self._real_lock:
-                        self._real_plan = plan
-            except Exception:
-                pass
-            finally:
-                with self._real_lock:
-                    self._real_supervising = False
-
-        threading.Thread(target=worker, daemon=True).start()
-
-    def decide_real_game_tick(self, state: dict[str, Any]) -> dict[str, Any]:
-        """Choose low-level Terraria inputs + active macro for a live tModLoader tick."""
-        self._real_tick_count += 1
-        vp_png = state.get("screenshot_b64") or _ascii_grid_to_png_b64(state.get("ascii_grid"))
-        compact = {k: v for k, v in state.items() if k not in ("screenshot_b64", "ascii_grid")}
-        state_json = json.dumps(compact, sort_keys=True, default=str)[:5000]
-
-        if self.live and (self._real_tick_count == 1 or self._real_tick_count % 15 == 0):
-            self._refresh_real_plan_async(state_json, vp_png)
-
-        with self._real_lock:
-            plan = dict(self._real_plan)
-
-        cands = plan["candidates"]
-        criteria = {
-            cid: f"{c['tool']} {json.dumps(c['args'], sort_keys=True)} - {c['when']}"
-            for cid, c in cands.items()
-        }
-        questions = {
-            "next_action": {
-                "type": "choice",
-                "instructions": "Pick the single best macro objective for the player right now in real Terraria.",
-                "criteria": criteria,
-            },
-            **CONTROL_QUESTIONS,
-        }
-        context_text = (
-            f"SUPERVISOR STRATEGY\n{plan['strategy']}\n\n"
-            f"PREVIOUS MACRO\n{self._real_last_choice or 'none'}\n\n"
-            f"LIVE TERRARIA TELEMETRY\n{state_json}"
-        )
-        self.agent.stats["decision_calls"] += 1
-        res = self.agent.decisions.decide(questions, context_text, viewport_png_b64=vp_png)
-        answers = res["answers"]
-        controls = _answers_to_controls(answers)
-        choice = str(answers["next_action"]["value"])
-        conf = float(answers["next_action"].get("confidence") or 0.0)
-        self._real_last_choice = choice
-        cand = cands.get(choice) or next(iter(cands.values()))
-        tool, args = cand["tool"], dict(cand["args"])
-        stage = _infer_real_stage(state, tool, args)
-        _refine_real_controls(controls, state, tool, args, self._real_tick_count)
-        hud_text = (
-            f"[S{stage}/5 {self.agent.decisions.model}] {tool} ({conf:.0%}) | "
-            f"Keys: {' '.join(controls['active_keys'])} | Aim: {controls['aim_target']} | Threat: {controls['threat_label']}"
-        )
-        return {
-            "ok": True,
-            "controls": controls,
-            "macro": {"tool": tool, "args": args, "stage": stage},
-            "choice": choice,
-            "confidence": round(conf, 4),
-            "strategy": plan["strategy"],
-            "source": res.get("source", "unknown"),
-            "hud_text": hud_text,
-            "burst_ticks": 20,
-        }
-
-
-def _refine_real_controls(
-    controls: dict[str, Any],
-    state: dict[str, Any],
-    tool: str,
-    args: dict[str, Any],
-    tick_count: int,
-) -> None:
-    """Apply hole-escape mining, continuous tool use, and jump pulsing for real Terraria."""
-    enemies = sorted(
-        (
-            e for e in (state.get("nearby_enemies") or [])
-            if float(e.get("dist", 999.0)) <= 10.0 and abs(float(e.get("dy", 0.0))) <= 4.0
-        ),
-        key=lambda e: float(e.get("dist", 999.0)),
-    )
-    near_enemy = enemies[0] if enemies else None
-    grid = state.get("ascii_grid")
-    trapped, escape_dir, left_blocked, right_blocked = _detect_trapped_or_blocked(grid)
-    stuck = abs(float(state.get("vx", 0.0) or 0.0)) < 0.05
-    wall_ahead = (controls.get("left") and left_blocked) or (controls.get("right") and right_blocked)
-
-    if trapped or (stuck and wall_ahead):
-        dir_choice = escape_dir if trapped else ("left" if controls.get("left") else "right")
-        controls["hotbar_slot"] = "slot_2_pickaxe"
-        controls["smart_cursor"] = True
-        controls["aim_target"] = "build_site"
-        controls["left"] = dir_choice == "left"
-        controls["right"] = dir_choice == "right"
-        controls["use_item"] = True
-        controls["jump"] = True
-    elif near_enemy is not None:
-        controls["aim_target"] = "nearest_enemy"
-        controls["hotbar_slot"] = "slot_1_weapon"
-        controls["use_item"] = (tick_count % 4) != 0
-        dx = float(near_enemy.get("dx", 0.0))
-        if abs(dx) < 5.0:
-            controls["left"] = dx >= 0.0
-            controls["right"] = dx < 0.0
-            controls["jump"] = True
-    elif tool == "chop_trees":
-        controls["hotbar_slot"] = "slot_3_axe"
-        controls["aim_target"] = "nearest_tree"
-        controls["smart_cursor"] = True
-        controls["use_item"] = True
-        dx = _find_grid_target_dx(grid, "T")
-        if dx is not None:
-            controls["left"] = dx < -1
-            controls["right"] = dx > 1
-    elif tool in ("mine_vein", "explore_cavern"):
-        controls["hotbar_slot"] = "slot_2_pickaxe"
-        controls["aim_target"] = "underfoot" if tool == "explore_cavern" else "nearest_ore"
-        controls["smart_cursor"] = True
-        controls["use_item"] = True
-        if tool == "explore_cavern":
-            controls["down"] = True
-        elif (dx := _find_grid_target_dx(grid, "civgs")) is not None and abs(dx) > 1:
-            controls["left"] = dx < 0
-            controls["right"] = dx > 0
-    elif controls.get("hotbar_slot") in ("slot_2_pickaxe", "slot_3_axe", "slot_4_wood", "slot_5_platform"):
-        if controls.get("use_item"):
-            controls["use_item"] = True
-    elif controls.get("use_item") and (tick_count % 4) == 0:
-        controls["use_item"] = False
-
-    if (controls["left"] or controls["right"]) and stuck:
-        controls["jump"] = True
-
-    # Pulse jump off every other poll tick so Terraria resets releaseJump and jumps repeatedly.
-    if controls["jump"]:
-        controls["jump"] = (tick_count % 2) == 1
-
-    hp = _as_int(state.get("hp"), 100)
-    max_hp = max(1, _as_int(state.get("max_hp"), 100))
-    controls["quick_heal"] = hp < max_hp * 0.55
-
-    controls["move_x"] = "left" if controls["left"] else ("right" if controls["right"] else "idle")
-    controls["hotbar_index"] = HOTBAR_INDEX.get(controls["hotbar_slot"], 0)
-    controls["active_keys"] = _format_active_keys(controls)
+    def decide_real_game_tick(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Real Terraria tick: vision -> supervisor -> decision. See ``real_game.RealGameController``."""
+        return self.real.tick(payload)
 
 
 def _snapshot_episode(ep: Episode) -> dict[str, Any]:
@@ -1020,6 +740,18 @@ function selectClip(c, autoplay) {{
   if (autoplay && !playing) togglePlay();
 }}
 
+const FRAME_IMAGES = {{}};
+function frameImage(url) {{
+  let im = FRAME_IMAGES[url];
+  if (!im) {{
+    im = new Image();
+    im.onload = () => render();
+    im.src = url;
+    FRAME_IMAGES[url] = im;
+  }}
+  return im;
+}}
+
 function drawCanvas(f) {{
   const st = f.state || {{}};
   const grid = st.ascii_grid || [];
@@ -1047,6 +779,10 @@ function drawCanvas(f) {{
   ctx.fillStyle = grad;
   ctx.fillRect(vpX, vpY, vpW, vpH);
 
+  // Real-game recordings: show the exact frame the models were given (lighting and darkness included).
+  const shot = st.frame_url ? frameImage(st.frame_url) : null;
+  if (shot && shot.complete && shot.naturalWidth) ctx.drawImage(shot, vpX, vpY, vpW, vpH);
+
   const cw = vpW / cols, ch = vpH / rows;
   for (let r = 0; r < rows; r++) {{
     const line = grid[r] || "";
@@ -1070,7 +806,12 @@ function drawCanvas(f) {{
     nearest_enemy: [56, -18], nearest_tree: [48, -10], nearest_ore: [34, 26],
     underfoot: [0, 44], ahead: [ctrl.left ? -52 : 52, 0], build_site: [-36, -24]
   }};
-  const [ax, ay] = aimMap[ctrl.aim_target] || [45, 0];
+  let [ax, ay] = aimMap[ctrl.aim_target] || [45, 0];
+  if (typeof ctrl.cursor_dx === "number") {{
+    const ppt = (st.px_per_tile || 16) * (vpW / (st.shot_width || 640));
+    ax = ctrl.cursor_dx * ppt;
+    ay = ctrl.cursor_dy * ppt;
+  }}
   ctx.strokeStyle = ctrl.use_item ? "#facc15" : "#38bdf8";
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -1447,12 +1188,23 @@ def run_recorded_episode(
     }
 
 
-def create_live_app(live_models: bool = True) -> FastAPI:
+def create_live_app(
+    live_models: bool = True,
+    supervisor_model: str = DEFAULT_SUPERVISOR_MODEL,
+    decision_model: str = DEFAULT_DECISION_MODEL,
+    vision_model: str | None = None,
+) -> FastAPI:
     """Create the port 8765 Live Play Studio + real Terraria (tModLoader) bridge."""
     if live_models:
         load_dotenv_if_needed()
     has_key = bool(os.environ.get("GEMINI_API_KEY"))
-    controller = DecisionController(live=live_models and has_key)
+    controller = DecisionController(
+        supervisor_model=supervisor_model,
+        decision_model=decision_model,
+        vision_model=vision_model,
+        live=live_models and has_key,
+    )
+    real_turn = [0]
     bridge = BridgeSession(task_id="first-night", seed=7)
     real_frames: list[dict[str, Any]] = []
     real_lock = threading.Lock()
@@ -1501,72 +1253,116 @@ def create_live_app(live_models: bool = True) -> FastAPI:
         with real_lock:
             return {"ok": True, "frames": len(real_frames), "latest": real_frames[-1] if real_frames else None}
 
+    @app.get("/play/real_terraria_live_frames/{name}")
+    async def real_frame_png(name: str) -> Response:
+        path = RECORDINGS_DIR / REAL_FRAMES_DIRNAME / Path(name).name
+        if path.suffix != ".png" or not path.exists():
+            return Response(status_code=404)
+        return Response(path.read_bytes(), media_type="image/png")
+
     @app.post("/real_game_tick")
-    async def real_game_tick(request: Request) -> dict[str, Any]:
-        state = await request.json()
-        decision = controller.decide_real_game_tick(state)
+    def real_game_tick(payload: dict[str, Any]) -> dict[str, Any]:
+        # Sync handler: FastAPI runs it in a worker thread, so slow model calls never block the studio pages.
+        decision = controller.decide_real_game_tick(payload)
+        if decision["source"] == "outdated_mod":
+            return decision
+        hud = sanitize_hud(payload)
+        # Referee block = ground truth for scoring and failure clips only. It is never passed to a model.
+        referee = payload.get("referee") if isinstance(payload.get("referee"), dict) else {}
         with real_lock:
-            turn_idx = len(real_frames) + 1
-            prev_hp = real_frames[-1]["state"]["hp"] if real_frames else _as_int(state.get("hp"), 100)
-            prev_deaths = real_frames[-1]["state"]["deaths"] if real_frames else _as_int(state.get("deaths"), 0)
-            cur_hp = _as_int(state.get("hp"), 100)
-            cur_deaths = _as_int(state.get("deaths"), 0)
+            real_turn[0] += 1
+            turn_idx = real_turn[0]
+            cur_hp = _as_int(hud.get("hp"), 100)
+            cur_deaths = _as_int(referee.get("deaths"), 0)
+            prev_hp = real_frames[-1]["state"]["hp"] if real_frames else cur_hp
+            prev_deaths = real_frames[-1]["state"]["deaths"] if real_frames else cur_deaths
             fails: list[dict[str, Any]] = []
             if cur_deaths > prev_deaths:
                 fails.append({"tag": "DEATH", "severity": "critical", "title": "Died in Real Terraria", "description": "Player health dropped to 0."})
             elif cur_hp - prev_hp <= -15:
                 fails.append({"tag": "HEAVY_DAMAGE", "severity": "high", "title": f"Heavy Hit ({cur_hp - prev_hp} HP)", "description": f"HP fell from {prev_hp} to {cur_hp}."})
+            tiers = decision["tiers"]
+            down = [f"{k}={t['status']}" for k, t in tiers.items() if t["status"] not in ("LIVE", "OFFLINE", "WAITING")]
+            if down and controller.live:
+                fails.append({"tag": "MODEL_TIER_DOWN", "severity": "high", "title": "Model tier not live", "description": ", ".join(down)})
+
+            frame_url = ""
+            shot = payload.get("screenshot_b64")
+            if shot:
+                try:
+                    frames_dir = RECORDINGS_DIR / REAL_FRAMES_DIRNAME
+                    frames_dir.mkdir(parents=True, exist_ok=True)
+                    (frames_dir / f"{turn_idx}.png").write_bytes(base64.b64decode(shot))
+                    (frames_dir / f"{turn_idx - REAL_FRAMES_KEPT}.png").unlink(missing_ok=True)
+                    frame_url = f"{REAL_FRAMES_DIRNAME}/{turn_idx}.png"
+                except (OSError, ValueError):
+                    frame_url = ""
+            view = hud.get("view") if isinstance(hud.get("view"), dict) else {}
             frame = {
                 "turn": turn_idx,
                 "tool": decision["macro"]["tool"],
                 "args": decision["macro"]["args"],
-                "result_ok": True,
-                "result_summary": {"hud": decision["hud_text"]},
+                "result_ok": decision["source"] in ("decisions_api", "decisions_api_routine"),
+                "result_summary": {"source": decision["source"], **decision["hud"]},
                 "hp_delta": cur_hp - prev_hp,
                 "controls": decision["controls"],
                 "supervisor_strategy": decision["strategy"],
-                "decision_choice": decision["choice"],
+                "decision_choice": " ".join(decision["controls"]["active_keys"]) or "no keys",
                 "decision_conf": decision["confidence"],
                 "failure_events": fails,
+                "tiers": tiers,
+                "plan": decision["plan"],
+                "plan_no": decision["plan_no"],
+                "vision_report": decision["vision_report"],
+                "source": decision["source"],
                 "state": {
                     "window": 1,
                     "total_windows": 1,
-                    "phase": "Day" if state.get("dayTime", True) else "Night",
+                    "phase": "Day" if referee.get("dayTime", True) else "Night",
                     "ops_left": turn_idx,
                     "ops_budget": turn_idx,
                     "hp": cur_hp,
-                    "max_hp": _as_int(state.get("max_hp"), 100),
-                    "defense": _as_int(state.get("defense"), 0),
-                    "phi": float(decision["macro"].get("stage", 1)),
-                    "tech_tier": _as_int(decision["macro"].get("stage"), 1),
+                    "max_hp": _as_int(hud.get("max_hp"), 100),
+                    "defense": _as_int(referee.get("defense"), 0),
+                    "phi": 0.0,
+                    "tech_tier": 0,
                     "sheltered": False,
-                    "threat": decision["controls"]["threat_label"],
+                    "threat": "n/a",
                     "deaths": cur_deaths,
-                    "equipped": state.get("equipped") or {},
-                    "milestones": state.get("milestones") or [],
-                    "ascii_grid": state.get("ascii_grid") or [],
+                    "equipped": {},
+                    "milestones": [],
+                    "ascii_grid": [],
+                    "frame_url": frame_url,
+                    "px_per_tile": view.get("px_per_tile"),
+                    "shot_width": view.get("shot_width"),
+                    "held_item": hud.get("held_item", ""),
+                    "inventory_open": bool(hud.get("inventory_open")),
+                    "lighting": (decision["vision_report"] or {}).get("lighting"),
+                    "referee": referee,
                 },
             }
             real_frames.append(frame)
-            if len(real_frames) > 300:
-                del real_frames[:-300]
+            if len(real_frames) > REAL_FRAMES_KEPT:
+                del real_frames[:-REAL_FRAMES_KEPT]
             if turn_idx == 1 or turn_idx % 5 == 0 or fails:
                 RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
                 rec = {
                     "run_id": "real_terraria_live",
                     "task_id": "real-terraria",
-                    "task_title": "Live tModLoader Session",
+                    "task_title": "Live tModLoader Session (human-parity, protocol 2)",
                     "seed": 0,
                     "live": controller.live,
                     "supervisor_model": controller.agent.model,
+                    "vision_model": controller.real.tiers["vision"].model,
                     "decision_model": controller.agent.decisions.model,
+                    "tiers": tiers,
                     "final_deaths": cur_deaths,
                     "stats": controller.agent.stats,
                     "score": {"windows": 1, "phi_final": 0.0, "deaths": cur_deaths},
                     "failure_clips": build_failure_clips(real_frames),
                     "frames": real_frames,
                 }
-                (RECORDINGS_DIR / "real_terraria_live.json").write_text(json.dumps(rec), encoding="utf-8")
+                (RECORDINGS_DIR / "real_terraria_live.json").write_text(json.dumps(rec, default=str), encoding="utf-8")
                 (RECORDINGS_DIR / "real_terraria_live.html").write_text(render_player_html(rec), encoding="utf-8")
         return decision
 
@@ -1601,6 +1397,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-turns", type=int, default=45)
     parser.add_argument("--supervisor", default=DEFAULT_SUPERVISOR_MODEL)
     parser.add_argument("--decision-model", default=DEFAULT_DECISION_MODEL)
+    parser.add_argument("--vision-model", default=None,
+                        help="Multimodal model that reads the real-game screenshot (default: $TERRARIA_GEMINI_VISION_MODEL, else the supervisor model)")
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--serve", action="store_true", help="Serve live studio & real-game bridge on --port")
     parser.add_argument("--host", default="127.0.0.1")
@@ -1611,7 +1409,13 @@ def main(argv: list[str] | None = None) -> int:
         import uvicorn
 
         load_dotenv_if_needed()
-        uvicorn.run(create_live_app(live_models=args.live or bool(os.environ.get("GEMINI_API_KEY"))), host=args.host, port=args.port)
+        app = create_live_app(
+            live_models=args.live or bool(os.environ.get("GEMINI_API_KEY")),
+            supervisor_model=args.supervisor,
+            decision_model=args.decision_model,
+            vision_model=args.vision_model,
+        )
+        uvicorn.run(app, host=args.host, port=args.port)
         return 0
 
     out = run_recorded_episode(

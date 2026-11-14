@@ -6,7 +6,9 @@ __pycache__/
 dist/
 build/
 .env
+data/terraria_wiki/
 artifacts/checkpoints/
+artifacts/recordings/*_frames/
 uv.lock
 
 
