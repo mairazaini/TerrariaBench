@@ -8,6 +8,17 @@ runs the top candidate (autopilot) or lets a decision model pick among them.
 
 Route: wood -> Work Bench -> bow + sword + wood armor -> stone -> arrows -> (ore -> furnace -> anvil -> metal bow)
 -> 6 Lens at night + find a Demon/Crimson Altar -> Suspicious Looking Eye -> runway arena -> night -> summon -> fight.
+
+Two layers, on purpose:
+
+* ``Strategy`` is the LONG-TERM plan for one run: a handful of choices that trade preparation time against the odds
+  of winning the fight (which bow, which armor, how much health, how many arrows, what to do on unarmed nights).
+  A model writes it at the start of the run and may revise it after a death; it is stored in the run memory and
+  rendered as a numbered ``roadmap`` with the current step marked. ``REFERENCE_STRATEGY`` is what the scripted
+  reference run uses.
+* ``candidates`` is the SHORT-TERM layer: the legal next skills given the strategy, the HUD and what memory holds.
+  The planner only ever proposes steps that are possible right now, so a model cannot waste a turn on a skill that
+  must fail, but which strategy it runs under, and which candidate it picks, is the model's decision.
 """
 
 from __future__ import annotations
@@ -35,7 +46,83 @@ ORE_TARGET = 60           # 5 bars for an anvil + 7 for a bow, with slack for mi
 ORE_ATTEMPT_LIMIT = 10    # failed underground prospecting runs before settling for the wooden bow
 ARENA_WIDTH = 90
 BLOCK_COOLDOWN = 5        # planner decisions a twice-failed skill stays off the list
+METAL_ARMOR_ORE = 180     # a full iron-tier set is 60 bars
+CRYSTAL_SEARCH_LIMIT = 6  # underground prospecting runs spent looking for Life Crystals before moving on
+BUNKER_BLOCKS = 11        # two 3-high side walls and a 5-wide roof
+HEAL_ITEMS = ("Healing Potion", "Lesser Healing Potion", "Mushroom")
 SUMMON_HOURS = (19.5, 1.5)  # summon between 7:30 PM and 1:30 AM so the Eye cannot escape at dawn
+
+
+@dataclass(frozen=True)
+class Strategy:
+    """Long-term plan for one run. Every field is a real trade-off, not a free upgrade:
+
+    * ``bow``: "metal" needs ore, a furnace and an anvil (slow) but roughly doubles damage per arrow; "wooden" is
+      ready on day one and makes the fight long enough to run into dawn.
+    * ``armor``: "metal" costs about 180 more ore; "wood" is 3 defense; "none" saves the wood.
+    * ``max_hp``: Life Crystals to look for underground before summoning (100 = do not look).
+    * ``arrows``: ammunition to carry into the fight (0 = the planner default for the chosen bow).
+    * ``night``: "bunker" walls the player in on a night spent unarmed or badly hurt; "work" keeps going.
+    * ``pickaxe``: spend bars on a better pickaxe first, which makes all later mining faster.
+    """
+
+    bow: str = "metal"
+    armor: str = "wood"
+    max_hp: int = 140
+    arrows: int = 0
+    night: str = "bunker"
+    pickaxe: bool = False
+    arena_width: int = ARENA_WIDTH
+    rationale: str = ""
+
+    @classmethod
+    def from_dict(cls, raw: Any) -> "Strategy":
+        """Build from untrusted model output: unknown keys are dropped and every value is clamped."""
+        d = raw if isinstance(raw, dict) else {}
+        base = cls()
+
+        def pick(key: str, allowed: tuple[str, ...], default: str) -> str:
+            v = str(d.get(key, default)).strip().lower()
+            return v if v in allowed else default
+
+        def num(key: str, lo: int, hi: int, default: int) -> int:
+            try:
+                return max(lo, min(hi, int(float(d.get(key, default)))))
+            except (TypeError, ValueError):
+                return default
+
+        raw_pick = d.get("pickaxe", base.pickaxe)
+        return cls(
+            bow=pick("bow", ("wooden", "metal"), base.bow),
+            armor=pick("armor", ("none", "wood", "metal"), base.armor),
+            max_hp=num("max_hp", 100, 400, base.max_hp) // 20 * 20,
+            arrows=num("arrows", 0, 2000, base.arrows),
+            night=pick("night", ("bunker", "work"), base.night),
+            pickaxe=bool(raw_pick) and str(raw_pick).strip().lower() not in ("false", "0", "no"),
+            arena_width=num("arena_width", 40, 200, base.arena_width),
+            rationale=str(d.get("rationale") or "")[:400],
+        )
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"bow": self.bow, "armor": self.armor, "max_hp": self.max_hp, "arrows": self.arrows,
+                "night": self.night, "pickaxe": self.pickaxe, "arena_width": self.arena_width,
+                "rationale": self.rationale}
+
+
+REFERENCE_STRATEGY = Strategy(rationale="Reference run: metal bow, wood armor, two Life Crystals, bunker on unarmed nights.")
+
+STRATEGY_BRIEF = (
+    "Write the long-term plan for this run as JSON with exactly these keys:\n"
+    '{"bow": "wooden|metal", "armor": "none|wood|metal", "max_hp": 100-400 (multiple of 20), '
+    '"arrows": 0-2000 (0 = default for the bow), "night": "bunker|work", "pickaxe": true|false, '
+    '"arena_width": 40-200, "rationale": "<2-3 sentences: why these choices for THIS world and state>"}\n'
+    "Facts: the Eye of Cthulhu has 2800 HP and 12 defense until half health, then 0 defense and faster charges. "
+    "A Wooden Bow with Wooden Arrows does about 3 damage a hit in phase one; an iron-tier bow about 7. It must be "
+    "summoned at night and leaves at dawn, so a slow fight is a lost fight. Metal gear needs ore from underground, "
+    "a Furnace (20 Stone, 4 Wood, 3 Torch) and an Anvil (5 bars); a bow is 7 bars and a full armor set about 60. "
+    "Life Crystals (+20 max HP each) are underground. The summoning item needs 6 Lens from Demon Eyes (night, "
+    "surface) crafted at a Demon/Crimson Altar. Every extra preparation step costs in-game days and risks a death."
+)
 
 
 @dataclass
@@ -68,6 +155,12 @@ def _blank_memory() -> dict[str, Any]:
         "deaths": [],            # [[x, y]]
         "eye_defeated": False,
         "summoned": False,
+        "strategy": None,        # Strategy.as_dict() once a plan has been written for this run
+        "strategy_author": "",   # model id that wrote it, or "reference"
+        "strategy_revisions": 0,
+        "bunker": None,          # [x, y] while walled in for the night
+        "crystal_searches": 0,
+        "pickaxe_upgraded": False,
         "log": [],               # last skill outcomes, newest last
     }
 
@@ -108,6 +201,80 @@ class EyePlanner:
         except OSError:
             pass  # memory is an optimisation; a read-only disk must not stop the run
 
+    # ------------------------------------------------------------------ long-term plan
+    @property
+    def strategy(self) -> Strategy:
+        raw = self.mem.get("strategy")
+        return Strategy.from_dict(raw) if isinstance(raw, dict) else REFERENCE_STRATEGY
+
+    @property
+    def has_authored_strategy(self) -> bool:
+        return isinstance(self.mem.get("strategy"), dict)
+
+    def set_strategy(self, raw: Any, author: str) -> Strategy:
+        """Adopt a plan (validated and clamped) and remember who wrote it."""
+        strategy = raw if isinstance(raw, Strategy) else Strategy.from_dict(raw)
+        if self.has_authored_strategy:
+            self.mem["strategy_revisions"] = int(self.mem.get("strategy_revisions") or 0) + 1
+        self.mem["strategy"] = strategy.as_dict()
+        self.mem["strategy_author"] = str(author)[:80]
+        self.save()
+        return strategy
+
+    def roadmap(self, hud: dict[str, Any]) -> list[dict[str, Any]]:
+        """The run's step-by-step plan under the current strategy: [{n, step, status}] where status is
+        done | current | todo | skipped. Exactly one step is ``current`` until the Eye is dead."""
+        st, mem = self.strategy, self.mem
+        bag = hud.get("backpack") if isinstance(hud.get("backpack"), dict) else {}
+        worn = [str(n) for n in (hud.get("equipment_now") or [])]
+
+        def have(name: str) -> int:
+            return int(bag.get(name) or 0)
+
+        arrows = sum(have(n) for n in ARROW_NAMES)
+        metal_bow = any(have(b) for b in METAL_BOWS)
+        any_bow = metal_bow or have("Wooden Bow") > 0
+        slots = {_slot_of(w): w for w in worn if _slot_of(w)}
+        full_armor = len(slots) == 3
+        metal_armor = full_armor and not any(w.startswith("Wood ") for w in slots.values())
+        ore_abandoned = bool(mem.get("ore_given_up"))
+        crystals_abandoned = int(mem.get("crystal_searches") or 0) >= CRYSTAL_SEARCH_LIMIT
+        arrow_goal = st.arrows or (ARROWS_METAL_BOW if (metal_bow or st.bow == "metal") else ARROWS_WOODEN_BOW)
+        max_hp = _num(hud.get("max_hp"), 100)
+        # (text, done) where done is True/False, or None for "not part of this plan / abandoned"
+        steps: list[tuple[str, bool | None]] = [
+            ("Chop wood and place a Work Bench", bool(mem["stations"].get("Work Bench"))),
+            ("Craft a Wooden Bow and Wooden Sword", any_bow),
+            ("Craft and wear Wood armor", None if st.armor == "none" else full_armor),
+            (f"Mine stone and craft {arrow_goal} arrows", arrows >= arrow_goal),
+            ("Mine ore, build a Furnace and an Anvil, craft a metal bow",
+             None if st.bow != "metal" or (ore_abandoned and not metal_bow) else metal_bow),
+            ("Craft and wear metal armor",
+             None if st.armor != "metal" or (ore_abandoned and not metal_armor) else metal_armor),
+            (f"Find Life Crystals until max HP is {st.max_hp}",
+             None if st.max_hp <= 100 or (crystals_abandoned and max_hp < st.max_hp) else max_hp >= st.max_hp),
+            ("Find a Demon/Crimson Altar", bool(mem["altars"]) or have(SUMMON) > 0),
+            ("Hunt Demon Eyes at night for 6 Lens and craft the Suspicious Looking Eye",
+             have(SUMMON) > 0 or bool(mem.get("summoned"))),
+            (f"Level a {st.arena_width}-tile arena near spawn", bool(mem.get("arena"))),
+            ("Summon the Eye early in the night and win the fight", bool(mem.get("eye_defeated"))),
+        ]
+        won = bool(mem.get("eye_defeated"))
+        out, current_set = [], won
+        for n, (text, done) in enumerate(steps, 1):
+            if done is not None and won:
+                done = True  # arrows were shot and the summoning item was used: the step still happened
+            if done is None:
+                status = "skipped"
+            elif done:
+                status = "done"
+            elif not current_set:
+                status, current_set = "current", True
+            else:
+                status = "todo"
+            out.append({"n": n, "step": text, "status": status})
+        return out
+
     # ------------------------------------------------------------------ observation
     @staticmethod
     def _pos(hud: dict[str, Any]) -> tuple[int, int] | None:
@@ -132,6 +299,9 @@ class EyePlanner:
             self.save()
         pos = self._pos(hud)
         dead = bool(hud.get("dead"))
+        if self.mem.get("bunker") and (dead or str(hud.get("time_phase") or "Day") != "Night"):
+            self.mem["bunker"] = None
+            self.save()
         if dead and not self._was_dead and pos:
             self.mem["deaths"] = (self.mem["deaths"] + [list(pos)])[-20:]
             self.save()
@@ -203,6 +373,16 @@ class EyePlanner:
             self.mem["ore_attempts"] += 1
             if self.mem["ore_attempts"] >= ORE_ATTEMPT_LIMIT:
                 self.mem["ore_given_up"] = True
+        if name == "goto" and pos and self.mem["life_crystals"]:
+            wv = hud.get("world_view") if isinstance(hud.get("world_view"), dict) else {}
+            if not wv.get("life_crystals"):
+                self.mem["life_crystals"] = [c for c in self.mem["life_crystals"] if _dist(c, pos) > 8]
+        if name == "bunker" and ok and pos:
+            self.mem["bunker"] = list(pos)
+        if name == "explore" and args.get("purpose") == "crystals":
+            self.mem["crystal_searches"] = int(self.mem.get("crystal_searches") or 0) + 1
+        if name == "craft" and str(args.get("item", "")).endswith(" Pickaxe") and ok:
+            self.mem["pickaxe_upgraded"] = True
         if name == "build_arena" and ok and pos:
             self.mem["arena"] = {"x": pos[0], "y": pos[1], "width": int(args.get("width") or ARENA_WIDTH)}
         if name == "craft" and str(args.get("item")) == SUMMON and not ok and "no " in reason and pos:
@@ -247,6 +427,8 @@ class EyePlanner:
         clock = _num(hud.get("clock"), 12.0)
         underground = pos[1] > 25
         mem = self.mem
+        strat = self.strategy
+        hp, max_hp = _num(hud.get("hp"), 100), _num(hud.get("max_hp"), 100)
 
         def have(name: str) -> int:
             return int(bag.get(name) or 0)
@@ -305,9 +487,36 @@ class EyePlanner:
                 if not any(_slot_of(w) == _slot_of(str(name)) and not w.startswith("Wood ") for w in worn):
                     add("equip", "metal armor beats wood", item=str(name))
 
-        # ---- 2. Ready to summon?
+        heal = next((h for h in HEAL_ITEMS if have(h)), "")
+        if heal and hp < 0.5 * max_hp and "Potion Sickness" not in json.dumps(hud.get("buffs") or [], default=str):
+            add("use", f"HP is {int(hp)}/{int(max_hp)}: heal before doing anything else", item=heal)
+
+        # ---- 1b. Night on the surface without the means to fight: wall in until morning.
+        blocks = wood + stone + have("Dirt Block") + have("Mud Block")
+        armed = any_bow and arrows >= 50
+        bunker_usable = self._blocked.get(Candidate("bunker", {}, "").key, 0) < self._decisions
+        if night and not underground and strat.night == "bunker" and bunker_usable and (not armed or hp < 0.4 * max_hp):
+            walled = mem.get("bunker")
+            if walled and _dist(walled, pos) <= 2:
+                add("wait", "inside the bunker: nothing can reach you until morning", until="day")
+            elif blocks >= BUNKER_BLOCKS:
+                add("bunker", "night without a working ranged weapon (or badly hurt): wall yourself in")
+            else:
+                add("chop", "blocks to wall in for the night", wood=wood + 20)
+            return out
+
+        # ---- 2. Ready to summon? Only once the strategy's preparation is done or has been given up on.
+        slots_worn = {_slot_of(w): w for w in worn if _slot_of(w)}
+        metal_armor_on = len(slots_worn) == 3 and not any(w.startswith("Wood ") for w in slots_worn.values())
+        ore_closed = bool(mem.get("ore_given_up"))
+        crystals_closed = int(mem.get("crystal_searches") or 0) >= CRYSTAL_SEARCH_LIMIT
+        prep_done = (
+            (bool(metal_bow) or strat.bow != "metal" or ore_closed)
+            and (metal_armor_on or strat.armor != "metal" or ore_closed)
+            and (max_hp >= strat.max_hp or crystals_closed)
+        )
         ready_weapon = any_bow and arrows >= (150 if metal_bow else 300)
-        if have(SUMMON) and ready_weapon:
+        if have(SUMMON) and ready_weapon and prep_done:
             arena = mem.get("arena")
             if not arena:
                 if underground:
@@ -317,7 +526,7 @@ class EyePlanner:
                 elif wood + stone + have("Dirt Block") + have("Wood Platform") < 60:
                     add("chop", "blocks for the arena floor", wood=wood + 60)
                 else:
-                    add("build_arena", "a long flat runway to outrun the Eye's charges", width=ARENA_WIDTH)
+                    add("build_arena", "a long flat runway to outrun the Eye's charges", width=strat.arena_width)
             elif _dist([arena["x"], arena["y"]], pos) > 12:
                 add("goto", "stand in the middle of the arena", x=arena["x"], y=arena["y"], tol_y=4)
             elif not night:
@@ -339,7 +548,8 @@ class EyePlanner:
         if out and not underground:
             return out + self._wood_fallback(wood)
 
-        missing_armor = [p for p in WOOD_ARMOR if not have(p) and not any(_slot_of(w) == _slot_of(p) for w in worn)]
+        missing_armor = [] if strat.armor == "none" else [
+            p for p in WOOD_ARMOR if not have(p) and not any(_slot_of(w) == _slot_of(p) for w in worn)]
         wood_needed = (0 if any_bow else 10) + (0 if have("Wooden Sword") else 7) \
             + sum({"Wood Helmet": 20, "Wood Breastplate": 30, "Wood Greaves": 25}[p] for p in missing_armor)
         if bench and wood < wood_needed and not underground:
@@ -355,7 +565,7 @@ class EyePlanner:
             return out + self._wood_fallback(wood)
 
         # ---- 4. Arrows (1 Wood + 1 Stone -> 25 at the Work Bench).
-        arrow_goal = ARROWS_METAL_BOW if metal_bow else ARROWS_WOODEN_BOW
+        arrow_goal = strat.arrows or (ARROWS_METAL_BOW if metal_bow else ARROWS_WOODEN_BOW)
         if arrows < arrow_goal and not underground:
             batches = (arrow_goal - arrows + 24) // 25
             if stone < min(batches, 12):
@@ -373,12 +583,35 @@ class EyePlanner:
         if nearest_chest:
             add("loot_chest", "an unopened chest is close (potions, gear, maybe a summoning item)")
 
-        # ---- 6. Metal bow: ore -> furnace -> bars -> anvil -> bow.
-        if not metal_bow:
-            best_bow = next((b for b in METAL_BOWS if b in craftable), "")
+        # ---- 6. Metal gear the strategy asks for: ore -> furnace -> bars -> anvil -> bow / armor / pickaxe.
+        metal_slots = {_slot_of(str(n)) for n in list(bag) + worn
+                       if _slot_of(str(n)) and not str(n).startswith("Wood ") and (str(n) in worn or have(str(n)))}
+        armor_missing = {"head", "body", "legs"} - metal_slots
+        want_bow = strat.bow == "metal" and not metal_bow
+        want_armor = strat.armor == "metal" and bool(armor_missing)
+        want_pick = strat.pickaxe and not mem.get("pickaxe_upgraded")
+        ore_target = (ORE_TARGET if want_bow else (0 if anvil else 15)) \
+            + (METAL_ARMOR_ORE if want_armor else 0) + (36 if want_pick else 0)
+        if want_bow or want_armor or want_pick:
+            wanted: list[tuple[str, str]] = []
+            if want_pick:
+                better = next((c for c in sorted(craftable) if c.endswith(" Pickaxe") and not have(c)), "")
+                if better:
+                    wanted.append((better, "a better pickaxe makes every later dig faster"))
+            if want_bow:
+                best_bow = next((b for b in METAL_BOWS if b in craftable), "")
+                if best_bow:
+                    wanted.append((best_bow, "a metal bow multiplies damage per arrow"))
+            if want_armor:
+                per_slot: dict[str, str] = {}
+                for c in sorted(craftable):
+                    if _slot_of(c) in armor_missing and not c.startswith("Wood "):
+                        per_slot.setdefault(_slot_of(c), c)
+                wanted += [(c, "metal armor: every charge of the Eye costs less health") for c in per_slot.values()]
             anvil_item = next((a for a in ANVILS if have(a)), "")
-            if best_bow:
-                add("craft", "a metal bow multiplies damage per arrow", item=best_bow, count=1, station="Anvil")
+            if wanted:
+                for item, why in wanted:
+                    add("craft", why, item=item, count=1, station="Anvil")
             elif anvil_item and not underground:
                 if not go(home, "place the anvil next to the Work Bench"):
                     add("place", "put the anvil down", item=anvil_item)
@@ -409,14 +642,25 @@ class EyePlanner:
                         add("craft", "smelt the ore", item=bar, count=40, station="Furnace")
                     else:
                         go(furnace, "walk to the furnace to smelt ore")
-            if not mem.get("ore_given_up") and ore + bars * 3 < ORE_TARGET and not night:
+            if not mem.get("ore_given_up") and ore + bars * 3 < ore_target and not night:
                 if wv.get("ores"):
-                    add("mine", "ore in view: bars for an anvil and a better bow", kind="ore", count=ORE_TARGET - ore)
+                    add("mine", "ore in view: bars for the anvil and the metal gear in the plan", kind="ore", count=ore_target - ore)
                 elif underground:
                     add("explore", "prospect sideways for ore", dir=self._fresh_direction(), tiles=40, mode="tunnel")
                     add("dig_down", "go deeper for ore", depth=25)
                 elif arrows >= arrow_goal // 2:
                     add("dig_down", "ore is underground", depth=40)
+
+        # ---- 6b. Life Crystals up to the strategy's health target.
+        if max_hp < strat.max_hp and not crystals_closed and not wv.get("life_crystals"):
+            known = min(mem["life_crystals"], default=None, key=lambda c: _dist(c, pos))
+            if known is not None:
+                add("goto", "a Life Crystal seen earlier (+20 max HP)", x=known[0], y=known[1], tol_y=6)
+            elif underground:
+                add("explore", "search these caves for a Life Crystal", dir=self._fresh_direction(), tiles=40,
+                    mode="tunnel", purpose="crystals")
+            elif not night and arrows >= arrow_goal // 2:
+                add("dig_down", "Life Crystals are underground", depth=40)
 
         # ---- 7. Summoning item: 6 Lens crafted at a Demon/Crimson Altar.
         if not have(SUMMON):
@@ -474,6 +718,8 @@ class EyePlanner:
         m = self.mem
         return json.dumps({
             "goal": "defeat the Eye of Cthulhu",
+            "long_term_plan": {"strategy": self.strategy.as_dict(), "written_by": m.get("strategy_author") or "reference",
+                               "steps": [f"{r['n']}. [{r['status']}] {r['step']}" for r in self.roadmap(hud)]},
             "hp": f"{hud.get('hp')}/{hud.get('max_hp')}", "defense": hud.get("defense"),
             "time": f"{hud.get('time_phase')} {hud.get('clock')}h", "pos_from_spawn": hud.get("pos"),
             "in_evil_biome": bool(hud.get("evil_biome")), "wearing": hud.get("equipment_now"), "key_items": keep,

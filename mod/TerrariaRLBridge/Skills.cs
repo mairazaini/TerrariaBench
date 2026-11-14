@@ -123,6 +123,7 @@ namespace TerrariaRLBridge
                 case "equip": return 5;
                 case "use": return 12;
                 case "build_arena": return 420;
+                case "bunker": return 90;
                 case "fight": return 660;
                 case "hunt": return 600;
                 case "loot_chest": return 90;
@@ -164,6 +165,7 @@ namespace TerrariaRLBridge
                     case "equip": Equip(p); break;
                     case "use": UseItemSkill(p); break;
                     case "build_arena": BuildArena(p); break;
+                    case "bunker": Bunker(p); break;
                     case "fight": Fight(p); break;
                     case "hunt": Hunt(p); break;
                     case "loot_chest": LootChest(p); break;
@@ -1135,6 +1137,62 @@ namespace TerrariaRLBridge
                 return;
             }
             _counter++;
+        }
+
+        // ------------------------------------------------------------------ night bunker
+
+        /// <summary>
+        /// Walls the player in where they stand: two 3-high side walls, then a 5-wide roof, placed one block at a
+        /// time with the mouse like any other block. Ground enemies cannot get in; the player mines out in the
+        /// morning. This is the quick "cover yourself for the night" shelter, not NPC housing.
+        /// </summary>
+        private static void Bunker(Player p)
+        {
+            if (Ticks == 1)
+            {
+                _target = new Point(Cx(p), FeetRow(p) + 1); // x centre, floor row
+                _counter = 0;                                // next cell to close (0..10)
+                _baseline = 0;                               // cells that could not be closed
+            }
+            int cx = _target.X;
+            int floor = _target.Y;
+            while (_counter < 11)
+            {
+                int x, y;
+                if (_counter < 3) { x = cx - 2; y = floor - 1 - _counter; }             // left wall, bottom up
+                else if (_counter < 6) { x = cx + 2; y = floor - 1 - (_counter - 3); }  // right wall, bottom up
+                else { x = cx - 2 + (_counter - 6); y = floor - 4; }                    // roof, left to right
+                Detail = "cell " + (_counter + 1) + "/11";
+                Tile t = Framing.GetTileSafely(x, y);
+                if (t.HasTile && Solid(x, y))
+                {
+                    _counter++;
+                    continue;
+                }
+                if (t.HasTile)
+                {
+                    // A tree, plant or furniture tile is in the way: clear it with the right tool first.
+                    MineStep(p, x, y);
+                    return;
+                }
+                int slot = Best(p, it => BlockScore(it));
+                if (slot < 0)
+                {
+                    Fail("no blocks left to build the bunker");
+                    return;
+                }
+                int placed = PlaceStep(p, x, y, slot);
+                if (placed == 0)
+                    return;
+                if (placed == -1)
+                    _baseline++;
+                _counter++;
+                return;
+            }
+            if (_baseline > 0)
+                Fail("bunker has " + _baseline + " open cells (nothing to attach a block to)");
+            else
+                Done("bunker closed: side walls and roof are in place");
         }
 
         // ------------------------------------------------------------------ combat

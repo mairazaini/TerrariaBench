@@ -821,3 +821,68 @@ def test_skill_mode_lifecycle_and_eye_progress_scoring(tmp_path: Path, monkeypat
     assert compute_eye_progress({})["eye_progress_score"] == 0.0
     assert EyeProgressTracker().as_dict()["eye_min_hp_ratio"] == 1.0
 
+
+
+def test_skill_mode_runs_under_a_model_written_long_term_plan(tmp_path: Path, monkeypatch):
+    """Skill mode: the strategy model writes the run's plan before the first skill, the plan and its
+    author are reported every tick, and no tier claims to be LIVE unless its model actually answered."""
+    import terraria_bench.live_play as lp
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+    monkeypatch.delenv("TERRARIA_AUTOPILOT", raising=False)
+    app = create_live_app(live_models=False)
+    calls = _wire_mock_models(app, {"skill": "s0"})
+    real = app.state.controller.real
+    real.eye_planner = real.eye_planner.__class__(memory_path=tmp_path / "eye_mem.json")
+    strategy_prompts = []
+
+    def strategy_fn(prompt, png):
+        strategy_prompts.append(prompt)
+        return json.dumps({"bow": "wooden", "armor": "none", "max_hp": 100, "night": "work", "arrows": 400,
+                           "rationale": "Rush the fight before the first death."})
+
+    real.strategy_fn = strategy_fn
+    client = TestClient(app)
+    payload = _payload(
+        skill={"id": 0, "name": "", "status": "idle", "reason": "", "ticks": 0, "detail": ""},
+        pos={"x": 0, "y": 0}, clock=12.0, world="PlanWorld", boss=None, backpack={"Wood": 0},
+    )
+    r = client.post("/real_game_tick", json=payload).json()
+
+    assert len(strategy_prompts) == 1 and "long-term plan" in strategy_prompts[0]
+    plan = r["plan"]
+    assert plan["long_term_strategy"]["bow"] == "wooden" and plan["long_term_strategy"]["arrows"] == 400
+    assert plan["written_by"] == real.tiers["supervisor"].model
+    assert [s["status"] for s in plan["roadmap"]].count("current") == 1
+    assert "skipped" in {s["status"] for s in plan["roadmap"]}          # no metal bow, no armor in this plan
+    assert r["tiers"]["supervisor"]["status"] == "LIVE" and r["tiers"]["supervisor"]["calls"] == 1
+    # no screenshot was sent and no vision model ran, so the vision tier must not read LIVE
+    assert not calls["vision"] and r["tiers"]["vision"]["status"] != "LIVE"
+    # the decision model was shown the plan it is executing
+    assert "LONG-TERM PLAN" in calls["decision"][-1][1] and "Rush the fight" in calls["decision"][-1][1]
+
+    # one plan per run: later ticks do not ask again
+    running = dict(payload["hud"], skill={"id": r["controls"]["skill"]["id"], "name": "chop", "status": "running",
+                                           "reason": "", "ticks": 30, "detail": ""})
+    client.post("/real_game_tick", json={**payload, "hud": running})
+    assert len(strategy_prompts) == 1
+
+
+def test_skill_mode_without_a_usable_plan_falls_back_to_the_reference_and_says_so(tmp_path: Path, monkeypatch):
+    import terraria_bench.live_play as lp
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+    monkeypatch.delenv("TERRARIA_AUTOPILOT", raising=False)
+    app = create_live_app(live_models=False)
+    _wire_mock_models(app, {"skill": "s0"})
+    real = app.state.controller.real
+    real.eye_planner = real.eye_planner.__class__(memory_path=tmp_path / "eye_mem.json")
+    real.strategy_fn = lambda prompt, png: "I think you should just have fun!"
+    client = TestClient(app)
+    r = client.post("/real_game_tick", json=_payload(
+        skill={"id": 0, "name": "", "status": "idle", "reason": "", "ticks": 0, "detail": ""},
+        pos={"x": 0, "y": 0}, clock=12.0, world="PlanWorld2", boss=None, backpack={"Wood": 0},
+    )).json()
+    assert r["tiers"]["supervisor"]["status"] == "FAILED"
+    assert "reference plan" in r["plan"]["written_by"]
+    assert r["controls"]["skill"]["name"] == "chop"                      # the run still proceeds
