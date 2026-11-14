@@ -390,11 +390,37 @@ def test_real_game_aim_assist_and_routines_are_offered_only_when_usable():
     assert "routine" not in questions
 
     hud["visible_enemies"] = [{"name": "Green Slime"}]
-    hud["hotbar"].append({"slot": 4, "name": "Torch", "stack": 2})
+    hud["hotbar"].extend([
+        {"slot": 2, "name": "Copper Pickaxe", "stack": 1},
+        {"slot": 3, "name": "Copper Axe", "stack": 1},
+        {"slot": 4, "name": "Torch", "stack": 2},
+        {"slot": 5, "name": "Wood", "stack": 50},
+        {"slot": 6, "name": "Wood Wall", "stack": 40},
+        {"slot": 7, "name": "Work Bench", "stack": 1},
+        {"slot": 8, "name": "Wood Platform", "stack": 30},
+    ])
     questions, _, _ = build_questions(hud, builtin_routines(hud))
-    assert "aim_assist" in questions
+    assert "aim_assist" not in questions
     assert "routine" in questions
-    assert "place_torch" in questions["routine"]["criteria"]
+    criteria = questions["routine"]["criteria"]
+    assert "box_in" not in criteria
+    for expected in (
+        "chop_tree_right",
+        "chop_tree_left",
+        "mine_clear_overhead",
+        "clear_area_right",
+        "clear_area_left",
+        "build_house_frame",
+        "furnish_house",
+        "dig_down",
+        "stairs_down_right",
+        "stairs_down_left",
+        "build_arena_platform_right",
+        "build_arena_platform_left",
+        "place_torch",
+        "pillar_up",
+    ):
+        assert expected in criteria
 
 
 def test_real_game_routine_queues_steps_without_more_decision_calls(tmp_path: Path, monkeypatch):
@@ -450,3 +476,238 @@ def test_real_game_repeated_ineffective_input_requests_replan(tmp_path: Path, mo
     assert len(calls["decision"]) == 6
     assert len(calls["supervisor"]) == 2
     assert "repeated the same input 5 times" in calls["supervisor"][1][0]
+
+
+def test_real_game_routine_first_step_switches_hotbar_without_use_item_and_disables_aim_assist(tmp_path: Path, monkeypatch):
+    import terraria_bench.live_play as lp
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+    app = create_live_app(live_models=False)
+    _wire_mock_models(app, {"move_x": "idle", "routine": "chop_tree_right"})
+    client = TestClient(app)
+
+    step1 = client.post("/real_game_tick", json=_payload(selected_slot=1)).json()
+    c1 = step1["controls"]
+    assert step1["source"] == "decisions_api_routine"
+    assert c1["hotbar"] == 3
+    assert c1["use_item"] is False
+    assert c1["hold_ticks"] == 6
+    assert c1["aim_assist"] is False
+
+    step2 = client.post("/real_game_tick", json=_payload(selected_slot=3)).json()
+    c2 = step2["controls"]
+    assert step2["source"] == "decisions_api_routine"
+    assert c2["hotbar"] == 0
+    assert c2["use_item"] is True
+    assert c2["aim_assist"] is False
+
+
+def test_real_game_vision_reaction_stage_roadmap_and_no_referee_leak(tmp_path: Path, monkeypatch):
+    import terraria_bench.live_play as lp
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+    app = create_live_app(live_models=False)
+    calls = _wire_mock_models(app, {"move_x": "right", "routine": "none"})
+    real = app.state.controller.real
+
+    def vision_with_reaction(prompt, png):
+        calls["vision"].append((prompt, png))
+        return json.dumps({
+            "lighting": "bright",
+            "surroundings": "Forest clearing with tree to right.",
+            "enemies": [],
+            "reaction": {
+                "threat_level": "low",
+                "immediate_directive": "Chop tree to right for wood",
+                "recommended_routine": "chop_tree_right",
+                "recommended_hotbar": 3,
+                "recommended_cursor_dx": 1.5,
+                "recommended_cursor_dy": 1.0,
+            },
+        })
+
+    def staged_supervisor(prompt, png):
+        calls["supervisor"].append((prompt, png))
+        return json.dumps({
+            "phase": "gather_wood",
+            "strategy": "Chop trees to gather initial wood and acorns.",
+            "objective": "Collect 60 Wood from forest trees",
+            "roadmap": ["gather_wood", "clear_house_site", "build_house"],
+            "steps": ["Select axe and run chop_tree_right"],
+            "avoid": ["Digging randomly"],
+            "done_when": "60 Wood in inventory",
+        })
+
+    real.vision_fn = vision_with_reaction
+    real.supervisor_fn = staged_supervisor
+
+    d = TestClient(app).post("/real_game_tick", json=_payload(
+        time_phase="Day",
+        blocked={"left": False, "right": False, "above": False, "below": True},
+    )).json()
+    assert d["plan"]["phase"] == "gather_wood"
+    assert d["plan"]["roadmap"] == ["gather_wood", "clear_house_site", "build_house"]
+
+    sup_prompt = calls["supervisor"][0][0]
+    assert "PROGRESSION STAGES" in sup_prompt
+    assert "TERRARIA KNOWLEDGE BASE" in sup_prompt
+    assert "gather_wood" in sup_prompt and "fight_eye_of_cthulhu" in sup_prompt
+
+    dec_ctx = calls["decision"][0][1]
+    assert "IMMEDIATE SHORT-TERM REACTION (from live vision)" in dec_ctx
+    assert "Chop tree to right for wood" in dec_ctx
+    assert '"phase": "gather_wood"' in dec_ctx
+    assert dec_ctx.index("IMMEDIATE SHORT-TERM REACTION") < dec_ctx.index("SUPERVISOR PLAN")
+
+    vis_prompt = calls["vision"][0][0]
+    assert "CURRENT SUPERVISOR GOAL" in vis_prompt
+    assert "HUD SUMMARY" in vis_prompt
+
+    blob = "\n".join([vis_prompt, sup_prompt, dec_ctx])
+    for secret in ("987654", "123456", "31337", "SENTINEL_BOSS", "SENTINEL_ORE", "referee", "depth_below_surface"):
+        assert secret not in blob
+
+
+def test_real_game_simulated_vision_and_backpack_routines_zero_latency(tmp_path: Path, monkeypatch):
+    import terraria_bench.live_play as lp
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+    app = create_live_app(live_models=False)
+    calls = _wire_mock_models(app, {"move_x": "idle", "routine": "build_house_frame"})
+    client = TestClient(app)
+
+    payload = _payload(
+        selected_slot=1,
+        hotbar=[{"slot": 1, "name": "Copper Shortsword", "stack": 1}],
+        backpack={
+            "Copper Shortsword": 1,
+            "Wood": 80,
+            "Work Bench": 1,
+            "Wooden Door": 1,
+            "Wooden Chair": 1,
+            "Wood Wall": 40,
+        },
+        world_view={
+            "lighting": "bright",
+            "biome": "surface",
+            "trees": [{"dx": 3.0, "dy": 1.0, "dist": 3.2}],
+            "ores": [],
+            "chests": [],
+            "life_crystals": [],
+            "stations": [],
+            "house_status": {
+                "valid_room": False,
+                "back_walls": 0,
+                "roof_tiles": 0,
+                "floor_tiles": 0,
+                "has_bench": False,
+                "has_chair": False,
+                "has_door": False,
+                "has_light": False,
+                "tombstones_nearby": 0,
+            },
+            "cave_openings": [],
+            "ascii_map": [],
+        },
+    )
+    d = client.post("/real_game_tick", json=payload).json()
+    assert calls["vision"] == []  # 0ms simulated player vision; never blocks on vision LLM
+    assert d["vision_report"]["age_s"] == 0.0
+    assert d["vision_report"]["reaction"]["recommended_routine"] in (
+        "build_house_frame", "furnish_house", "chop_tree_right"
+    )
+    criteria = calls["decision"][0][0]["routine"]["criteria"]
+    assert "build_house_frame" in criteria
+    assert "furnish_house" in criteria
+    assert d["source"] == "decisions_api_routine"
+    assert d["controls"]["select_item"] == "block"
+    assert d["controls"]["macro_action"] == "build_house_frame"
+
+    blob = "\n".join([calls["supervisor"][0][0], calls["decision"][0][1]])
+    for secret in ("987654", "123456", "31337", "SENTINEL_BOSS", "SENTINEL_ORE", "referee", "depth_below_surface"):
+        assert secret not in blob
+
+
+def test_simulated_vision_ignores_roof_enemies_without_los_and_never_rebuilds_valid_house(tmp_path: Path, monkeypatch):
+    import terraria_bench.live_play as lp
+    from terraria_bench.real_game import _simulate_vision
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+
+    # 1. Inside house with roof_tiles >= 6 & blocked.above=True and a roof Blue Slime with line_of_sight=False:
+    #    must NOT trigger false-alarm combat or mine_clear_overhead, and must NOT have manual trapping steps.
+    hud_inside = _payload(
+        blocked={"left": True, "right": False, "above": True, "below": True},
+        visible_enemies=[{"name": "Blue Slime", "dx": -1.0, "dy": -5.2, "dist": 5.3, "approaching": False, "line_of_sight": False}],
+        backpack={"Wood": 60, "Work Bench": 1, "Wooden Chair": 1, "Wood Wall": 30},
+        world_view={
+            "lighting": "bright",
+            "biome": "surface",
+            "trees": [],
+            "ores": [],
+            "chests": [],
+            "life_crystals": [],
+            "stations": [],
+            "house_status": {
+                "valid_room": False,
+                "in_house": True,
+                "back_walls": 40,
+                "roof_tiles": 10,
+                "floor_tiles": 10,
+                "has_bench": False,
+                "has_chair": False,
+                "has_door": True,
+                "has_light": True,
+                "tombstones_nearby": 0,
+                "missing_for_house": ["workbench_inside", "chair_inside"],
+            },
+            "cave_openings": [],
+            "ascii_map": [],
+        },
+    )["hud"]
+    sim = _simulate_vision(hud_inside, {"phase": "build_house"})
+    assert sim["reaction"]["recommended_routine"] == "furnish_house"
+    assert sim["reaction"]["threat_level"] == "none"
+    routines_inside = builtin_routines(hud_inside)
+    assert len(routines_inside["build_house_frame"]["steps"]) == 3
+    assert all(not s["use_item"] for s in routines_inside["build_house_frame"]["steps"])
+
+    # 2. Once valid_room=True is observed, RealGameController latches _house_completed and never offers house rebuilds again.
+    app = create_live_app(live_models=False)
+    calls = _wire_mock_models(app, {"move_x": "right", "routine": "none"})
+    client = TestClient(app)
+
+    valid_wv = {
+        "lighting": "bright",
+        "biome": "surface",
+        "trees": [],
+        "ores": [{"name": "Iron Ore", "dx": 4.0, "dy": 3.0, "dist": 5.0}],
+        "chests": [],
+        "life_crystals": [],
+        "stations": [],
+        "house_status": {
+            "valid_room": True,
+            "in_house": True,
+            "back_walls": 50,
+            "roof_tiles": 12,
+            "floor_tiles": 12,
+            "has_bench": True,
+            "has_chair": True,
+            "has_door": True,
+            "has_light": True,
+            "tombstones_nearby": 0,
+            "missing_for_house": [],
+        },
+        "cave_openings": [{"dx": 8, "dy": 2}],
+        "ascii_map": [],
+    }
+    client.post("/real_game_tick", json=_payload(backpack={"Wood": 80}, world_view=valid_wv)).raise_for_status()
+    assert app.state.controller.real._house_completed is True
+
+    # Walk outdoors where instantaneous Check might otherwise report valid_room=False: controller keeps valid_room=True.
+    walked_away_wv = {**valid_wv, "house_status": {**valid_wv["house_status"], "valid_room": False, "in_house": False}}
+    d2 = client.post("/real_game_tick", json=_payload(tick=2, backpack={"Wood": 80}, world_view=walked_away_wv)).json()
+    criteria2 = calls["decision"][1][0].get("routine", {}).get("criteria", {})
+    assert "build_house_frame" not in criteria2
+    assert "furnish_house" not in criteria2
+    assert d2["vision_report"]["reaction"]["recommended_routine"] not in ("build_house_frame", "furnish_house")

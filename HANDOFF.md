@@ -1,77 +1,51 @@
 # HANDOFF.md — TerrariaBench Session Continuation
 
-**Generated:** 2026-11-14 03:31
-**Branch:** fix/matrix-free-tiles-and-gemini-two-tier
-**Repo:** TerrariaBench (C:\Users\natha\dev\TerrariaBench)
+**Generated:** 2026-11-14 12:38
+**Branch:** main
+**Repo:** TerrariaBench (C:/Users/natha/dev/TerrariaBench)
 
 ---
 
 ## Current Session
 
-**Session ID:** a890cdb4-623a-43cc-a187-8ab1299d620f
-**Title:** pasted content id 3999 next item ready
-**First Prompt:** <pasted_content id="3999">
- ### Next Item Ready for Refinement
-
-  • The single xfail (test_free_tile_matrix_housing_is_c
+**Session ID:** b34f371f-1a3b-421b-aa9d-022c0cbc3caa
+**Title:** pending
 
 ## Working Tree Status
 
 ⚠️  **Uncommitted work present** — commit or stash before ending the session.
 
 ```
-M .gitignore
- M HANDOFF.md
-M  README.md
- M artifacts/calibration.json
- M artifacts/seed_data.json
- M docs/teammate_2_mcp_and_frontier_harness.md
-A  harbor/template/environment/Dockerfile
-A  harbor/template/environment/docker-compose.yaml
-A  harbor/template/environment/game/Dockerfile
-A  harbor/template/environment/game/server.py
-A  harbor/template/environment/terraria
-AM harbor/template/instruction.md
-A  harbor/template/solution/solve.sh
-A  harbor/template/task.toml
-A  harbor/template/tests/test.sh
-A  mod/TerrariaRLBridge/TerrariaRLBridge.csproj
- M pyproject.toml
- M terraria_bench/exploits.py
- M terraria_bench/harness/__init__.py
-M  terraria_bench/harness/gemini_agent.py
- M terraria_bench/harness/gemma_agent.py
-AM terraria_bench/harness/harbor_agent.py
- M terraria_bench/harness/nemotron_agent.py
- M terraria_bench/harness/runner.py
- M terraria_bench/tools.py
-M  tests/test_reward_exploits.py
- M tests/test_teammate2_mcp_and_harness.py
-?? harbor/build_tasks.py
-?? harbor/tasks/
-?? tests/test_harbor_tasks.py
-?? tests/test_harbor_two_tier_agent.py
+M HANDOFF.md
+ M artifacts/recordings/real_terraria_live.html
+ M artifacts/recordings/real_terraria_live.json
+ M mod/TerrariaRLBridge/TerrariaRLBridge.cs
+ M terraria_bench/context_crawler.py
+ M terraria_bench/real_game.py
+ M tests/test_live_play.py
+?? mod/TerrariaRLBridge/Skills.cs
+?? terraria_bench/eye_planner.py
 ```
 
 ## Recent Commits
 
 ```
+f9cd5d3 Merge pull request #7 from mairazaini/fix/real-terraria-latency
+d3db8b5 feat: reduce real Terraria bridge latency, add wiki context crawler, and update live play
+ba408ff Merge pull request #6 from mairazaini/fix/matrix-free-tiles-and-gemini-two-tier
+2b090b6 feat: add two-tier gemini-decision-1 harness, live play studio, Harbor tasks, and tModLoader bridge
 ad202d0 Merge pull request #5 from mairazaini/feat/teammate-3-gemma-and-grpo-training
 aa5a000 feat(track-3): integrate GemmaAgent with EpisodeRunner, expand harness lazy exports, and update docs
 c365b44 Merge remote-tracking branch 'origin/main' into feat/teammate-3-gemma-and-grpo-training
 e154f50 Merge pull request #2 from mairazaini/feat/teammate-4-bridge-console-dashboard
 4537457 Merge pull request #4 from mairazaini/feat/teammate-2-mcp-and-frontier-harness
 412b600 Merge pull request #3 from mairazaini/feat/teammate1-anchors-exploits-calibration
-c770944 fix(recorder): verify replay seal against recorded manifest and add Track 1/2 lazy exports
-d2716e9 perf(harness): cache git_commit in run_eval_standard and add lazy Track 3 exports
-24f7d18 feat(teammate-3): implement Gemma 4 agent & GRPO + LoRA post-training pipeline
-4d34cca feat(track-2): implement 24-tool MCP server and frontier evaluation harness
 ```
 
 ## Resume
 
 ```
-claude --continue "C:\Users\natha\.claude\projects\C--Users-natha-dev-TerrariaBench\a890cdb4-623a-43cc-a187-8ab1299d620f.jsonl"
+claude --continue "C:\Users\natha\.claude\projects\C--Users-natha-dev-TerrariaBench\b34f371f-1a3b-421b-aa9d-022c0cbc3caa.jsonl"
 ```
 
 ## Next Steps

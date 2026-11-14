@@ -36,11 +36,12 @@ from .context_crawler import DEFAULT_OUTPUT_DIR, retrieve_wiki_context
 PROTOCOL = 2
 DEFAULT_GOAL = "Survive, gather resources, build a shelter, gear up, then summon and defeat the Eye of Cthulhu."
 
-# Everything a human can read off the game's own HUD. Anything else in a payload is dropped before prompting.
+# Everything visible through the player bridge (HUD + simulated local player view). Ground truth in `referee` is dropped.
 HUD_KEYS = (
-    "hp", "max_hp", "mana", "max_mana", "dead", "selected_slot", "held_item", "hotbar", "buffs",
-    "inventory_open", "inventory", "equipment", "craftable", "chest_open", "chest", "cursor", "events", "view",
-    "visible_enemies",
+    "hp", "max_hp", "mana", "max_mana", "dead", "time_phase", "blocked",
+    "selected_slot", "held_item", "hotbar", "backpack", "equipment_now", "craftable_now",
+    "buffs", "inventory_open", "inventory", "equipment", "craftable", "chest_open", "chest",
+    "cursor", "events", "view", "visible_enemies", "world_view",
 )
 
 CURSOR_X = (-20, -12, -8, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 8, 12, 20)
@@ -48,85 +49,145 @@ CURSOR_Y = (-12, -8, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 8, 12)
 HOLD_TICKS = {"tap": 6, "short": 20, "medium": 45, "long": 90}
 MAX_MENU = 40
 MAX_ROUTINE_STEPS = 12
-BUILTIN_ROUTINE_NAMES = ("pillar_up", "box_in", "stairs_up_left", "stairs_up_right", "place_torch")
+BUILTIN_ROUTINE_NAMES = (
+    "pillar_up",
+    "stairs_up_left",
+    "stairs_up_right",
+    "place_torch",
+    "chop_tree_right",
+    "chop_tree_left",
+    "mine_clear_overhead",
+    "clear_area_right",
+    "clear_area_left",
+    "build_house_frame",
+    "furnish_house",
+    "dig_down",
+    "stairs_down_left",
+    "stairs_down_right",
+    "build_arena_platform_right",
+    "build_arena_platform_left",
+)
+
+PROGRESSION_STAGES: tuple[dict[str, str], ...] = (
+    {
+        "id": "gather_wood",
+        "goal": "Chop nearby surface trees with Copper Axe + Smart Cursor until ~60+ Wood and collect Gel from slimes for Torches.",
+        "done_when": "60+ Wood in hotbar/inventory and torches/gel available.",
+    },
+    {
+        "id": "clear_house_site",
+        "goal": "Clear obstructing trees and flatten 1-tile dirt bumps across a ~12-tile flat surface strip near spawn.",
+        "done_when": "A clear, tree-free flat grass stretch >=10 tiles wide is open.",
+    },
+    {
+        "id": "build_house",
+        "goal": "Craft Work Bench, Wood Walls (~40), Wooden Chair, Wooden Door, Torches; build a >=10x6 frame, place safe background walls, light, bench, chair, and door.",
+        "done_when": "Enclosed, walled, lit, furnished house is complete before nightfall.",
+    },
+    {
+        "id": "craft_early_gear",
+        "goal": "Craft Wood Armor, Wooden Bow, and Arrows (plus Flaming Arrows with Torches) via open inventory.",
+        "done_when": "Equipped armor + ranged weapon/arrows ready for caves.",
+    },
+    {
+        "id": "explore_caves",
+        "goal": "Dig down/diagonally into caves placing Torches for light, mine Copper/Iron/Silver/Gold Ore, loot Chests, and mine+use Life Crystals (+20 max HP each).",
+        "done_when": "Upgraded armor/bow/ore bars and increased max HP (140-200+ HP).",
+    },
+    {
+        "id": "build_arena_and_summon_prep",
+        "goal": "Collect 6 Lenses from Demon Eyes at night to craft Suspicious Looking Eye at a Demon/Crimson Altar (or find one in a Chest), build 2-3 horizontal platform rows with Campfires, and stock healing potions.",
+        "done_when": "Suspicious Looking Eye in inventory, platform arena built, potions & ammo stocked.",
+    },
+    {
+        "id": "fight_eye_of_cthulhu",
+        "goal": "Use Suspicious Looking Eye at Night (7:30 PM-4:30 AM) on the arena, strafe/jump across platforms to dodge charges (especially Phase 2 chain dashes), shoot continuously, and quick-heal with H.",
+        "done_when": "Eye of Cthulhu defeated.",
+    },
+)
+
+TERRARIA_KNOWLEDGE_BASE = (
+    "TERRARIA MECHANICS CHEAT-SHEET:\n"
+    "- Lighting & Fog-of-War: Underground dirt below surface grass is ALWAYS solid black until lit with torches or dug open. Do not mistake normal black subterranean dirt in a daytime frame for nighttime darkness.\n"
+    "- Trees & Building: Trees do NOT block player movement, so you can walk past them, BUT tree trunks/canopy occupy build cells so blocks cannot be placed on them. Chop obstructing trees at their base trunk with an Axe + Smart Cursor.\n"
+    "- Hotbar Switching: Changing hotbar slots while holding Left Mouse can be delayed by auto-swing tools; stop clicking for one tap when switching items.\n"
+    "- House Rules: Minimum ~10 wide x 6 tall exterior (leave 4+ interior height so you never trap your head), solid Wood perimeter, safe crafted Wood Walls filling the background, 1 Torch, 1 Work Bench (counts as table), 1 Chair, and 1 Door.\n"
+    "- Crafting: Only available while inventory is open (Esc). Many items require standing within ~4 tiles of a placed Work Bench, Furnace (3 Iron/Silver/Gold Ore -> 1 Bar), or Anvil.\n"
+    "- Mining & Caves: Place Torches frequently while digging down (`dig_down` / `stairs_down_*`). Look for chests (loot all) and glowing red Life Crystals (mine with pickaxe, then select and left-click to raise max HP by 20).\n"
+    "- Eye of Cthulhu: Summon ONLY at Night (`time_phase == Night`), never Dawn/Day. Kite horizontally along platform tiers, jump/drop (`S`) to evade dashes, and focus on dodging fast dashes in Phase 2."
+)
 
 VISION_SYSTEM = (
-    "You are the eyes of an agent playing Terraria. You receive one screenshot of the game exactly as it appears "
-    "on the player's monitor, including lighting, darkness and any open menus. Report ONLY what is visible in "
-    "this image. Never guess what is hidden in darkness or off screen: if an area is black, say it cannot be "
-    "seen. The player character stands at the centre of the image and is 2 tiles wide and 3 tiles tall. Give "
-    "positions as tile offsets from the player's centre: dx positive = right, dy positive = down.\n"
+    "You are the live quick eyes AND short-term tactical spotter of an agent playing Terraria. You receive one "
+    "screenshot of the game exactly as it appears on the player's monitor, plus the player's current supervisor "
+    "objective and HUD summary. Report ONLY what is visible in this image. Never guess what is hidden in darkness "
+    "or off screen. IMPORTANT: In Terraria daytime, the sky is bright and underground dirt/stone beneath the surface "
+    "is naturally black fog-of-war — NEVER report lighting as 'pitch_black' when daytime sky or lit terrain is visible; "
+    "reserve 'pitch_black' ONLY for when the player is completely in darkness (night/cave with no visible terrain).\n"
+    "The player character stands near the centre of the image (2 tiles wide, 3 tiles tall). Give positions as tile "
+    "offsets from the player's centre: dx positive = right, dy positive = down.\n"
+    "Because the Supervisor plans slowly in the background, YOU provide the fast short-term 'reaction' guidance for "
+    "the 1-second Decision API controller: spot enemies within 5 tiles, walls/ceilings trapping the player, nearby "
+    "tree trunks to chop, or open flat ground to build on, and output a concrete 1-sentence immediate_directive plus "
+    "optional recommended_routine / recommended_hotbar / recommended_cursor_dx / recommended_cursor_dy.\n"
     "Return JSON only: {\"lighting\": \"bright|dim|dark|pitch_black\", \"surroundings\": \"<1-2 sentences: biome, "
     "surface or underground, terrain shape near the player>\", \"blocked\": {\"left\": bool, \"right\": bool, "
     "\"above\": bool, \"below\": bool}, \"in_hole_or_enclosed\": bool, \"enemies\": [{\"name\": str, \"dx\": number, "
     "\"dy\": number, \"moving_toward_player\": bool}], \"objects\": [{\"kind\": \"tree|ore|chest|crafting_station|"
     "door|dropped_item|torch|light_source|water|lava|npc|placed_block|other\", \"label\": str, \"dx\": number, "
     "\"dy\": number}], \"hazards\": [str], \"ui\": {\"inventory_open\": bool, \"crafting_list_visible\": bool, "
-    "\"chest_open\": bool, \"death_screen\": bool, \"text_on_screen\": str}, \"notes\": \"<anything else a player "
-    "would notice>\"}"
+    "\"chest_open\": bool, \"death_screen\": bool, \"text_on_screen\": str}, \"reaction\": {\"threat_level\": "
+    "\"none|low|high|critical\", \"immediate_directive\": \"<1 short imperative sentence for THIS frame>\", "
+    "\"recommended_routine\": \"<builtin routine name or none>\", \"recommended_hotbar\": 0, "
+    "\"recommended_cursor_dx\": 0, \"recommended_cursor_dy\": 0}, \"notes\": \"<anything else a player would notice>\"}"
 )
 
 REAL_SUPERVISOR_SYSTEM = (
-    "You are the strategy supervisor for an agent playing real Terraria under human-parity rules. The agent has "
-    "exactly what a human has: the picture on the screen (described to you by a vision model, and attached), "
-    "the on-screen HUD, a keyboard and a mouse. It has no map knowledge, cannot see in the dark, and nothing is "
-    "done for it. You do not act. A fast decision model looks at the screen and presses the keys about once a "
-    "second; it handles all short-term play (movement, aiming, clicking, fighting) on its own. Your job is the "
-    "long game: what to do next and why, and getting it unstuck. It follows your guidance literally, so be "
-    "concrete.\n"
-    "The decision model has two tools: aim assist (cursor tracks the nearest visible, lit enemy) and routines "
-    "(fixed input sequences such as pillar_up, box_in, stairs_up_left/right, place_torch). Tell it when to use "
-    "them. You may also store up to 3 new routines of your own for sequences it keeps getting wrong.\n"
-    "Terraria fundamentals the decision model needs spelled out when relevant:\n"
-    "- Darkness: if the screen is dark it must make light first. Torches are crafted by hand from Wood + Gel "
-    "(open inventory, craft Torch), then placed by selecting them in the hotbar and left-clicking an empty tile "
-    "next to a block or wall. Do not explore caves blind.\n"
-    "- Crafting: only works with the inventory open; many recipes need a crafting station (Work Bench, Furnace, "
-    "Iron Anvil) placed within a few tiles. Only currently available recipes can be crafted.\n"
-    "- Tools: pickaxe mines blocks, axe chops trees (aim at the trunk), sword hits what is in front of the "
-    "player in the direction of the cursor. Hold the mouse button long enough for a block to break.\n"
-    "- Building: tree trunks and foliage occupy cells, so a block cannot be placed in those cells. Chop obstructing "
-    "trees with an axe; do not rely on trees as block support. Blocks need a valid empty placement cell and support "
-    "where required by that tile. "
-    "Placement range is game-enforced and depends on direction/equipment; do not assume a fixed four-tile radius. "
-    "Choose a nearby visible cell, try a placement, then inspect HUD/events and revise the cursor if it fails. "
-    "A valid house needs a closed frame plus suitable background walls, light, table, chair, and door.\n"
-    "- Eye of Cthulhu: use the Suspicious Looking Eye only at night (7:30 PM-4:30 AM). Prepare an open arena, "
-    "ranged weapon/ammunition, mobility and healing; keep moving during charges. It despawns at dawn. In phase two "
-    "prioritize dodging its faster charges, then attack during pauses. Verify boss health and phase from visible UI.\n"
-    "- Life Crystals found underground permanently add 20 maximum HP when used; search visible caves for them and "
-    "use them before the boss fight. A larger life bar and stronger crafted armor are preparation milestones.\n"
-    "- Stuck in a hole: place blocks under the feet while jumping (cursor at dy=+2), or mine a staircase "
-    "diagonally upward, or build a block pillar. Boxed in by enemies: place blocks to wall them off.\n"
-    "- Night is dangerous early: be inside a closed shelter. Heal with potions (quick heal) when HP is low.\n"
-    "Return JSON only: {\"strategy\": \"<2-4 sentences: the overall plan from here>\", \"objective\": \"<the "
-    "single immediate objective>\", \"steps\": [\"<3-8 short imperative steps, in order, as concrete inputs "
-    "where possible>\"], \"avoid\": [\"<mistakes to avoid right now>\"], \"done_when\": \"<how the decision model "
-    "can tell from the screen/HUD that the objective is complete and it should request a replan>\", "
-    "\"routines\": [optional, {\"name\": \"<snake_case>\", \"when\": \"<when to use it>\", \"steps\": [{\"move\": "
-    "\"left|right|idle\", \"jump\": bool, \"down\": bool, \"use_item\": bool, \"interact\": bool, \"hotbar\": 0-10 "
-    "(0 keeps), \"cursor_dx\": number, \"cursor_dy\": number, \"hold\": \"tap|short|medium|long\"}]}]}"
+    "You are the LONG-TERM strategic supervisor for an agent playing real Terraria under human-parity rules. "
+    "A fast Vision model and a 1-second Decision API controller execute short-term reactionary play (dodging slimes, "
+    "aiming at nearby trunks/blocks, switching slots, triggering routines). You run periodically in the background "
+    "(~every 45 ticks, on death, or when stuck), so produce a DETAILED, ACTIONABLE, STATE-GROUNDED tactical plan "
+    "with exact numbers from HUD/world_view rather than vague advice or single-frame keypresses.\n"
+    "Overarching multi-stage roadmap from spawn to defeating the Eye of Cthulhu:\n"
+    "  1. gather_wood -> 2. clear_house_site -> 3. build_house -> 4. craft_early_gear -> "
+    "5. explore_caves -> 6. build_arena_and_summon_prep -> 7. fight_eye_of_cthulhu.\n"
+    "CRITICAL RULES:\n"
+    "- Inspect `HUD.world_view.house_status` (`valid_room`, `in_house`, `missing_for_house`) and `HUD.backpack` / "
+    "`craftable_now` carefully before choosing `phase`.\n"
+    "- Once `house_status.valid_room` is true (a valid house is already anchored and built), NEVER stay in "
+    "`build_house` or rebuild another house; immediately advance to `craft_early_gear` (Work Bench/Furnace/Anvil, "
+    "ore smelting, Wooden/Ore Bow + Arrows + armor) and then `explore_caves` (`stairs_down_*`/`dig_down`, loot "
+    "Chests, mine Life Crystals & ores).\n"
+    "- Ignore roof/exterior enemies whose `line_of_sight` is false while inside the house, and NEVER tell Decision "
+    "to run `mine_clear_overhead` against its own house roof/doorway lintel (`in_house=true`).\n"
+    "- Specify concrete inventory counts, exact target coordinates from `world_view` (`trees`, `ores`, `chests`, "
+    "`life_crystals`), the exact builtin routine sequence (`chop_tree_right`/`left`, `mine_clear_overhead`, "
+    "`clear_area_right`/`left`, `build_house_frame`, `furnish_house`, `dig_down`, `stairs_down_left`/`right`, "
+    "`build_arena_platform_right`/`left`, `pillar_up`, `stairs_up_left`/`right`, `place_torch`), explicit "
+    "`avoid` guardrails, and an observable `done_when` transition condition.\n"
+    "You may also define up to 3 custom reusable routines for multi-step sequences if helpful.\n"
+    "Return JSON only: {\"phase\": \"<one of the 7 stage ids>\", \"roadmap\": [\"<remaining stages in order>\"], "
+    "\"strategy\": \"<3-5 detailed sentences diagnosing inventory, house_status, nearby world_view targets, and next stage>\", "
+    "\"objective\": \"<concrete stage milestone objective with numbers>\", \"steps\": [\"<4-7 detailed ordered "
+    "sub-goals referencing exact routines, crafts, and coordinates>\"], \"avoid\": [\"<specific mistakes/loops "
+    "to avoid right now>\"], \"done_when\": \"<exact observable HUD/world_view sign to advance stage>\", "
+    "\"routines\": [optional custom routines]}"
 )
 
 DECISION_BRIEF = (
     "You control a Terraria player with a keyboard and mouse, like a human. Every answer becomes a real input. "
-    "You are the fast loop: you are asked again about once a second, so act now on what the attached frame "
-    "shows; do not wait for anyone. Nothing happens unless you choose it.\n"
-    "TOOLS (optional, yours to trigger): 'aim_assist' keeps the cursor on the nearest enemy that is visible and "
-    "lit while you hold attack; 'routine' runs a short fixed sequence of ordinary inputs (for example pillar up "
-    "out of a hole, box yourself in, mine a staircase, place a torch) and then hands control back to you.\n"
-    "GEOMETRY: the cursor is placed at a tile offset from the player's centre. dx>0 is right, dy>0 is down. The "
-    "player occupies dy -1..+1. The tile under the feet is dy=+2. The tile at head height just in front is "
-    "dx=+/-1 or 2, dy=-1. Game-enforced placement and tool reach depends on direction and equipment; do not "
-    "assume a fixed four-tile radius. Choose a nearby visible target within reach and adjust after failed placement. "
-    "Trees are natural terrain and cannot be directly placed on; chop them with an axe. To hit an enemy with a "
-    "sword put the cursor on its side of the player. To mine or place a specific tile put the cursor exactly on it.\n"
-    "TIMING: the chosen keys are held for the chosen duration, then released. Breaking a block or chopping a "
-    "tree needs 'medium' or 'long'; a single placement or menu action needs 'tap'.\n"
-    "Follow the supervisor's objective. The attached frame is your sight and is always current; the scene notes "
-    "are a slower model's description and may be several seconds old, so the frame wins on any conflict. If "
-    "the screen is dark you cannot see: make light. If the last actions changed nothing, do something "
-    "different (re-aim, move, jump, switch item, use a routine)."
+    "You are the fast loop (~1 Hz): react immediately to what the attached frame, `HUD.world_view`, and Vision's "
+    "IMMEDIATE SHORT-TERM REACTION show while advancing the Supervisor's stage objective. Do not wait.\n"
+    "IMPORTANT: If IMMEDIATE SHORT-TERM REACTION specifies `recommended_routine != 'none'` and that routine is available, "
+    "select that `routine` immediately instead of clicking randomly.\n"
+    "TOOLS: 'routine' runs a fixed multi-step input sequence (e.g. `chop_tree_right`/`left`, `mine_clear_overhead`, "
+    "`clear_area_right`/`left`, `build_house_frame`, `furnish_house`, `dig_down`, `stairs_down_right`/`left`, "
+    "`build_arena_platform_right`/`left`, `pillar_up`, `stairs_up_right`/`left`, `place_torch`) with Smart Cursor & "
+    "contextual auto-aim enabled, then returns control to you.\n"
+    "GEOMETRY & CONTROLS: cursor offset is in tiles from player's centre (dx>0 right, dy>0 down; body is dy -1..+1, "
+    "floor is dy=+2, ceiling above head is dy=-2). Trees and tombstones block building — chop/clear them first. Tool/"
+    "weapon/block auto-aim helps land clicks when attacking/mining/chopping/placing, so focus on picking the right tool, "
+    "routine, movement, and crafting (crafting auto-opens inventory if needed)."
 )
 
 
@@ -155,8 +216,10 @@ def parse_real_plan(text: str) -> dict[str, Any]:
     if not strategy and not objective:
         raise ValueError("supervisor plan has no strategy or objective")
     return {
+        "phase": str(data.get("phase") or "")[:64],
         "strategy": strategy[:1200],
         "objective": objective[:400],
+        "roadmap": [str(s)[:200] for s in (data.get("roadmap") or [])][:7],
         "steps": [str(s)[:300] for s in (data.get("steps") or [])][:8],
         "avoid": [str(s)[:200] for s in (data.get("avoid") or [])][:6],
         "done_when": str(data.get("done_when") or "")[:300],
@@ -176,10 +239,13 @@ def _clean_step(raw: Any) -> dict[str, Any] | None:
             "down": bool(raw.get("down")),
             "use_item": bool(raw.get("use_item")),
             "interact": bool(raw.get("interact")),
+            "smart_cursor": bool(raw.get("smart_cursor")),
             "hotbar": hotbar if 1 <= hotbar <= 10 else 0,
             "cursor_dx": max(-20.0, min(20.0, float(raw.get("cursor_dx") or 0))),
             "cursor_dy": max(-12.0, min(12.0, float(raw.get("cursor_dy") or 0))),
             "hold": raw.get("hold") if raw.get("hold") in HOLD_TICKS else "short",
+            "select_item": str(raw.get("select_item") or "")[:40],
+            "macro_action": str(raw.get("macro_action") or "")[:40],
         }
     except (TypeError, ValueError):
         return None
@@ -205,12 +271,74 @@ def _hotbar_slot(hud: dict[str, Any], match: Callable[[str], bool]) -> int:
     return 0
 
 
+def _item_count(hud: dict[str, Any], match: str | Callable[[str], bool]) -> int:
+    pred = (lambda n: n == match) if isinstance(match, str) else match
+    for container_key in ("backpack",):
+        bag = hud.get(container_key)
+        if isinstance(bag, dict):
+            return sum(int(qty or 0) for name, qty in bag.items() if pred(str(name)) and int(qty or 0) > 0)
+    total = 0
+    for entry in hud.get("hotbar") or []:
+        if isinstance(entry, dict) and pred(str(entry.get("name") or "")):
+            total += int(entry.get("stack") or 0)
+    for container_key in ("inventory",):
+        inv = hud.get(container_key)
+        if isinstance(inv, dict):
+            total += sum(int(qty or 0) for name, qty in inv.items() if pred(str(name)) and int(qty or 0) > 0)
+    return total
+
+
+def _has_item(hud: dict[str, Any], match: Callable[[str], bool]) -> bool:
+    return _hotbar_slot(hud, match) > 0 or _item_count(hud, match) > 0
+
+
 def _is_block(name: str) -> bool:
     return name.endswith(" Block") or name.endswith("Wood") or name.endswith(" Brick") or name.endswith(" Platform")
 
 
+_COMBAT_WEAPON_MARKERS = (
+    "sword", "bow", "gun", "pistol", "rifle", "musket", "repeater", "launcher", "boomstick",
+    "minishark", "shotgun", "staff", "wand", "spear", "whip", "yoyo", "flail", "boomerang",
+    "dagger", "knife", "scythe", "chakram", "grenade", "molotov",
+)
+
+
+def _held_item_name(hud: dict[str, Any]) -> str:
+    held = str(hud.get("held_item") or "").strip()
+    if held:
+        return held
+    try:
+        slot = int(hud.get("selected_slot") or 0)
+    except (TypeError, ValueError):
+        return ""
+    for entry in hud.get("hotbar") or []:
+        if not isinstance(entry, dict):
+            continue
+        try:
+            if int(entry.get("slot") or 0) == slot:
+                return str(entry.get("name") or "")
+        except (TypeError, ValueError):
+            continue
+    return ""
+
+
+def _aim_assist_usable(hud: dict[str, Any], controls: dict[str, Any] | None = None) -> bool:
+    """Aim assist may redirect the cursor only for a visible-enemy weapon attack."""
+    if not hud.get("visible_enemies"):
+        return False
+    name = _held_item_name(hud).lower()
+    if not any(marker in name for marker in _COMBAT_WEAPON_MARKERS):
+        return False
+    if controls is not None:
+        # A slot switch may not apply until the current item animation ends. Never
+        # let aim assist redirect a click while a different item is still held.
+        if not controls.get("use_item") or int(controls.get("hotbar") or 0) != 0:
+            return False
+    return True
+
+
 def builtin_routines(hud: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Routines offered this tick. Each needs its item to be in the hotbar right now, as it would for a human.
+    """Routines offered this tick using both hotbar and backpack inventory, with Smart Cursor & macro support.
 
     Geometry: the player's centre sits on a tile boundary, so +/-0.5 is inside the player and +/-1.5 is the
     column beside it. Rows -1..+1 are the body, +2 is the floor tile, -2 is the tile above the head.
@@ -219,42 +347,142 @@ def builtin_routines(hud: dict[str, Any]) -> dict[str, dict[str, Any]]:
         return _clean_step(kw) or {}
 
     out: dict[str, dict[str, Any]] = {}
-    block = _hotbar_slot(hud, _is_block)
-    pick = _hotbar_slot(hud, lambda n: "Pickaxe" in n or "Drill" in n)
-    torch = _hotbar_slot(hud, lambda n: n.endswith("Torch"))
-    if block:
+    is_solid_block = lambda n: _is_block(n) and not n.endswith("Platform")
+    is_platform = lambda n: n.endswith("Platform")
+    is_pick = lambda n: "Pickaxe" in n or "Drill" in n
+    is_axe = lambda n: "Axe" in n or "Chainsaw" in n or "Hamaxe" in n
+    is_torch = lambda n: n.endswith("Torch")
+    is_wall = lambda n: n.endswith(" Wall")
+    is_bench = lambda n: n == "Work Bench" or n.endswith(" Work Bench")
+    is_chair = lambda n: n == "Chair" or n.endswith(" Chair")
+    is_door = lambda n: n == "Door" or n.endswith(" Door")
+
+    block = _hotbar_slot(hud, is_solid_block)
+    platform = _hotbar_slot(hud, is_platform)
+    pick = _hotbar_slot(hud, is_pick)
+    axe = _hotbar_slot(hud, is_axe)
+    torch = _hotbar_slot(hud, is_torch)
+    wall = _hotbar_slot(hud, is_wall)
+    workbench = _hotbar_slot(hud, is_bench)
+    chair = _hotbar_slot(hud, is_chair)
+    door = _hotbar_slot(hud, is_door)
+
+    has_block = block > 0 or _has_item(hud, is_solid_block)
+    has_pick = pick > 0 or _has_item(hud, is_pick)
+    has_axe = axe > 0 or _has_item(hud, is_axe)
+    has_torch = torch > 0 or _has_item(hud, is_torch)
+    has_platform = platform > 0 or _has_item(hud, is_platform)
+    can_furnish = (
+        wall > 0 or workbench > 0 or chair > 0 or door > 0
+        or _has_item(hud, is_wall) or _has_item(hud, is_bench)
+        or _has_item(hud, is_chair) or _has_item(hud, is_door)
+        or _item_count(hud, "Wood") >= 25
+    )
+
+    house_status = (hud.get("world_view") or {}).get("house_status") or {}
+    house_valid = bool(house_status.get("valid_room"))
+
+    if has_block:
         out["pillar_up"] = {
             "when": "Climb out of a hole or gain height: jump and place a block under the feet, four times.",
-            "steps": [step(hotbar=block, hold="tap")]
+            "steps": [step(hotbar=block, select_item="block", hold="tap")]
             + [step(jump=True, use_item=True, cursor_dx=-0.5, cursor_dy=2, hold="short"),
                step(jump=True, use_item=True, cursor_dx=0.5, cursor_dy=2, hold="short")] * 4,
         }
-        walls = [(dx, dy) for dx in (-1.5, 1.5) for dy in (1, 0, -1, -2)]
-        roof = [(-0.5, -2), (0.5, -2)]
-        out["box_in"] = {
-            "when": "Emergency shelter: wall off both sides and the roof around the player with blocks.",
-            "steps": [step(hotbar=block, hold="tap")]
-            + [step(use_item=True, cursor_dx=dx, cursor_dy=dy, hold="tap") for dx, dy in walls + roof],
+        if not house_valid:
+            out["build_house_frame"] = {
+                "when": "Build and furnish a single anchored 12x7 valid house (clears interior, never rebuilds once valid).",
+                "steps": [
+                    step(hotbar=block, select_item="block", macro_action="build_house_frame", hold="tap"),
+                    step(hold="tap"),
+                    step(hold="tap"),
+                ],
+            }
+    if can_furnish and not house_valid:
+        out["furnish_house"] = {
+            "when": "Finish crafting and placing walls, doors, Work Bench, Chair, and Torch inside the anchored house.",
+            "steps": [
+                step(hotbar=wall or workbench or chair or door or torch, select_item="wall", macro_action="furnish_house", hold="tap"),
+                step(hold="tap"),
+                step(hold="tap"),
+            ],
         }
-    if pick:
+    if has_pick:
+        out["mine_clear_overhead"] = {
+            "when": "Mine away blocks directly above the player's head when trapped under tiles or clearing headroom.",
+            "steps": [step(hotbar=pick, select_item="pickaxe", macro_action="mine_clear_overhead", hold="tap")]
+            + [step(use_item=True, smart_cursor=True, cursor_dx=dx, cursor_dy=dy, hold="medium")
+               for dy in (-3, -2) for dx in (-1.5, -0.5, 0.5, 1.5)],
+        }
+        out["dig_down"] = {
+            "when": "Dig straight down beneath the player's feet to descend toward caves.",
+            "steps": [step(hotbar=pick, select_item="pickaxe", hold="tap")]
+            + [step(use_item=True, smart_cursor=True, cursor_dx=dx, cursor_dy=dy, hold="medium")
+               for _ in range(2) for dy in (2, 3) for dx in (-0.5, 0.5)],
+        }
         for side, d in (("left", -1), ("right", 1)):
             out[f"stairs_up_{side}"] = {
                 "when": f"Dig a staircase up and to the {side} to climb out of a pit or cave.",
-                "steps": [step(hotbar=pick, hold="tap")] + [
+                "steps": [step(hotbar=pick, select_item="pickaxe", hold="tap")] + [
                     st for _ in range(3) for st in (
-                        step(use_item=True, cursor_dx=d * 1.5, cursor_dy=-2, hold="medium"),
-                        step(use_item=True, cursor_dx=d * 1.5, cursor_dy=-1, hold="medium"),
-                        step(use_item=True, cursor_dx=d * 1.5, cursor_dy=0, hold="medium"),
-                        step(use_item=True, cursor_dx=d * 0.5, cursor_dy=-2, hold="medium"),
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=-2, hold="medium"),
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=-1, hold="medium"),
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=0, hold="medium"),
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 0.5, cursor_dy=-2, hold="medium"),
                         step(move=side, jump=True, hold="short"),
                     )],
             }
-    if torch:
+            out[f"stairs_down_{side}"] = {
+                "when": f"Dig a walkable diagonal staircase down and to the {side} into caves.",
+                "steps": [step(hotbar=pick, select_item="pickaxe", hold="tap")] + [
+                    st for _ in range(3) for st in (
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=-1, hold="medium"),
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=0, hold="medium"),
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=1, hold="medium"),
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=2, hold="medium"),
+                        step(move=side, hold="short"),
+                    )],
+            }
+            out[f"clear_area_{side}"] = {
+                "when": f"Clear tombstones and terrain bumps to the {side} for a house site (without digging under feet).",
+                "steps": [step(hotbar=pick, select_item="pickaxe", macro_action=f"clear_area_{side}", hold="tap")] + [
+                    st for _ in range(2) for st in (
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=-1, hold="medium"),
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=0, hold="medium"),
+                        step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=1, hold="medium"),
+                        step(move=side, hold="short"),
+                    )],
+            }
+    if has_axe:
+        wv_trees = (hud.get("world_view") or {}).get("trees") or []
+        for side, d in (("left", -1), ("right", 1)):
+            matching = [t for t in wv_trees if isinstance(t, dict) and ((t.get("dx", 0) >= 0) if d > 0 else (t.get("dx", 0) < 0))]
+            target_tree = matching[0] if matching else (wv_trees[0] if wv_trees and isinstance(wv_trees[0], dict) else None)
+            tdx = float(target_tree.get("dx", d * 1.5)) if target_tree else d * 1.5
+            tdy = float(target_tree.get("dy", 1.0)) if target_tree else 1.0
+            out[f"chop_tree_{side}"] = {
+                "when": f"Chop a tree trunk to the {side} at its base with Smart Cursor and axe auto-aim.",
+                "steps": [
+                    step(hotbar=axe, select_item="axe", macro_action=f"chop_tree_{side}", hold="tap"),
+                    step(move=side, use_item=True, smart_cursor=True, cursor_dx=tdx, cursor_dy=tdy, hold="long"),
+                    step(use_item=True, smart_cursor=True, cursor_dx=d * 1.5, cursor_dy=1, hold="long"),
+                ],
+            }
+    if has_torch:
         out["place_torch"] = {
             "when": "Light the spot where the player stands: place one torch at the feet.",
-            "steps": [step(hotbar=torch, hold="tap"), step(use_item=True, cursor_dx=0.5, cursor_dy=1, hold="tap"),
+            "steps": [step(hotbar=torch, select_item="torch", hold="tap"), step(use_item=True, cursor_dx=0.5, cursor_dy=1, hold="tap"),
                       step(use_item=True, cursor_dx=1.5, cursor_dy=1, hold="tap")],
         }
+    if has_platform:
+        for side, d in (("left", -1), ("right", 1)):
+            out[f"build_arena_platform_{side}"] = {
+                "when": f"Place a horizontal row of platforms overhead while moving {side} to build a boss arena.",
+                "steps": [step(hotbar=platform, select_item="platform", hold="tap")] + [
+                    step(move=side, use_item=True, cursor_dx=d * 1.5, cursor_dy=-2, hold="tap")
+                    for _ in range(5)
+                ],
+            }
     return out
 
 
@@ -264,8 +492,11 @@ def step_to_controls(step: dict[str, Any]) -> dict[str, Any]:
     ctrl.update({
         "move_x": move, "left": move == "left", "right": move == "right", "jump": bool(step.get("jump")),
         "down": bool(step.get("down")), "use_item": bool(step.get("use_item")), "use_tile": bool(step.get("interact")),
+        "smart_cursor": bool(step.get("smart_cursor")),
         "hotbar": int(step.get("hotbar") or 0), "cursor_dx": float(step.get("cursor_dx") or 0.0),
         "cursor_dy": float(step.get("cursor_dy") or 0.0), "hold_ticks": HOLD_TICKS.get(step.get("hold", "short"), 20),
+        "select_item": str(step.get("select_item") or ""),
+        "macro_action": str(step.get("macro_action") or ""),
     })
     return _finish_controls(ctrl)
 
@@ -315,10 +546,6 @@ def build_questions(
         "replan": {"type": "noul", "instructions": "Is the supervisor's objective finished, impossible, or clearly not working, so a new plan is needed?"},
     }
 
-    if hud.get("visible_enemies"):
-        q["aim_assist"] = {"type": "choice", "instructions": "Aim assist tool: who positions the mouse cursor?",
-                           "criteria": {"manual": "Use my cursor_x / cursor_y answers",
-                                        "nearest_enemy": "Keep the cursor on the nearest visible enemy (use with attack)"}}
     if routines:
         crit = {"none": "No routine: use my individual key answers"}
         crit.update({name: str(r.get("when") or name) for name, r in routines.items()})
@@ -350,7 +577,7 @@ def idle_controls() -> dict[str, Any]:
         "move_x": "idle", "left": False, "right": False, "up": False, "down": False, "jump": False,
         "use_item": False, "use_tile": False, "hook": False, "quick_heal": False, "smart_cursor": False,
         "hotbar": 0, "cursor_dx": 0.0, "cursor_dy": 0.0, "hold_ticks": 1, "inventory": "", "craft": "",
-        "inventory_item": "", "loot_all": False, "aim_assist": False, "decisions": {},
+        "inventory_item": "", "select_item": "", "macro_action": "", "loot_all": False, "aim_assist": False, "decisions": {},
     }
     return _finish_controls(ctrl)
 
@@ -417,6 +644,8 @@ def answers_to_real_controls(answers: dict[str, Any], craft_ids: dict[str, str],
         "inventory": inv if inv in ("open", "close") else "",
         "craft": craft_ids.get(str(val("craft", "none")), ""),
         "inventory_item": item_ids.get(str(val("inventory_item", "none")), ""),
+        "select_item": "",
+        "macro_action": "",
         "loot_all": yes("loot_all"),
         "aim_assist": str(val("aim_assist", "manual")) == "nearest_enemy",
         "decisions": {
@@ -425,6 +654,195 @@ def answers_to_real_controls(answers: dict[str, Any], craft_ids: dict[str, str],
         },
     }
     return _finish_controls(ctrl)
+
+
+def _simulate_vision(hud: dict[str, Any], plan: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Zero-latency simulated player vision built directly from TerrariaRLBridge `world_view` + HUD."""
+    wv = hud.get("world_view") or {}
+    house = wv.get("house_status") or {}
+    trees = [t for t in (wv.get("trees") or []) if isinstance(t, dict)]
+    ores = [o for o in (wv.get("ores") or []) if isinstance(o, dict)]
+    chests = [c for c in (wv.get("chests") or []) if isinstance(c, dict)]
+    hearts = [h for h in (wv.get("life_crystals") or []) if isinstance(h, dict)]
+    stations = [s for s in (wv.get("stations") or []) if isinstance(s, dict)]
+    caves = [c for c in (wv.get("cave_openings") or []) if isinstance(c, dict)]
+    blocked = hud.get("blocked") or {"left": False, "right": False, "above": False, "below": False}
+
+    raw_enemies = hud.get("visible_enemies") or []
+    enemies: list[dict[str, Any]] = []
+    for e in raw_enemies:
+        if isinstance(e, dict):
+            dx = float(e.get("dx") or 0.0)
+            dy = float(e.get("dy") or 0.0)
+            enemies.append({
+                "name": str(e.get("name") or "Enemy"),
+                "dx": dx,
+                "dy": dy,
+                "dist": float(e.get("dist") or round((dx * dx + dy * dy) ** 0.5, 1)),
+                "moving_toward_player": bool(e.get("approaching", True)),
+                "line_of_sight": bool(e.get("line_of_sight", True)),
+            })
+        elif e:
+            enemies.append({
+                "name": str(e),
+                "dx": 2.0,
+                "dy": 0.0,
+                "dist": 2.0,
+                "moving_toward_player": True,
+                "line_of_sight": True,
+            })
+    enemies.sort(key=lambda x: x["dist"])
+
+    wood = _item_count(hud, "Wood")
+    lighting = str(wv.get("lighting") or ("bright" if hud.get("time_phase") == "Day" else "dark"))
+    biome = str(wv.get("biome") or "surface")
+    valid_room = bool(house.get("valid_room"))
+    in_house = bool(
+        house.get("in_house")
+        or int(house.get("roof_tiles") or 0) >= 4
+        or int(house.get("back_walls") or 0) >= 8
+    )
+    missing_house = [str(m) for m in (house.get("missing_for_house") or [])]
+    tombstones = int(house.get("tombstones_nearby") or 0)
+
+    objects: list[dict[str, Any]] = []
+    for t in trees[:4]:
+        objects.append({"kind": "tree", "label": "Tree trunk", "dx": t.get("dx", 0), "dy": t.get("dy", 0)})
+    for h in hearts[:3]:
+        objects.append({"kind": "life_crystal", "label": "Life Crystal", "dx": h.get("dx", 0), "dy": h.get("dy", 0)})
+    for c in chests[:3]:
+        objects.append({"kind": "chest", "label": "Chest", "dx": c.get("dx", 0), "dy": c.get("dy", 0)})
+    for o in ores[:4]:
+        objects.append({"kind": "ore", "label": str(o.get("name") or "Ore"), "dx": o.get("dx", 0), "dy": o.get("dy", 0)})
+    for s in stations[:5]:
+        objects.append({"kind": "crafting_station", "label": str(s.get("kind") or "Station"), "dx": s.get("dx", 0), "dy": s.get("dy", 0)})
+
+    weapon_slot = _hotbar_slot(hud, lambda n: any(m in n.lower() for m in _COMBAT_WEAPON_MARKERS))
+    pick_slot = _hotbar_slot(hud, lambda n: "Pickaxe" in n or "Drill" in n)
+    axe_slot = _hotbar_slot(hud, lambda n: "Axe" in n or "Chainsaw" in n or "Hamaxe" in n)
+    block_slot = _hotbar_slot(hud, lambda n: _is_block(n) and not n.endswith("Platform"))
+
+    reaction = {
+        "threat_level": "none",
+        "immediate_directive": "Explore and gather resources.",
+        "recommended_routine": "none",
+        "recommended_hotbar": 0,
+        "recommended_cursor_dx": 0,
+        "recommended_cursor_dy": 0,
+    }
+    phase = str((plan or {}).get("phase") or "")
+    # Ignore enemies blocked behind roofs/walls (line_of_sight=False) so roof slimes do not cause ceiling swings.
+    close_enemies = [e for e in enemies if e["dist"] <= 5.5 and e["line_of_sight"]]
+    if close_enemies:
+        target = close_enemies[0]
+        reaction.update({
+            "threat_level": "critical" if target["dist"] <= 2.5 or int(hud.get("hp") or 100) <= 35 else "high",
+            "immediate_directive": f"Fight {target['name']} at ({target['dx']:+g},{target['dy']:+g}) with weapon.",
+            "recommended_routine": "none",
+            "recommended_hotbar": weapon_slot,
+            "recommended_cursor_dx": target["dx"],
+            "recommended_cursor_dy": target["dy"],
+        })
+    elif blocked.get("above") and not in_house:
+        reaction.update({
+            "immediate_directive": "Blocked overhead: run mine_clear_overhead immediately.",
+            "recommended_routine": "mine_clear_overhead",
+            "recommended_hotbar": pick_slot,
+            "recommended_cursor_dy": -2,
+        })
+    elif tombstones > 0 or ((not in_house) and (blocked.get("left") or blocked.get("right"))):
+        side = "left" if blocked.get("left") and not blocked.get("right") else "right"
+        reaction.update({
+            "immediate_directive": f"Clear tombstones/obstacles to the {side} using clear_area_{side}.",
+            "recommended_routine": f"clear_area_{side}",
+            "recommended_hotbar": pick_slot,
+            "recommended_cursor_dx": -1.5 if side == "left" else 1.5,
+        })
+    elif not valid_room and phase in ("", "gather_wood", "clear_house_site", "build_house") and (
+        wood >= 40 or in_house or int(house.get("floor_tiles") or 0) >= 6 or int(house.get("roof_tiles") or 0) >= 6
+    ):
+        if int(house.get("floor_tiles") or 0) < 10 or int(house.get("roof_tiles") or 0) < 8:
+            reaction.update({
+                "immediate_directive": "Run build_house_frame once at anchor to finish the 12x7 house.",
+                "recommended_routine": "build_house_frame",
+                "recommended_hotbar": block_slot,
+            })
+        else:
+            missing_str = ", ".join(missing_house) or "walls/furniture"
+            reaction.update({
+                "immediate_directive": f"Run furnish_house to finish valid house (missing: {missing_str}).",
+                "recommended_routine": "furnish_house",
+            })
+    elif (phase in ("", "gather_wood") or (wood < 50 and not valid_room and not in_house)) and trees:
+        nearest_tree = trees[0]
+        tdx = float(nearest_tree.get("dx") or 0.0)
+        tdy = float(nearest_tree.get("dy") or 1.0)
+        side = "right" if tdx >= 0 else "left"
+        reaction.update({
+            "immediate_directive": f"Chop tree at ({tdx:+g},{tdy:+g}) using chop_tree_{side} (Wood={wood}/50).",
+            "recommended_routine": f"chop_tree_{side}",
+            "recommended_hotbar": axe_slot,
+            "recommended_cursor_dx": tdx,
+            "recommended_cursor_dy": tdy,
+        })
+    elif hearts:
+        h = hearts[0]
+        reaction.update({
+            "immediate_directive": f"Mine Life Crystal at ({h.get('dx', 0):+g},{h.get('dy', 0):+g}) with pickaxe.",
+            "recommended_hotbar": pick_slot,
+            "recommended_cursor_dx": h.get("dx", 0),
+            "recommended_cursor_dy": h.get("dy", 0),
+        })
+    elif chests:
+        c = chests[0]
+        reaction.update({
+            "immediate_directive": f"Move toward Chest at ({c.get('dx', 0):+g},{c.get('dy', 0):+g}) and loot it.",
+            "recommended_cursor_dx": c.get("dx", 0),
+            "recommended_cursor_dy": c.get("dy", 0),
+        })
+    elif ores:
+        o = ores[0]
+        reaction.update({
+            "immediate_directive": f"Mine {o.get('name', 'Ore')} at ({o.get('dx', 0):+g},{o.get('dy', 0):+g}).",
+            "recommended_hotbar": pick_slot,
+            "recommended_cursor_dx": o.get("dx", 0),
+            "recommended_cursor_dy": o.get("dy", 0),
+        })
+    else:
+        c_dir = "right" if (not caves or float(caves[0].get("dx", 0)) >= 0) else "left"
+        reaction.update({
+            "immediate_directive": f"Descend toward caves via stairs_down_{c_dir} or dig_down.",
+            "recommended_routine": f"stairs_down_{c_dir}",
+            "recommended_hotbar": pick_slot,
+        })
+
+    hazards = [str(e["name"]) for e in enemies[:3]]
+    if hud.get("time_phase") == "Night":
+        hazards.append("nighttime")
+    missing_note = f", missing={missing_house}" if (not valid_room and missing_house) else ""
+    surroundings = (
+        f"{biome} ({hud.get('time_phase', 'Day')}, light={lighting}); "
+        f"trees={len(trees)}, ores={len(ores)}, chests={len(chests)}, hearts={len(hearts)}, "
+        f"valid_house={valid_room}, in_house={in_house}{missing_note}, tombstones={tombstones}, wood={wood}."
+    )
+    return {
+        "lighting": lighting,
+        "surroundings": surroundings,
+        "blocked": blocked,
+        "in_hole_or_enclosed": bool(blocked.get("left") and blocked.get("right") and blocked.get("above") and not in_house),
+        "enemies": enemies,
+        "objects": objects,
+        "hazards": hazards,
+        "ui": {
+            "inventory_open": bool(hud.get("inventory_open")),
+            "crafting_list_visible": bool(hud.get("inventory_open")),
+            "chest_open": bool(hud.get("chest_open")),
+            "death_screen": bool(hud.get("dead")),
+            "text_on_screen": "",
+        },
+        "reaction": reaction,
+        "notes": "Simulated 0ms player vision from TerrariaRLBridge world_view.",
+    }
 
 
 class _Tier:
@@ -491,7 +909,7 @@ class RealGameController:
         vision_model: str | None = None,
         vision_fn: Callable[[str, str | None], str] | None = None,
         supervisor_fn: Callable[[str, str | None], str] | None = None,
-        supervisor_every: int = 20,
+        supervisor_every: int = 45,
         async_supervisor: bool = True,
         async_vision: bool = True,
         decision_sees_frame: bool | None = None,
@@ -541,6 +959,7 @@ class RealGameController:
         self._seeing = False
         self._vision: dict[str, Any] | None = None
         self._vision_time = 0.0
+        self._house_completed = False
         self._replan_reason = ""
         self._signatures: deque[str] = deque(maxlen=5)
         self._stored_routines: dict[str, dict[str, Any]] = {}
@@ -556,10 +975,24 @@ class RealGameController:
             error = str(shot_error or "mod sent no screenshot")[:300]
             tier.set_status("NO FRAME", error)
             return {"lighting": "unknown", "surroundings": "NO PICTURE THIS TICK: nothing can be seen.", "notes": error}
-        ppt = (hud.get("view") or {}).get("px_per_tile")
+        safe_hud = sanitize_hud(hud)
+        hud_summary = {
+            k: safe_hud[k]
+            for k in ("hp", "max_hp", "time_phase", "blocked", "selected_slot", "held_item", "hotbar", "inventory_open", "visible_enemies")
+            if k in safe_hud
+        }
+        with self._lock:
+            plan = self._plan
+        plan_summary = (
+            {"phase": plan.get("phase", ""), "objective": plan.get("objective", "")}
+            if plan is not None else {"phase": "", "objective": self.goal}
+        )
+        ppt = (safe_hud.get("view") or {}).get("px_per_tile")
         prompt = (
-            "Describe this Terraria frame for the player."
+            "Describe this Terraria frame and output short-term reaction guidance for the player."
             + (f" In this image one tile is about {float(ppt):.1f} pixels." if ppt else "")
+            + f"\nCURRENT SUPERVISOR GOAL: {json.dumps(plan_summary, default=str)}"
+            + f"\nHUD SUMMARY: {json.dumps(hud_summary, sort_keys=True, default=str)[:1800]}"
         )
         with self._lock:
             self.last_prompts["vision"] = prompt
@@ -569,11 +1002,56 @@ class RealGameController:
         except Exception as exc:
             tier.fail(exc)
             return {"lighting": "unknown", "surroundings": "VISION FAILED THIS TICK: nothing can be seen.", "notes": tier.as_dict(tick)["last_error"]}
+        default_reaction = {
+            "threat_level": "none",
+            "immediate_directive": "",
+            "recommended_routine": "none",
+            "recommended_hotbar": 0,
+            "recommended_cursor_dx": 0,
+            "recommended_cursor_dy": 0,
+        }
+        raw_reaction = report.get("reaction")
+        report["reaction"] = {**default_reaction, **(raw_reaction if isinstance(raw_reaction, dict) else {})}
         tier.ok(tick, time.time() - started)
         return report
 
     def _look(self, shot: str | None, hud: dict[str, Any], shot_error: str | None, tick: int) -> dict[str, Any]:
-        """Newest scene notes without ever making the game wait: the vision model works in the background."""
+        """Use 0ms simulated player world_view when provided, plus periodic async VLM supervision."""
+        if isinstance(hud.get("world_view"), dict):
+            now = time.time()
+            with self._lock:
+                plan = self._plan
+                self.last_prompts["vision"] = json.dumps({"simulated_world_view": True, "phase": (plan or {}).get("phase", "")})
+                vlm_latest = self._vision
+                vlm_seen_at = self._vision_time
+                start_vlm = bool(self.async_vision and shot and not self._seeing and (now - self._vision_time >= 6.0))
+                if start_vlm:
+                    self._seeing = True
+            if start_vlm:
+                def vlm_work() -> None:
+                    try:
+                        v_report = self._see(shot, hud, shot_error, tick)
+                        with self._lock:
+                            self._vision, self._vision_time = v_report, time.time()
+                    finally:
+                        with self._lock:
+                            self._seeing = False
+                threading.Thread(target=vlm_work, daemon=True).start()
+
+            report = _simulate_vision(hud, plan)
+            if isinstance(vlm_latest, dict):
+                vlm_bits = [
+                    str(vlm_latest.get("surroundings") or "").strip(),
+                    str(((vlm_latest.get("reaction") or {}) if isinstance(vlm_latest.get("reaction"), dict) else {}).get("immediate_directive") or "").strip(),
+                    str(vlm_latest.get("notes") or "").strip(),
+                ]
+                vlm_note = " | ".join(b for b in vlm_bits if b and "VISION FAILED" not in b and "nothing can be seen" not in b)
+                if vlm_note:
+                    age = round(now - vlm_seen_at, 1) if vlm_seen_at else 0.0
+                    report["notes"] = f"{report['notes']} [VLM {age}s ago: {vlm_note[:300]}]"
+            self.tiers["vision"].ok(tick, 0.0)
+            return {**report, "age_s": 0.0}
+
         if not shot or not self.async_vision:
             return self._see(shot, hud, shot_error, tick)
 
@@ -599,18 +1077,27 @@ class RealGameController:
 
     def _supervise(self, tick: int, hud: dict[str, Any], vision: dict[str, Any], shot: str | None, reason: str) -> None:
         tier = self.tiers["supervisor"]
+        safe_hud = sanitize_hud(hud)
         with self._lock:
             previous = self._plan
             history = list(self._history)
+        hud_for_prompt = self._hud_for_prompt(safe_hud, tick)
         prompt = (
             f"GOAL\n{self.goal}\n\nWHY YOU ARE BEING ASKED\n{reason}\n\n"
+            f"PROGRESSION STAGES\n{json.dumps(PROGRESSION_STAGES)}\n\n"
+            f"TERRARIA KNOWLEDGE BASE\n{TERRARIA_KNOWLEDGE_BASE}\n\n"
             f"VISION REPORT (what is on screen now)\n{json.dumps(vision, sort_keys=True, default=str)[:3000]}\n\n"
-            f"ON-SCREEN HUD\n{json.dumps(self._hud_for_prompt(hud, tick), sort_keys=True, default=str)[:3500]}\n\n"
+            f"ON-SCREEN HUD\n{json.dumps(hud_for_prompt, sort_keys=True, default=str)[:3500]}\n\n"
             f"YOUR PREVIOUS PLAN\n{json.dumps(previous, default=str)[:1500] if previous else 'none'}\n\n"
             "RECENT INPUTS BY THE DECISION MODEL\n" + ("\n".join(history) or "none")
         )
         wiki_context = retrieve_wiki_context(
-            " ".join((self.goal, prompt, json.dumps(hud, sort_keys=True, default=str))),
+            " ".join((
+                self.goal,
+                reason,
+                json.dumps(vision, sort_keys=True, default=str)[:1500],
+                json.dumps(hud_for_prompt, sort_keys=True, default=str)[:2000],
+            )),
             corpus_dir=self.wiki_dir,
         )
         if wiki_context:
@@ -699,6 +1186,14 @@ class RealGameController:
             return self._reply(idle_controls(), {}, None, "outdated_mod",
                                note="OUTDATED MOD: rebuild and reload TerrariaRLBridge (protocol 2 required)")
         hud = sanitize_hud(payload)
+        wv = hud.get("world_view")
+        if isinstance(wv, dict):
+            hs = wv.get("house_status")
+            if isinstance(hs, dict):
+                if hs.get("valid_room"):
+                    self._house_completed = True
+                elif self._house_completed:
+                    hud["world_view"] = {**wv, "house_status": {**hs, "valid_room": True}}
         shot = payload.get("screenshot_b64") or None
         if hud.get("inventory_open"):
             self._inventory_memory = {k: hud.get(k) for k in ("inventory", "equipment", "craftable")}
@@ -734,13 +1229,18 @@ class RealGameController:
                 return self._reply(controls, vision, plan, "decisions_api_routine", note=note)
 
         questions, craft_ids, item_ids = build_questions(hud, routines)
+        reaction = vision.get("reaction")
+        reaction_text = (
+            f"IMMEDIATE SHORT-TERM REACTION (from live vision)\n{json.dumps(reaction, sort_keys=True, default=str)}\n\n"
+            if isinstance(reaction, dict) and reaction else ""
+        )
         plan_text = (
             f"SUPERVISOR PLAN #{plan_no} (written {tick - plan_tick} decisions ago)\n{json.dumps({k: v for k, v in plan.items() if k != 'routines'}, default=str)}"
             if plan is not None else
             f"SUPERVISOR PLAN: the first plan is still being written. Until it arrives, work toward the goal yourself and stay alive.\nGOAL: {self.goal}"
         )
         context = (
-            f"{DECISION_BRIEF}\n\n{plan_text}\n\n"
+            f"{DECISION_BRIEF}\n\n{reaction_text}{plan_text}\n\n"
             f"SCENE NOTES from the vision model ({vision.get('age_s', 0) or 0} s old; the attached frame is current)\n"
             f"{json.dumps(vision, sort_keys=True, default=str)[:3000]}\n\n"
             f"ON-SCREEN HUD\n{json.dumps(self._hud_for_prompt(hud, tick), sort_keys=True, default=str)[:3500]}\n\n"
@@ -761,6 +1261,7 @@ class RealGameController:
 
         answers = res["answers"]
         controls = answers_to_real_controls(answers, craft_ids, item_ids)
+        controls["aim_assist"] = False
         chosen = str((answers.get("routine") or {}).get("value") or "none")
         if chosen in routines:
             steps = list(routines[chosen]["steps"])

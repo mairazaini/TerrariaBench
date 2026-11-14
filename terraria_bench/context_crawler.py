@@ -170,6 +170,41 @@ _WORD = re.compile(r"[a-z0-9]{3,}", re.I)
 _STOP_WORDS = {"the", "and", "for", "from", "with", "that", "this", "are", "you", "your", "what", "when", "where", "how", "now", "then", "have", "has", "into", "about", "would", "could", "should", "player", "terraria", "cthulhu"}
 
 
+_META_PREFIXES = (
+    "category:", "template:", "help:", "terraria wiki:", "module:", "user:",
+    "legacy:", "editing ", "database data", "information for", "pages that link", "creating ",
+)
+
+_PAGE_BOOSTS: tuple[tuple[set[str], set[str], int], ...] = (
+    ({"eye of cthulhu"}, {"eye", "boss", "summon", "suspicious", "lens", "cthulhu"}, 50),
+    ({"house"}, {"house", "housing", "shelter", "door", "chair", "table", "wall", "walls", "npc", "guide"}, 35),
+    ({"background walls"}, {"house", "housing", "shelter", "wall", "walls"}, 24),
+    ({"guide:getting started", "guide:walkthrough"}, {"wood", "tree", "trees", "chop", "axe", "start", "house", "night", "early"}, 26),
+    ({"work benches", "crafting stations", "guide:crafting 101"}, {"workbench", "bench", "furnace", "anvil", "craft", "crafting", "recipe"}, 25),
+    ({"ores", "bars", "underground", "cavern"}, {"ore", "ores", "bar", "bars", "mine", "mining", "pickaxe", "cave", "caves", "underground", "cavern"}, 24),
+    ({"chests", "health", "potions"}, {"chest", "chests", "loot", "heart", "crystal", "health", "hp", "potion", "potions", "heal"}, 24),
+    ({"blocks", "tools"}, {"block", "blocks", "place", "placement", "tree", "trees", "pickaxe", "axe", "dig"}, 20),
+    ({"ranged weapons", "weapons", "armor", "bosses"}, {"weapon", "weapons", "bow", "arrow", "arrows", "ranged", "armor", "combat", "fight", "arena", "boss"}, 18),
+    ({"day and night cycle"}, {"night", "day", "dawn", "dusk", "summon", "eye"}, 16),
+)
+
+_PAGE_TOPIC_TERMS: dict[str, set[str]] = {
+    "eye of cthulhu": {"summon", "summoned", "suspicious", "lens", "lenses", "night", "dawn", "phase", "charge", "charges", "despawn", "health", "life", "arena", "platforms"},
+    "house": {"house", "housing", "light", "chair", "table", "door", "walls", "wall", "tiles", "width", "height", "workbench"},
+    "background walls": {"wall", "walls", "house", "housing", "hammer", "safe", "natural", "wood"},
+    "blocks": {"blocks", "block", "place", "placement", "tree", "trees", "support", "reach", "platform", "platforms"},
+    "guide:getting started": {"tree", "trees", "wood", "axe", "pickaxe", "house", "workbench", "torch", "torches", "gel", "night", "shelter", "platform"},
+    "guide:walkthrough": {"tree", "wood", "house", "cave", "caves", "ore", "furnace", "anvil", "life", "crystal", "chest", "arena", "eye", "suspicious"},
+    "work benches": {"work", "bench", "wood", "craft", "crafting", "furnace", "chair", "door", "wall", "armor"},
+    "crafting stations": {"workbench", "bench", "furnace", "anvil", "demon", "altar", "suspicious", "looking", "eye", "lens"},
+    "ores": {"ore", "ores", "pickaxe", "copper", "tin", "iron", "lead", "silver", "tungsten", "gold", "platinum", "furnace", "bar"},
+    "chests": {"chest", "chests", "loot", "underground", "surface", "cavern", "potion", "hermes", "cloud"},
+    "health": {"life", "crystal", "crystals", "heart", "hearts", "max", "hp", "20", "potion", "healing", "campfire"},
+    "ranged weapons": {"bow", "bows", "arrow", "arrows", "flaming", "frostburn", "jester", "shuriken", "eye"},
+    "bosses": {"arena", "platforms", "campfire", "buff", "potion", "summon", "night"},
+}
+
+
 def retrieve_wiki_context(query: str, *, corpus_dir: str | Path = DEFAULT_OUTPUT_DIR,
                           max_pages: int = 4, max_chars: int = 7200) -> str:
     """Return relevant saved wiki pages for a model prompt; never performs network I/O."""
@@ -193,30 +228,19 @@ def retrieve_wiki_context(query: str, *, corpus_dir: str | Path = DEFAULT_OUTPUT
         if canonical_url in seen_urls:
             continue
         seen_urls.add(canonical_url)
+        title = str(page.get("title", "")).lower()
+        # Terraria has a post-Plantera yoyo named "The Eye of Cthulhu"; skip it and wiki maintenance pages.
+        if title == "the eye of cthulhu" or title.startswith(_META_PREFIXES):
+            continue
         title_terms = {w.lower() for w in _WORD.findall(f"{page.get('title', '')} {page.get('url', '')}")}
         title_terms |= {word[:-1] for word in tuple(title_terms) if word.endswith("s") and len(word) > 4}
         score = len(terms & title_terms) * 5
-        title = str(page.get("title", "")).lower()
-        # Keep the prompt useful for this task: canonical boss, house, blocks,
-        # and ranged-combat pages outrank incidental mentions and categories.
-        if title == "eye of cthulhu" and "eye" in terms:
-            score += 50
-        elif title == "house" and terms & {"house", "shelter", "housing"}:
-            score += 30
-        elif title == "blocks" and terms & {"block", "build", "building", "tree"}:
-            score += 20
-        elif title in {"ranged", "ranged weapons"} and terms & {"weapon", "ranged", "combat", "fight", "eye"}:
-            score += 10
-        if title.startswith("category:"):
-            score -= 20
-        # Terraria has a post-Plantera yoyo named "The Eye of Cthulhu"; the
-        # starting-boss article is the exact title "Eye of Cthulhu".
-        if str(page.get("title", "")).lower() == "the eye of cthulhu":
-            continue
+        for page_titles, match_terms, bonus in _PAGE_BOOSTS:
+            if title in page_titles and (terms & match_terms):
+                score += bonus
         if not score:
             # Give core progression/mechanics pages a chance when the query is broad.
-            name = title
-            if any(x in name for x in ("eye of cthulhu", "building range", "placement", "house", "life crystal")):
+            if any(x in title for x in ("eye of cthulhu", "getting started", "walkthrough", "house", "ores", "chests", "health")):
                 score = 1
         if score:
             ranked.append((score, page))
@@ -236,13 +260,7 @@ def retrieve_wiki_context(query: str, *, corpus_dir: str | Path = DEFAULT_OUTPUT
         if remaining <= 300:
             break
         title = str(page.get("title", "")).lower()
-        topic_terms: set[str] = set()
-        if title == "eye of cthulhu":
-            topic_terms = {"summon", "summoned", "night", "dawn", "phase", "charge", "charges", "despawn", "health", "life"}
-        elif title == "house":
-            topic_terms = {"house", "housing", "light", "chair", "table", "door", "walls", "tiles"}
-        elif title == "blocks":
-            topic_terms = {"blocks", "block", "place", "placement", "tree", "trees", "support", "reach"}
+        topic_terms = _PAGE_TOPIC_TERMS.get(title, set())
         lines = text.splitlines()
         title_line = next((line for line in lines if line.startswith("# ")), "")
         candidates: list[tuple[int, int, str]] = []
