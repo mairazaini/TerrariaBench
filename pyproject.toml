@@ -14,6 +14,7 @@ dependencies = [
     "numpy>=1.26",
     "fastapi>=0.110",
     "uvicorn>=0.27",
+    "httpx>=0.27",
 ]
 
 [project.optional-dependencies]
@@ -27,6 +28,10 @@ dev = [
     "pytest>=8.0",
 ]
 
+[tool.setuptools.packages.find]
+include = ["terraria_bench*", "dashboard*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-q"
