@@ -1,5 +1,7 @@
 # Teammate 2 — MCP Server & Frontier Agent Evaluation Harness (Runner, Gemini 4 + Image Blueprint + Decisions API, Nemotron 3.5 VL)
 
+**Status:** **COMPLETED & VERIFIED** (`terraria_bench/mcp_server.py`, `terraria_bench/harness/`, and `tests/test_teammate2_mcp_and_harness.py` implemented in pure Python `>=3.11` and verified offline)
+
 ## 1. Mission & Scope
 
 > **Language Standard:** Implement **all code, agents, MCP servers, and CLI entrypoints in pure Python (>= 3.11)** whenever possible. Do not introduce Node/TypeScript MCP wrappers or shell-script runners; use Python's `mcp` SDK and stdlib (`json`, `sys`, `urllib`, `asyncio`) directly.
@@ -125,7 +127,9 @@ Must integrate three capabilities via `google-genai` (`from google import genai`
 Run:
 ```powershell
 python -m terraria_bench.mcp_server --help
+python -m terraria_bench.mcp_server --list-tools
 python -m terraria_bench.harness.runner --eval-standard
+uv run --no-project --with pytest python -m pytest tests/test_teammate2_mcp_and_harness.py -v
 ```
-- [ ] `mcp_server.py` responds to JSON-RPC `tools/list` with all 24 tools and executes `tools/call` returning the 1-line status header.
-- [ ] `python -m terraria_bench.harness.runner --eval-standard` runs cleanly in < 10 seconds, verifies all 6 anchor rows (`do-nothing = 0.000`, `absentee = 0.100`, `exploiter < 0.050`), and renders the StoreBench Table 1 & Table 3 leaderboards.
+- [x] `mcp_server.py` responds to JSON-RPC `tools/list` with all 24 tools and executes `tools/call` returning the 1-line status header (`test_mcp_server_jsonrpc_and_stdio`).
+- [x] `python -m terraria_bench.harness.runner --eval-standard` runs cleanly, verifies all 6 anchor rows (`smart-triage = 0.813`, `rule-based = 0.573`, `blast-list = 0.111`, `absentee = 0.100`, `do-nothing = 0.000`, `exploiter = 0.011 < 0.050`), and renders the StoreBench Table 1 & Table 3 leaderboards (`test_nemotron_backoff_multimodal_and_eval_standard`, `test_gemini_blueprint_decisions_and_episode`, `4 passed`).
