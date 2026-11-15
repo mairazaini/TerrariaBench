@@ -1,0 +1,16 @@
+{
+  "task": "eye-of-cthulhu",
+  "seed": 7,
+  "run": 1,
+  "turns": 129,
+  "max_turns": 600,
+  "ended_by": "episode_complete",
+  "agent": "nemotron",
+  "model": "nemotron-3.5-super-vl",
+  "agent_stats": {
+    "live_calls": 129,
+    "live_errors": 0,
+    "last_error": ""
+  },
+  "ledger_sha256": "df052e4681ef690f189fb81a90ad57867dbf73b7353f8904b610b872374b3de2"
+}

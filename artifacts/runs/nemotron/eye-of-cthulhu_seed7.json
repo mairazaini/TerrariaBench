@@ -1,42 +1,62 @@
 {
  "deaths": 7,
+ "eye": {
+  "armor_peak": 3,
+  "armor_start": 0,
+  "fought": true,
+  "max_hp": 100,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 100
+ },
  "manifest": {
-  "calibration_sha256": "8e063c2ad16aaa41ccaddf1ebd6f8bec563d4d7219510022e0c3c4a2e265a6f5",
+  "calibration_sha256": "14996cbd7e22ce8b0aac92f7df4583758d88a158a87e9588f90adfa5f5bbc325",
   "image_digest": "unpinned-local-run",
   "python": "3.12.13",
-  "seed_data_sha256": "66a7464ee3e833d5d5129f4fc911cc1977c23a7c975362b160e694d54efd8133",
-  "source_commit": "36e4cbd5dfe9a0f75b7d5c176980bc8ee8ae8baf",
-  "source_hash": "ed14799f8b1ecbdff0d7b3b3434c0c82aa0cb954c8816d17b63cb35351d12875"
+  "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
+  "source_commit": "88e6236f5a9a7f5e41b75a9e533dd5b086b7afbf",
+  "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
  },
  "milestones": [
+  "ARENA",
+  "CRAFT:campfire",
   "CRAFT:furnace",
+  "CRAFT:iron_bar",
+  "CRAFT:torch",
+  "CRAFT:wood_armor",
+  "CRAFT:wood_platform",
+  "CRAFT:wooden_bow",
   "CRAFT:workbench",
   "FURNACE",
+  "SHELTER",
+  "T1",
   "WORKBENCH"
  ],
  "phi0": 1.08,
- "phi_final": -1.02,
+ "phi_final": 0.48,
  "seed": 7,
- "sha256": "acc9e3638c4385ea44fbb21d6da5e904ba688a5b58b5f846eb23abee5809aa73",
- "state_hash": "ac09884887ebcf23ae002f0be040339fef3557798dd23a62fba026486f6594c0",
+ "sha256": "df052e4681ef690f189fb81a90ad57867dbf73b7353f8904b610b872374b3de2",
+ "state_hash": "1599ec593fc2343588a9b3be501fc984a81d50d746f982757ea977d3b25e320e",
  "task": "eye-of-cthulhu",
  "windows": [
   {
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 20,
-   "phi": 22.06,
+   "ops_used": 13,
+   "phi": 20.21,
    "sheltered": false,
    "sla": [],
    "w": 1
   },
   {
    "attended": true,
-   "deaths": 0,
-   "notes": [],
-   "ops_used": 16,
-   "phi": 21.19,
+   "deaths": 1,
+   "notes": [
+    "The Eye of Cthulhu overwhelmed you and left.",
+    "You were slain (the Eye of Cthulhu)."
+   ],
+   "ops_used": 18,
+   "phi": 97.4,
    "sheltered": false,
    "sla": [
     [
@@ -47,69 +67,65 @@
    "w": 2
   },
   {
-   "attended": false,
-   "deaths": 1,
-   "notes": [
-    "You were slain (caught in the open)."
-   ],
-   "ops_used": 0,
-   "phi": 1.08,
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 4,
+   "phi": 97.4,
    "sheltered": false,
    "sla": [],
    "w": 3
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 1,
    "notes": [
     "You were slain (caught in the open)."
    ],
-   "ops_used": 0,
-   "phi": -0.045,
+   "ops_used": 10,
+   "phi": 73.66,
    "sheltered": false,
    "sla": [],
    "w": 4
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 0,
-   "phi": -0.045,
+   "ops_used": 14,
+   "phi": 74.63,
    "sheltered": false,
    "sla": [],
    "w": 5
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 1,
    "notes": [
     "You were slain (caught in the open)."
    ],
-   "ops_used": 0,
-   "phi": -0.57,
+   "ops_used": 3,
+   "phi": 48.73,
    "sheltered": false,
    "sla": [],
    "w": 6
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 0,
-   "phi": -0.57,
+   "ops_used": 3,
+   "phi": 48.73,
    "sheltered": false,
    "sla": [],
    "w": 7
   },
   {
-   "attended": false,
-   "deaths": 1,
-   "notes": [
-    "You were slain (caught in the open)."
-   ],
-   "ops_used": 0,
-   "phi": -0.81,
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 61.57,
    "sheltered": false,
    "sla": [
     [
@@ -120,51 +136,53 @@
    "w": 8
   },
   {
-   "attended": false,
-   "deaths": 0,
-   "notes": [],
-   "ops_used": 0,
-   "phi": -0.81,
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 8,
+   "phi": 35.43,
    "sheltered": false,
    "sla": [],
    "w": 9
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 1,
    "notes": [
     "You were slain (caught in the open)."
    ],
-   "ops_used": 0,
-   "phi": -0.93,
+   "ops_used": 1,
+   "phi": 9.86,
    "sheltered": false,
    "sla": [
     [
      "arena",
-     false
+     true
     ]
    ],
    "w": 10
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 0,
-   "phi": -0.93,
+   "ops_used": 4,
+   "phi": 12.185,
    "sheltered": false,
    "sla": [],
    "w": 11
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 1,
    "notes": [
     "The Eye of Cthulhu overwhelmed you and left.",
     "You were slain (the Eye of Cthulhu)."
    ],
-   "ops_used": 0,
-   "phi": -0.99,
+   "ops_used": 5,
+   "phi": 1.08,
    "sheltered": false,
    "sla": [
     [
@@ -175,23 +193,23 @@
    "w": 12
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 0,
-   "phi": -0.99,
+   "ops_used": 1,
+   "phi": 1.08,
    "sheltered": false,
    "sla": [],
    "w": 13
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 1,
    "notes": [
     "You were slain (caught in the open)."
    ],
-   "ops_used": 0,
-   "phi": -1.02,
+   "ops_used": 1,
+   "phi": 0.48,
    "sheltered": false,
    "sla": [
     [

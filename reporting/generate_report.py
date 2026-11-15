@@ -20,7 +20,9 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
 from terraria_bench.grader import grade  # noqa: E402
-from terraria_bench.harness.runner import _aggregate_graded, _load_saved_runs, _reference_calibration, run_eval_standard  # noqa: E402
+from terraria_bench.harness.runner import (  # noqa: E402
+    _aggregate_graded, _cell_means, _load_saved_runs, _reference_calibration, run_eval_standard,
+)
 from terraria_bench.tasks import REPORTED_SEEDS  # noqa: E402
 
 FAILURE_AREAS = (
@@ -28,6 +30,9 @@ FAILURE_AREAS = (
     ("Short-range strategy & execution", ("first-night", "blood-moon-survival")),
     ("Multimodal & 2D spatial modification", ("arena-architect", "cavern-expedition")),
 )
+
+HEADLINE_CELL = ("eye-of-cthulhu", 7)
+HEADLINE_MODELS = (("gemini", "Gemini 4 / 2.5"), ("nemotron", "Nemotron 3.5 VL"))
 
 BC_EVAL = REPO / "artifacts" / "post_training" / "bc_eval.json"
 GRPO_EVAL = REPO / "artifacts" / "post_training" / "grpo_eval.json"
@@ -40,6 +45,54 @@ def _num(v, pct: bool = False) -> str:
     if v is None:
         return "-"
     return f"{v * 100:.0f}%" if pct else f"{v:.3f}"
+
+
+def _headline_section() -> list[str]:
+    """Repeat runs of the headline cell: the reference, the two baselines, and each saved model run."""
+    from terraria_bench.harness.runner import _run_builtin_anchor
+
+    task, seed = HEADLINE_CELL
+    cell_key = f"{task}:{seed}"
+    cal = _reference_calibration()
+    cell = cal["cells"][cell_key]
+    lines = [
+        f"## Headline cell: {task}, seed {seed}",
+        "",
+        f"Pass threshold {cell['threshold']:.3f}. Scripted rows are deterministic, so one run is exact. Model",
+        "rows are separate live episodes of the same cell; `ended by` is recorded by the harness",
+        "(`episode_complete` = every window was played; `agent_stopped` = the model stopped calling tools;",
+        "`harness_turn_cap` = the runner cut the episode). `Stand-in turns` counts turns where the model's",
+        "API call failed and the harness's scripted fallback acted instead; a clean model run shows 0.",
+        "",
+        "| Agent | Run | Composite | Eye progress | Deaths | Windows | Turns | Stand-in turns | Ended by | Passed |",
+        "|:---|---:|---:|---:|---:|---:|---:|---:|:---|:---:|",
+    ]
+    for anchor, label in (("smart-triage", "reference (smart-triage)"), ("rule-based", "rule-based"),
+                          ("absentee", "stop-early (absentee)"), ("do-nothing", "do-nothing")):
+        g = grade(_run_builtin_anchor(anchor, task, seed, calibration=cal), cell)
+        lines.append(f"| {label} | - | {g['composite']:.3f} | {g.get('eye_progress_pct', 0.0):.0f}% | "
+                     f"{int(g.get('deaths', 0))} | {g['windows']} | - | - | scripted | {'yes' if g.get('passed') else 'no'} |")
+    for key, label in HEADLINE_MODELS:
+        runs = [r for r in _load_saved_runs(key, cal) if r["cell"] == cell_key]
+        if not runs:
+            lines.append(f"| {label} | - | not run | | | | | | | |")
+            continue
+        runs.sort(key=lambda r: (r.get("meta") or {}).get("run", 1))
+        for r in runs:
+            meta = r.get("meta") or {}
+            lines.append(
+                f"| {label} | {meta.get('run', '?')} | {r['composite']:.3f} | {r.get('eye_progress_pct', 0.0):.0f}% | "
+                f"{int(r.get('deaths', 0))} | {r['windows']} | {meta.get('turns', '-')} | "
+                f"{(meta.get('agent_stats') or {}).get('live_errors', '-')} | {meta.get('ended_by', 'not recorded')} | "
+                f"{'yes' if r.get('passed') else 'no'} |")
+        comps = [r["composite"] for r in runs]
+        eyes = [r.get("eye_progress_pct", 0.0) for r in runs]
+        lines.append(
+            f"| **{label}, {len(runs)} runs** | | **{sum(comps) / len(comps):.3f}** "
+            f"({min(comps):.3f}-{max(comps):.3f}) | **{sum(eyes) / len(eyes):.0f}%** | | | | | | "
+            f"**{sum(1 for r in runs if r.get('passed'))}/{len(runs)}** |")
+    lines.append("")
+    return lines
 
 
 def build_markdown(report: dict | None = None) -> str:
@@ -56,20 +109,24 @@ def build_markdown(report: dict | None = None) -> str:
         "Composite is the calibrated reward (0 = no better than an absent player, 1 = the best scripted",
         "policy). Eye progress is the 0-100% progress-toward-killing-the-Eye score.",
         "",
-        "| Policy / model | Status | Episodes | Composite | Pass rate | Eye progress |",
-        "|:---|:---|---:|---:|---:|---:|",
+        "| Policy / model | Status | Cells | Runs | Composite | Pass rate | Eye progress |",
+        "|:---|:---|---:|---:|---:|---:|---:|",
     ]
     for row in report["table1"]:
         lines.append(
-            f"| {row['name']} | {row['status']} | {row['episodes']} | {_num(row['composite'])} | "
-            f"{_num(row['pass_rate'], pct=True)} | {_num(row.get('eye_progress'), pct=True)} |"
+            f"| {row['name']} | {row['status']} | {row['episodes']} | {row.get('runs', row['episodes'])} | "
+            f"{_num(row['composite'])} | {_num(row['pass_rate'], pct=True)} | "
+            f"{_num(row.get('eye_progress'), pct=True)} |"
         )
     lines += [
         "",
-        "Rows with few episodes cover only the cells that were actually played; they are not comparable",
-        "to the 24-episode anchor rows until the full grid is run.",
+        "Cells are distinct task:seed pairs; runs are sealed episodes. Repeat runs of one cell are averaged",
+        "into that cell first, so repeating the headline task does not re-weight a model's row. Model rows",
+        "cover only the cells that were actually played and are not comparable to the 24-cell anchor rows",
+        "until the full grid is run.",
         "",
     ]
+    lines += _headline_section()
 
     if BC_EVAL.exists():
         rows = json.loads(BC_EVAL.read_text(encoding="utf-8"))
@@ -113,23 +170,10 @@ def build_markdown(report: dict | None = None) -> str:
         "|:---|:---|---:|---:|---:|---:|",
     ]
     from terraria_bench.harness.runner import _run_builtin_anchor
-    from terraria_bench.provenance import ARTIFACTS_DIR, verify_seal
 
     def _saved_for_tasks(agent_name: str, tasks: tuple[str, ...]) -> list[dict]:
-        folder = ARTIFACTS_DIR / "runs" / agent_name
-        if not folder.exists():
-            return []
-        rows = []
-        for p in sorted(folder.glob("*.json")):
-            obj = json.loads(p.read_text(encoding="utf-8"))
-            ledger = obj.get("ledger", obj) if isinstance(obj, dict) else None
-            if not isinstance(ledger, dict) or not verify_seal(ledger):
-                continue
-            if ledger.get("task") in tasks:
-                cell = cal.get("cells", {}).get(f"{ledger.get('task')}:{ledger.get('seed')}")
-                if cell and cell.get("s", 0) > 0:
-                    rows.append(grade(ledger, cell))
-        return rows
+        rows = [r for r in _load_saved_runs(agent_name, cal) if r["cell"].rsplit(":", 1)[0] in tasks]
+        return _cell_means(rows)
 
     for area_name, area_tasks in FAILURE_AREAS:
         st_rows = [grade(_run_builtin_anchor("smart-triage", t, s, calibration=cal), cal["cells"][f"{t}:{s}"])
