@@ -20,7 +20,18 @@ One sentence to open with:
 | 9:00 | The small-model table | "A 4B Gemma, trained on 652 expert steps from training tasks only: 0.25 to 0.72, deaths 13 to 3." |
 | 9:40 | Limits section | "One world, small samples, a simulator. All written down." |
 
+## Why industry cares (beyond gaming)
+
+When a judge asks **"Who cares if AI can play Terraria?"**:
+
+- **The architecture pattern:** Frontier supervisor models manage long- and short-term planning, while fast decision/reflex layers handle sub-second movement, aim, and reactive control — cutting latency and increasing reliability in continuous 60 Hz interaction.
+- **The three failure modes we expose aren't about pixel-art nostalgia:** Even multi-layered multimodal agents struggle with (1) **long-term forethought & commitment** (saving return-home margins, pacing prerequisites), (2) **smart short-term survival reactions** (knowing when to disengage/retreat instead of fighting into an unwinnable loss), and (3) **2D spatial blind spots** (breaking their own workspace invariants without re-verifying).
+- **Direct real-world transfer:** Those exact three failure axes bottleneck **autonomous driving** (planner vs. evasive reflex handoff & aborting unsafe merges), **embodied robotics** (re-verifying physical safety after manipulating the workspace), and **long-horizon operational agents** acting outside purely digital sandboxes.
+
 ## Questions to expect
+
+**"Why a game? Who cares if AI plays Terraria?"**
+Digital code and chat benchmarks reset and have no physical geometry or continuous reactions. Terraria gives us a reproducible, zero-cost testbed for **supervisor + reflex control**, **smart retreat vs. fight decisions**, and **2D spatial self-modification** — the exact bottlenecks holding back self-driving, physical robotics, and real-world agentic execution.
 
 **"Kimi beats your reference. Where is the gap?"**
 In reliability, not skill. Six runs beat it; three score 0.28. Mean 0.76 against 0.985. A benchmark that

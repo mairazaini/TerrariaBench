@@ -13,6 +13,22 @@ TerrariaBench implements the OpenAI / Terraria progression domain across **14 ta
 
 ---
 
+## Why Terraria? Research & Industry Relevance Beyond Gaming
+
+Most existing agent benchmarks test purely digital workflows (chat, single-file code edits, or resettable browser forms). Real-world physical and operational autonomy — **autonomous driving, embodied robotics, and long-running industrial workflows** — requires an agent to coordinate across multiple timescales inside a persistent spatial environment where mistakes are irreversible.
+
+TerrariaBench serves as a deterministic, reproducible testbed for that transition, and our experiments establish two core takeaways:
+
+1. **Hierarchical supervisor + reflex architectures work:** Pairing a high-level **frontier supervisor** (managing long- and short-term strategy and prerequisite plans) with low-latency **decision and reflex layers** (handling sub-second reactions, aiming, movement, and immediate hazard avoidance in `live_play.py` and `eye_planner.py`) dramatically improves responsiveness and efficiency at 60 Hz.
+2. **Three failure modes persist even in multimodal, multi-layered agents:**
+   - **Long-term forethought & plan commitment:** Models fail to hold safety margins (like cave return budgets in 7/23 deaths) or commit cleanly along multi-step preparation trees before deadlines hit.
+   - **Short-term "smart-ish" tactical reactions:** Decision layers default to greedy engagement instead of smart disengagement — fighting an unwinnable boss (7/23 deaths) or pressing into hazards rather than retreating to recover.
+   - **2D spatial blind spots in multimodal models:** Even with visual images, ASCII grids, and explicit warnings, agents fail to recognize how their own physical world modifications invalidate safety invariants (9/23 deaths from building an arena that clipped their own shelter wall without re-checking).
+
+By isolating **planner-to-reflex handoffs**, **context-aware abort/retreat decisions**, and **post-manipulation spatial re-verification** in a fast seeded simulator + live 60 Hz bridge, TerrariaBench directly guides how we architect and post-train models that act in the physical world rather than only digital text interfaces.
+
+---
+
 ## One-Command Judge Verification (No API Keys Needed)
 
 Every claim in this repository can be reproduced offline on any laptop from sealed ledgers and engine replay:
