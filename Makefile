@@ -26,5 +26,13 @@ deploy-modal:
 train-grpo:
 	$(PYTHON) -m modal run cloud/modal_app.py::train_grpo
 
+# Auto-plays 24-step trajectory and exports MP4 video (sim mode)
+record-video-sim:
+	$(PYTHON) scripts/auto_play_and_record.py --mode sim
+
+# Auto-plays inside the live Terraria window and exports MP4 video (live mode)
+record-video-live:
+	$(PYTHON) scripts/auto_play_and_record.py --mode live
+
 clean:
 	rm -rf __pycache__ */__pycache__ .pytest_cache

@@ -16,6 +16,8 @@ TARGETS = {
     "serve-local-demo": [sys.executable, "cloud/modal_app.py", "--local", "8080"],
     "deploy-modal": [sys.executable, "-m", "modal", "deploy", "cloud/modal_app.py"],
     "train-grpo": [sys.executable, "-m", "modal", "run", "cloud/modal_app.py::train_grpo"],
+    "record-video-sim": [sys.executable, "scripts/auto_play_and_record.py", "--mode", "sim"],
+    "record-video-live": [sys.executable, "scripts/auto_play_and_record.py", "--mode", "live"],
 }
 
 def main():
