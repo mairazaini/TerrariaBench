@@ -1,14 +1,42 @@
 {
   "source": "tmodloader_real_game",
-  "recording": "C:\\Users\\natha\\dev\\TerrariaBench\\artifacts\\recordings\\real_terraria_live.json",
+  "run_id": "real_terraria_live",
+  "recording": "artifacts/recordings/real_terraria_live.json",
   "frames": 300,
-  "eye_progress_pct": 0.0,
+  "eye_progress_pct": 20.0,
   "eye_killed": false,
   "passed": false,
   "max_hp": 100,
-  "defense": 0,
-  "deaths": 0,
-  "survival_score": 1.0,
-  "milestones": [],
-  "task_checklist": {}
+  "defense": 3,
+  "deaths": 2,
+  "survival_score": 0.5,
+  "milestones": [
+    "WOOD_GATHERED",
+    "WORKBENCH",
+    "SHELTER",
+    "WEAPONS",
+    "ARMOR_EQUIPPED"
+  ],
+  "task_checklist": {
+    "wood_gathered": true,
+    "workbench": true,
+    "shelter": true,
+    "weapons": true,
+    "ammunition_ready": false,
+    "stone_or_ore_mined": false,
+    "furnace_smelting": false,
+    "anvil_placed": false,
+    "metal_gear": false,
+    "lenses_collected": false,
+    "altar_found": false,
+    "arena_built": false,
+    "summon_ready": false
+  },
+  "breakdown": {
+    "health_score": 0.0,
+    "armor_score": 0.05,
+    "tasks_score": 0.15,
+    "boss_fight_score": 0.0,
+    "eye_kill_score": 0.0
+  }
 }

@@ -19,9 +19,20 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
-from terraria_bench.harness.runner import run_eval_standard  # noqa: E402
+from terraria_bench.grader import grade  # noqa: E402
+from terraria_bench.harness.runner import _aggregate_graded, _load_saved_runs, _reference_calibration, run_eval_standard  # noqa: E402
+from terraria_bench.tasks import REPORTED_SEEDS  # noqa: E402
+
+FAILURE_AREAS = (
+    ("Long-range strategy planning", ("goblin-siege", "eye-of-cthulhu", "wall-of-flesh", "full-progression")),
+    ("Short-range strategy & execution", ("first-night", "blood-moon-survival")),
+    ("Multimodal & 2D spatial modification", ("arena-architect", "cavern-expedition")),
+)
 
 BC_EVAL = REPO / "artifacts" / "post_training" / "bc_eval.json"
+GRPO_EVAL = REPO / "artifacts" / "post_training" / "grpo_eval.json"
+REAL_SCORE = REPO / "artifacts" / "runs" / "real_terraria" / "latest_score.json"
+EVAL_STANDARD_JSON = REPO / "artifacts" / "runs" / "eval_standard.json"
 OUT = REPO / "EVAL_RESULTS.md"
 
 
@@ -31,8 +42,9 @@ def _num(v, pct: bool = False) -> str:
     return f"{v * 100:.0f}%" if pct else f"{v:.3f}"
 
 
-def build_markdown() -> str:
-    report = run_eval_standard(live=False)
+def build_markdown(report: dict | None = None) -> str:
+    if report is None:
+        report = run_eval_standard(live=False)
     lines = [
         "# TerrariaBench evaluation results",
         "",
@@ -92,12 +104,114 @@ def build_markdown() -> str:
             "first-night and cavern-expedition are eval tasks the model never trained on.",
             "",
         ]
+
+    cal = _reference_calibration()
+    lines += [
+        "## Breakdown by failure area",
+        "",
+        "| Failure area | Tasks | smart-triage | rule-based | Gemini 4 / 2.5 | Nemotron 3.5 VL |",
+        "|:---|:---|---:|---:|---:|---:|",
+    ]
+    from terraria_bench.harness.runner import _run_builtin_anchor
+    from terraria_bench.provenance import ARTIFACTS_DIR, verify_seal
+
+    def _saved_for_tasks(agent_name: str, tasks: tuple[str, ...]) -> list[dict]:
+        folder = ARTIFACTS_DIR / "runs" / agent_name
+        if not folder.exists():
+            return []
+        rows = []
+        for p in sorted(folder.glob("*.json")):
+            obj = json.loads(p.read_text(encoding="utf-8"))
+            ledger = obj.get("ledger", obj) if isinstance(obj, dict) else None
+            if not isinstance(ledger, dict) or not verify_seal(ledger):
+                continue
+            if ledger.get("task") in tasks:
+                cell = cal.get("cells", {}).get(f"{ledger.get('task')}:{ledger.get('seed')}")
+                if cell and cell.get("s", 0) > 0:
+                    rows.append(grade(ledger, cell))
+        return rows
+
+    for area_name, area_tasks in FAILURE_AREAS:
+        st_rows = [grade(_run_builtin_anchor("smart-triage", t, s, calibration=cal), cal["cells"][f"{t}:{s}"])
+                   for t in area_tasks for s in REPORTED_SEEDS]
+        rb_rows = [grade(_run_builtin_anchor("rule-based", t, s, calibration=cal), cal["cells"][f"{t}:{s}"])
+                   for t in area_tasks for s in REPORTED_SEEDS]
+        gem_area = _saved_for_tasks("gemini", area_tasks)
+        nem_area = _saved_for_tasks("nemotron", area_tasks)
+        st_m = _aggregate_graded(st_rows)["composite"]
+        rb_m = _aggregate_graded(rb_rows)["composite"]
+        gem_m = _aggregate_graded(gem_area)["composite"] if gem_area else None
+        nem_m = _aggregate_graded(nem_area)["composite"] if nem_area else None
+        lines.append(
+            f"| {area_name} | {', '.join(area_tasks)} | {_num(st_m)} | {_num(rb_m)} | {_num(gem_m)} | {_num(nem_m)} |"
+        )
+    lines.append("")
+
+    if GRPO_EVAL.exists():
+        grows = json.loads(GRPO_EVAL.read_text(encoding="utf-8"))
+        gcells = sorted({r["cell"] for r in grows}, key=[r["cell"] for r in grows].index)
+        gby = {(r["cell"], r["model"]): r for r in grows}
+        gb_vals = [gby[(c, "base")]["composite"] for c in gcells if (c, "base") in gby]
+        gt_vals = [gby[(c, "tuned")]["composite"] for c in gcells if (c, "tuned") in gby]
+        gt_pass = sum(1 for c in gcells if (c, "tuned") in gby and gby[(c, "tuned")].get("passed"))
+        if gb_vals and gt_vals:
+            gb_d = sum(int(gby[(c, "base")].get("deaths", 0)) for c in gcells if (c, "base") in gby)
+            gt_d = sum(int(gby[(c, "tuned")].get("deaths", 0)) for c in gcells if (c, "tuned") in gby)
+            lines += [
+                "## GRPO post-training (BC-initialised, KL-regularised)",
+                "",
+                "GRPO on `google/gemma-4-E4B-it`, starting from the behaviour-cloned LoRA and rewarded only by the "
+                "benchmark's own sealed-ledger grader (`post_training/terraria_reward.py`). Rows are read from "
+                "`artifacts/post_training/grpo_eval.json`; base and tuned are evaluated on the same cells with the "
+                "same turn budget.",
+                "",
+                "| Cell | Threshold | Base | Tuned | Base deaths | Tuned deaths |",
+                "|:---|---:|---:|---:|---:|---:|",
+            ]
+            for c in gcells:
+                bb, tt = gby.get((c, "base")), gby.get((c, "tuned"))
+                if not bb or not tt:
+                    continue
+                lines.append(f"| {c} | {tt['threshold']:.3f} | {bb['composite']:.3f} | {tt['composite']:.3f} | "
+                             f"{int(bb.get('deaths', 0))} | {int(tt.get('deaths', 0))} |")
+            lines += [
+                f"| **Mean / total** | | **{sum(gb_vals)/len(gb_vals):.3f}** | **{sum(gt_vals)/len(gt_vals):.3f}** | "
+                f"**{gb_d}** | **{gt_d}** |",
+                "",
+                f"Tuned cells passing the calibrated threshold: **{gt_pass}/{len(gt_vals)}**. The small model improves "
+                "sharply on reward and stops dying, yet still clears no pass gate: the benchmark keeps headroom "
+                "after training.",
+                "",
+            ]
+
+    if REAL_SCORE.exists():
+        rs = json.loads(REAL_SCORE.read_text(encoding="utf-8"))
+        ms = ", ".join(rs.get("milestones") or []) or "none"
+        lines += [
+            "## Real Terraria (tModLoader live session)",
+            "",
+            f"Reconciled from `{rs.get('recording', 'artifacts/recordings/real_terraria_live.json')}` "
+            f"via `python -m terraria_bench.real_eval --save` (`artifacts/runs/real_terraria/latest_score.json`):",
+            "",
+            "| Metric | Value |",
+            "|:---|---:|",
+            f"| Eye progress | {float(rs.get('eye_progress_pct', 0.0)):.1f}% |",
+            f"| Passed (Eye killed) | {'yes' if rs.get('passed') else 'no'} |",
+            f"| Recorded frames | {int(rs.get('frames', 0))} |",
+            f"| Deaths | {int(rs.get('deaths', 0))} |",
+            f"| Milestones | {ms} |",
+            "",
+        ]
+
     return "\n".join(lines)
 
 
 def main() -> int:
-    OUT.write_text(build_markdown(), encoding="utf-8", newline="\n")
-    print(f"wrote {OUT}")
+    report = run_eval_standard(live=False)
+    EVAL_STANDARD_JSON.parent.mkdir(parents=True, exist_ok=True)
+    EVAL_STANDARD_JSON.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    OUT.write_text(build_markdown(report), encoding="utf-8", newline="\n")
+    print(f"wrote {OUT} and {EVAL_STANDARD_JSON}")
     return 0
 
 

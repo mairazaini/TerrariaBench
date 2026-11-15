@@ -1,5 +1,7 @@
 # Teammate 2 — MCP Server & Frontier Agent Evaluation Harness (Runner, Gemini 4 + Image Blueprint + Decisions API, Nemotron 3.5 VL)
 
+> Build-phase design notes. Example numbers inside code blocks are illustrative; the current, regenerated numbers are in [`EVAL_RESULTS.md`](../EVAL_RESULTS.md).
+
 **Status:** **COMPLETED & VERIFIED** (`terraria_bench/mcp_server.py`, `terraria_bench/harness/`, and `tests/test_teammate2_mcp_and_harness.py` implemented in pure Python `>=3.11` and verified offline)
 
 ## 1. Mission & Scope
@@ -7,7 +9,7 @@
 > **Language Standard:** Implement **all code, agents, MCP servers, and CLI entrypoints in pure Python (>= 3.11)** whenever possible. Do not introduce Node/TypeScript MCP wrappers or shell-script runners; use Python's `mcp` SDK and stdlib (`json`, `sys`, `urllib`, `asyncio`) directly.
 
 You own **Track 2 (MCP Server & Frontier Model Evaluation Harness)** of **TerrariaBench**.
-The core world engine ([engine.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/engine.py)), task lenses ([tasks.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tasks.py)), composite grader ([grader.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/grader.py)), provenance ([provenance.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/provenance.py)), and the 24-tool `Episode` session ([tools.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tools.py)) are already complete and frozen.
+The core world engine ([engine.py](../terraria_bench/engine.py)), task lenses ([tasks.py](../terraria_bench/tasks.py)), composite grader ([grader.py](../terraria_bench/grader.py)), provenance ([provenance.py](../terraria_bench/provenance.py)), and the 24-tool `Episode` session ([tools.py](../terraria_bench/tools.py)) are already complete and frozen.
 
 Your responsibility is to expose the 24 tools over the **Model Context Protocol (`mcp_server.py`)** and build the **Multi-Model Evaluation Harness** (`runner.py`, `gemini_agent.py`, `nemotron_agent.py`) capable of running live LLM API trials as well as deterministic offline/cached evaluation (`python -m terraria_bench.harness.runner --eval-standard`).
 
@@ -137,4 +139,4 @@ python -m terraria_bench.harness.runner --eval-standard
 uv run --no-project --with pytest python -m pytest tests/test_teammate2_mcp_and_harness.py -v
 ```
 - [x] `mcp_server.py` responds to JSON-RPC `tools/list` with all 24 tools and executes `tools/call` returning the 1-line status header (`test_mcp_server_jsonrpc_and_stdio`).
-- [x] `python -m terraria_bench.harness.runner --eval-standard` runs cleanly, verifies all 6 anchor rows (`smart-triage = 0.813`, `rule-based = 0.573`, `blast-list = 0.111`, `absentee = 0.100`, `do-nothing = 0.000`, `exploiter = 0.011 < 0.050`), and renders the StoreBench Table 1 & Table 3 leaderboards (`test_nemotron_backoff_multimodal_and_eval_standard`, `test_gemini_blueprint_decisions_and_episode`, `4 passed`).
+- [x] `python -m terraria_bench.harness.runner --eval-standard` runs cleanly, verifies all 6 anchor rows (current values in `EVAL_RESULTS.md`: `smart-triage = 0.982`, `rule-based = 0.505`, `blast-list = 0.116`, `absentee = 0.000`, `do-nothing = 0.000`, `exploiter = 0.000 < 0.050`), and renders the StoreBench Table 1 & Table 3 leaderboards (`test_nemotron_backoff_multimodal_and_eval_standard`, `test_gemini_blueprint_decisions_and_episode`, `4 passed`).

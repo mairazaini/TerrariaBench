@@ -19,35 +19,55 @@ LORA_TARGETS = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", 
 
 
 def run_training(num_steps: int = 36, output_dir: str = "./checkpoints/gemma-terraria-grpo-r32",
-                 model_id: str = BASE_MODEL_ID) -> str:
+                 model_id: str = BASE_MODEL_ID, init_adapter: str = "", beta: float = 0.05,
+                 lr: float = 2e-5) -> str:
+    import torch
     from datasets import Dataset
-    from peft import LoraConfig
-    from transformers import AutoTokenizer
+    from peft import LoraConfig, PeftModel
+    from transformers import (
+        AutoModelForCausalLM,
+        AutoModelForImageTextToText,
+        AutoTokenizer,
+    )
     from trl import GRPOConfig, GRPOTrainer
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
+    try:
+        model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16, device_map="auto")
+    except ValueError:
+        model = AutoModelForImageTextToText.from_pretrained(model_id, torch_dtype=torch.bfloat16, device_map="auto")
+
+    peft_config = None
+    if init_adapter and os.path.exists(init_adapter):
+        print(f"initializing GRPO from BC adapter: {init_adapter}")
+        model = PeftModel.from_pretrained(model, init_adapter, is_trainable=True)
+    else:
+        names = [n for n, m in model.named_modules()
+                 if isinstance(m, torch.nn.Linear) and n.rsplit(".", 1)[-1] in LORA_TARGETS]
+        text_targets = [n for n in names if not any(k in n for k in ("vision", "audio", "embed_"))]
+        peft_config = LoraConfig(r=32, lora_alpha=32, lora_dropout=0.05, bias="none",
+                                 task_type="CAUSAL_LM", target_modules=text_targets or LORA_TARGETS)
+
     dataset = Dataset.from_list(training_rows(num_steps * PROMPTS_PER_STEP))
-    peft_config = LoraConfig(r=32, lora_alpha=32, lora_dropout=0.05, bias="none",
-                             task_type="CAUSAL_LM", target_modules=LORA_TARGETS)
     args = GRPOConfig(
         output_dir=output_dir,
-        learning_rate=5e-5,
+        learning_rate=lr,
         per_device_train_batch_size=GROUP_SIZE,
         gradient_accumulation_steps=PROMPTS_PER_STEP,   # 5 prompts x 6 rollouts per step
         num_generations=GROUP_SIZE,
         max_completion_length=384,
         max_steps=num_steps,
-        beta=0.0,                                       # no KL penalty
+        beta=beta,
         temperature=1.0,
         logging_steps=1,
         save_steps=12,
         bf16=True,
         report_to="none",
     )
-    trainer = GRPOTrainer(model=model_id, reward_funcs=grpo_reward, args=args,
+    trainer = GRPOTrainer(model=model, reward_funcs=grpo_reward, args=args,
                           train_dataset=dataset, peft_config=peft_config, processing_class=tokenizer)
     trainer.train()
     os.makedirs(output_dir, exist_ok=True)

@@ -1,5 +1,7 @@
 # Teammate 3 — Open-Weight Gemma 4 Agent & GRPO + LoRA Post-Training Pipeline
 
+> Build-phase design notes. Example numbers inside code blocks are illustrative; the current, regenerated numbers are in [`EVAL_RESULTS.md`](../EVAL_RESULTS.md).
+
 **Status:** **COMPLETED & VERIFIED** (`terraria_bench/harness/{gemma_agent,train_grpo}.py` and `tests/test_grpo_pipeline.py` implemented and verified offline with CPU `torch`/`transformers`/`peft`)
 
 ## 1. Mission & Scope
@@ -7,7 +9,7 @@
 > **Language Standard:** Implement **all training loops, rollout workers, reward calculators, and evaluation harnesses in pure Python (>= 3.11)** whenever possible. Avoid external bash orchestration scripts; expose all local and cloud (Modal/Verda) workflows through Python CLI flags (`python -m terraria_bench.harness.train_grpo`).
 
 You own **Track 3 (Open-Weight Gemma 4 Policy & GRPO + LoRA Post-Training Pipeline)** of **TerrariaBench**, mirroring StoreBench §7 and Appendices C & K.
-The deterministic environment ([engine.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/engine.py)), task splits ([tasks.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tasks.py)), composite and dense reward channels ([grader.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/grader.py)), provenance ([provenance.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/provenance.py)), and 24-tool `Episode` surface ([tools.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tools.py)) are already implemented and frozen.
+The deterministic environment ([engine.py](../terraria_bench/engine.py)), task splits ([tasks.py](../terraria_bench/tasks.py)), composite and dense reward channels ([grader.py](../terraria_bench/grader.py)), provenance ([provenance.py](../terraria_bench/provenance.py)), and 24-tool `Episode` surface ([tools.py](../terraria_bench/tools.py)) are already implemented and frozen.
 
 Your responsibility is to build the **Gemma 4 baseline & LoRA checkpoint evaluator (`gemma_agent.py`)** and the **GRPO + LoRA (rank 32, $\alpha=32$) post-training pipeline (`train_grpo.py`)** over the 4 disjoint training tasks (`woodland-scramble`, `ore-rush`, `slime-rain`, `shelter-crunch`) using the $[-2, 1]$ clipped dense/terminal training reward channel and behavior-cloning warm-start from human/expert trajectories.
 
@@ -41,7 +43,7 @@ In `grader.py`, the official composite score clips business growth to $[0, 1]$:
 $$R = 0.7 \cdot \text{clip}_{[0,1]}\left(\frac{\Delta\text{net} - z}{s}\right) + 0.2 \cdot \text{reliability} + 0.1 \cdot \text{continuity}$$
 For a base open-weight model that initially dies or fails to out-progress `absentee` ($\Delta\text{net} < z$), $\text{clip}_{[0,1]}$ maps every rollout in a group to `0.0`, producing zero variance within the group and **zero gradient signal**.
 
-Therefore, [grader.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/grader.py#L133-L146) already provides two training-specific functions that you must use during GRPO:
+Therefore, [grader.py](../terraria_bench/grader.py#L133-L146) already provides two training-specific functions that you must use during GRPO:
 - `training_reward(ledger, cell) -> float`:
   $$\tilde{R} = \text{clip}_{[-2, 1]}\left(\frac{\Phi(s_W) - \Phi(s_0) - z}{s}\right)$$
 - `dense_rewards(ledger, cell) -> list[float]`:

@@ -1,0 +1,225 @@
+{
+ "deaths": 0,
+ "eye": {
+  "armor_peak": 13,
+  "armor_start": 0,
+  "fought": true,
+  "max_hp": 180,
+  "min_hp_ratio": 0.736769,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "14996cbd7e22ce8b0aac92f7df4583758d88a158a87e9588f90adfa5f5bbc325",
+  "image_digest": "unpinned-local-run",
+  "python": "3.12.13",
+  "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
+  "source_commit": "da969a7f1a10bb3fa2b7049f2db1a1a24238f57d",
+  "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
+ },
+ "milestones": [
+  "ANVIL",
+  "ARENA",
+  "CAVERN",
+  "CRAFT:anvil",
+  "CRAFT:campfire",
+  "CRAFT:furnace",
+  "CRAFT:gold_bar",
+  "CRAFT:gold_bow",
+  "CRAFT:iron_bar",
+  "CRAFT:iron_pickaxe",
+  "CRAFT:silver_armor",
+  "CRAFT:silver_bar",
+  "CRAFT:silver_bow",
+  "CRAFT:wood_armor",
+  "CRAFT:wood_platform",
+  "CRAFT:wooden_arrow",
+  "CRAFT:workbench",
+  "CRYSTAL1",
+  "CRYSTAL2",
+  "CRYSTAL3",
+  "FURNACE",
+  "SHELTER",
+  "T1",
+  "T2",
+  "T3",
+  "WORKBENCH"
+ ],
+ "phi0": 1.08,
+ "phi_final": 517.736634,
+ "seed": 11,
+ "sha256": "68c6cefbc76719b4ab0580d3e5ca6382bd8d34aa406527d03d520703a5901b5c",
+ "state_hash": "25e61d763f8b96c8ad5f6eef7a7bbe8f44b00f423e77dd651552782dd4d35c1f",
+ "task": "eye-of-cthulhu",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 75.415,
+   "sheltered": true,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 115.86,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 17,
+   "phi": 160.65,
+   "sheltered": true,
+   "sla": [],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 237.925,
+   "sheltered": true,
+   "sla": [],
+   "w": 4
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 461.82,
+   "sheltered": false,
+   "sla": [],
+   "w": 5
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 3,
+   "phi": 461.895,
+   "sheltered": true,
+   "sla": [],
+   "w": 6
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 469.92,
+   "sheltered": true,
+   "sla": [],
+   "w": 7
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 2,
+   "phi": 470.52,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:2",
+     true
+    ]
+   ],
+   "w": 8
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 471.345,
+   "sheltered": true,
+   "sla": [],
+   "w": 9
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [
+    "The Eye of Cthulhu overwhelmed you and left."
+   ],
+   "ops_used": 8,
+   "phi": 517.736634,
+   "sheltered": true,
+   "sla": [
+    [
+     "arena",
+     true
+    ]
+   ],
+   "w": 10
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 517.736634,
+   "sheltered": true,
+   "sla": [],
+   "w": 11
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [
+    "The Eye of Cthulhu overwhelmed you and left."
+   ],
+   "ops_used": 0,
+   "phi": 517.736634,
+   "sheltered": true,
+   "sla": [
+    [
+     "boss:eye:0.6",
+     false
+    ]
+   ],
+   "w": 12
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 517.736634,
+   "sheltered": true,
+   "sla": [],
+   "w": 13
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 517.736634,
+   "sheltered": true,
+   "sla": [
+    [
+     "kill:eye",
+     false
+    ]
+   ],
+   "w": 14
+  }
+ ],
+ "world_hash": "846c4d061deef5ae53220563c5a3a676f7cbe7af8775821fa1f2acc74341ebf8"
+}

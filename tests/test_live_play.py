@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -257,7 +258,7 @@ def test_real_game_three_tiers_run_and_no_ground_truth_reaches_models(tmp_path: 
     assert d["source"] == "decisions_api"
     assert {t["status"] for t in d["tiers"].values()} == {"LIVE"}
     assert "Craft torches" in d["hud"]["supervisor"]
-    assert "pitch_black" in d["hud"]["vision"]
+    assert "Nothing visible" in d["hud"]["vision"]
 
     # Decision answers pass through untouched: no aim assist, no forced heal, no tool override.
     c = d["controls"]
@@ -564,7 +565,7 @@ def test_real_game_vision_reaction_stage_roadmap_and_no_referee_leak(tmp_path: P
     assert dec_ctx.index("IMMEDIATE SHORT-TERM REACTION") < dec_ctx.index("SUPERVISOR PLAN")
 
     vis_prompt = calls["vision"][0][0]
-    assert "CURRENT SUPERVISOR GOAL" in vis_prompt
+    assert "HYDROGEN TASK BRIEF" in vis_prompt and "CARBON STAGE" in vis_prompt
     assert "HUD SUMMARY" in vis_prompt
 
     blob = "\n".join([vis_prompt, sup_prompt, dec_ctx])
@@ -957,3 +958,206 @@ def test_four_tier_coordinates_never_truncated_and_routines_are_real_inputs(tmp_
     routines = builtin_routines(payload["hud"])
     assert all(not s.get("macro_action") for s in routines["chop_tree_right"]["steps"])
     assert all(not s.get("macro_action") for s in routines["build_house"]["steps"])
+
+
+def test_real_game_carbon_tasks_hydrogen_supervision_and_vision_targets(tmp_path: Path, monkeypatch):
+    """Carbon lists tasks, Hydrogen supervises one at a time and reports up, vision hands targets to the decision model."""
+    import terraria_bench.live_play as lp
+    from terraria_bench.real_game import shift_targets, vision_targets
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+    app = create_live_app(live_models=False)
+    answers = {"move": 0.0, "jump": 0.0, "use_item": 0.0, "cursor_dx": 0.0, "cursor_dy": 0.0, "hotbar": 0.0, "replan": 0.0}
+
+    def carbon(prompt, png):
+        calls["supervisor"].append((prompt, png))
+        return json.dumps({
+            "phase": "build_house", "strategy": "Wood, then a house.", "objective": "House before night",
+            "tasks": [
+                {"id": "wood", "task": "Chop 60 wood", "routine": "none", "done_when": "Wood >= 60"},
+                {"id": "house", "task": "Build a house", "routine": "build_house", "done_when": "valid room"},
+            ],
+        })
+
+    calls = _wire_mock_models(app, answers, supervisor_fn=carbon)
+    real = app.state.controller.real
+    hydrogen_status = ["done", "in_progress", "done"]
+
+    def hydrogen(prompt, png):
+        calls["short_term"].append((prompt, png))
+        status = hydrogen_status[min(len(calls["short_term"]) - 1, len(hydrogen_status) - 1)]
+        return json.dumps({
+            "status": status, "evidence": "saw it", "current_subgoal": "Place the left wall",
+            "tactical_steps": ["place wood"], "report_to_carbon": "house stands",
+            "vision_brief": {"focus": "place", "find": ["open wall cells"], "look_for": ["is the door placed?"]},
+        })
+
+    def vision_fn(prompt, png):
+        calls["vision"].append((prompt, png))
+        return json.dumps({
+            "task_view": "Left wall 2 of 5 placed.", "surroundings": "Flat grass.",
+            "place": [{"item": "Wood", "hotbar": 4, "dx": 3, "dy": -2, "supported_by": "wood below", "in_reach": True}],
+            "fight": {"threat_level": "none"}, "move": {"direction": "right", "jump": False},
+        })
+
+    real.short_term_fn = hydrogen
+    real.vision_fn = vision_fn
+    client = TestClient(app)
+
+    d1 = client.post("/real_game_tick", json=_payload(pos={"x": 10, "y": 20})).json()
+    assert d1["tiers"]["supervisor"]["role"] == "carbon_strategy"
+    assert d1["tiers"]["short_term"]["role"] == "hydrogen_task_supervisor"
+    assert "Chop 60 wood" in calls["short_term"][0][0] and "YOUR TASK (1 of 2" in calls["short_term"][0][0]
+    # Hydrogen called the first task done: it moves to the second without asking Carbon.
+    assert real._task_index == 1 and len(calls["supervisor"]) == 1
+    assert d1["vision_report"]["targets"]["place"][0]["dx"] == 3
+    dec_ctx = calls["decision"][0][1]
+    assert "VISION ACTION TARGETS" in dec_ctx and "Build a house" in dec_ctx
+    assert "targets: place x1, move right" in d1["hud"]["vision"]
+
+    d2 = client.post("/real_game_tick", json=_payload(pos={"x": 10, "y": 20})).json()
+    assert "YOUR TASK (2 of 2" in calls["short_term"][1][0]
+    assert "task 2/2: Build a house [in_progress]" in d2["hud"]["supervisor"]
+    # Hydrogen's brief reaches the vision model.
+    assert "open wall cells" in calls["vision"][-1][0] and "is the door placed?" in calls["vision"][-1][0]
+
+    # Last task done: Hydrogen escalates and Carbon writes the next plan, told why.
+    real._short_term_requested_tick = -100
+    client.post("/real_game_tick", json=_payload(pos={"x": 10, "y": 20}))
+    client.post("/real_game_tick", json=_payload(pos={"x": 10, "y": 20}))
+    assert len(calls["supervisor"]) == 2
+    assert "Build a house" in calls["supervisor"][1][0] and "is DONE" in calls["supervisor"][1][0]
+    assert "house stands" in calls["supervisor"][1][0]
+
+    # Targets seen earlier follow the player: 2 tiles right and 1 down means the cell is 2 nearer and 1 higher.
+    seen = vision_targets({"place": [{"dx": 3, "dy": -2}], "aim": {"dx": 5, "dy": 0, "action": "attack"},
+                           "fight": {"threat_level": "high", "attack_dx": 4, "attack_dy": 1, "enemies": [{"dx": 4, "dy": 1}]}})
+    moved = shift_targets(seen, 2, 1)
+    assert (moved["place"][0]["dx"], moved["place"][0]["dy"]) == (1, -3)
+    assert (moved["aim"]["dx"], moved["fight"]["attack_dx"], moved["fight"]["enemies"][0]["dy"]) == (3, 2, 0)
+    assert vision_targets({"aim": {"action": "none"}, "fight": {"threat_level": "none"}}) == {}
+
+
+def test_real_game_keeps_task_place_drops_stale_targets_and_pauses_on_outdated_mod(tmp_path: Path, monkeypatch):
+    """Carbon repeating a task keeps Hydrogen's place; off-screen targets vanish; an unknown skill pauses the run."""
+    import terraria_bench.live_play as lp
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+    app = create_live_app(live_models=False)
+    answers = {"move": 0.0, "jump": 0.0, "use_item": 0.0, "cursor_dx": 0.0, "cursor_dy": 0.0, "hotbar": 0.0, "replan": 0.0}
+    plans = [["wood", "house"], ["site", "house", "gear"]]
+
+    def carbon(prompt, png):
+        calls["supervisor"].append((prompt, png))
+        ids = plans[min(len(calls["supervisor"]) - 1, len(plans) - 1)]
+        return json.dumps({"phase": "build_house", "objective": "House", "tasks": [
+            {"id": i, "task": f"do {i}", "routine": "none", "done_when": "seen"} for i in ids]})
+
+    calls = _wire_mock_models(app, answers, supervisor_fn=carbon)
+    real = app.state.controller.real
+    real._task_index = 1
+    real._plan = None
+    real._supervise(1, _payload(), {}, None, "start")
+    assert real._task_index == 0
+    real._task_index = 1  # Hydrogen is on "house"
+    real._supervise(2, _payload(), {}, None, "check-in")
+    assert real._current_task(real._plan)["id"] == "house" and real._task_index == 1
+
+    report = {"targets": {"aim": {"dx": 4, "dy": 1, "action": "mine"}}, "targets_pos": (10.0, 20.0)}
+    assert real._live_targets(report, {"pos": {"x": 12, "y": 20}}, 1.0)["aim"]["dx"] == 2
+    assert real._live_targets(report, {"pos": {"x": 40, "y": 20}}, 1.0) == {}
+    assert real._live_targets({**report, "targets_time": time.time() - 60}, {"pos": {"x": 10, "y": 20}}, 1.0) == {}
+
+    real._routine_skill = {"id": 7, "name": "build_house", "args": {}, "routine": "build_house", "waited": 0}
+    hud = {"skill": {"id": 7, "status": "failed", "reason": "unknown skill 'build_house'"}}
+    assert real._track_routine_skill(hud, 5) is None
+    assert "older than this code" in real._history[-1] and real._mod_outdated_until == 25
+    d = TestClient(app).post("/real_game_tick", json=_payload()).json()
+    assert "OUTDATED MOD" in json.dumps(d)
+
+
+def test_score_real_recording_reads_live_play_schema(tmp_path: Path):
+    from terraria_bench.real_eval import score_real_recording
+
+    rec = {
+        "run_id": "real_terraria_live",
+        "final_deaths": 1,
+        "score": {
+            "eye_progress_pct": 7.0,
+            "deaths": 1,
+            "passed": False,
+            "eye_breakdown": {
+                "eye_progress_pct": 7.0,
+                "eye_killed": False,
+                "max_hp": 100,
+                "defense": 0,
+                "health_score": 0.0,
+                "armor_score": 0.0,
+                "tasks_score": 0.07,
+                "boss_fight_score": 0.0,
+                "eye_kill_score": 0.0,
+                "task_checklist": {"wood_gathered": True, "workbench": True},
+            },
+        },
+        "frames": [
+            {
+                "turn": 1,
+                "state": {
+                    "deaths": 1,
+                    "milestones": ["WOOD_GATHERED", "WORKBENCH"],
+                },
+            }
+        ],
+    }
+    p = tmp_path / "rec.json"
+    p.write_text(json.dumps(rec), encoding="utf-8")
+    summary = score_real_recording(p)
+    assert summary["eye_progress_pct"] == 7.0
+    assert summary["deaths"] == 1
+    assert summary["milestones"] == ["WOOD_GATHERED", "WORKBENCH"]
+    assert summary["task_checklist"]["wood_gathered"] is True
+    assert summary["breakdown"]["tasks_score"] == 0.07
+    assert summary["passed"] is False
+
+
+def test_real_game_hydrogen_watches_clip_and_measured_trace_every_decision(tmp_path: Path, monkeypatch):
+    """Hydrogen is called on every decision with recent frames and each input's measured result; its order leads."""
+    import terraria_bench.live_play as lp
+
+    monkeypatch.setattr(lp, "RECORDINGS_DIR", tmp_path)
+    app = create_live_app(live_models=False)
+    answers = {"move_x": "right", "jump": 0.0, "use_item": 0.0, "cursor_dx": 0.0, "cursor_dy": 0.0, "hotbar": 0.0, "replan": 0.0}
+    calls = _wire_mock_models(app, answers)
+    real = app.state.controller.real
+
+    def hydrogen(prompt, png):
+        calls["short_term"].append((prompt, png))
+        return json.dumps({"status": "in_progress", "current_subgoal": "reach the tree",
+                           "feedback": "walked right 3 times with NO EFFECT: blocked by a ledge",
+                           "directive": "hold D and SPACE to jump the 2-tile ledge at (+1, 0)"})
+
+    real.short_term_fn = hydrogen
+    client = TestClient(app)
+    wood = lambda n: [{"slot": 1, "name": "Copper Axe", "stack": 1}, {"slot": 2, "name": "Wood", "stack": n}]
+    client.post("/real_game_tick", json=_payload(pos={"x": 10, "y": 5}, hotbar=wood(4)))
+    client.post("/real_game_tick", json=_payload(pos={"x": 10, "y": 5}, hotbar=wood(4)))
+    client.post("/real_game_tick", json=_payload(hp=90, pos={"x": 13, "y": 5}, hotbar=wood(9), events=["Picked up Wood"]))
+
+    assert len(calls["short_term"]) == 3  # every decision, not every sixth
+    prompt, frames = calls["short_term"][-1]
+    assert isinstance(frames, list) and len(frames) == 3
+    assert "3 frame(s) attached" in prompt and "CONTROLLER TRACE" in prompt
+    lines = real._trace_lines()
+    assert "x2 [decisions_api] D" in prompt and "moved (+3,+0) tiles, HP -10" in prompt  # what Hydrogen was shown
+    assert "x3" in lines[0] and "moved (+3,+0) tiles" in lines[0] and "HP -10" in lines[0]
+    assert "Wood +5" in lines[0] and "Picked up Wood" in lines[0]
+    assert "SENTINEL" not in prompt and "987654" not in prompt
+    decision_prompt = calls["decision"][-1][1]
+    assert decision_prompt.index("HYDROGEN ORDER") < decision_prompt.index("CURRENT TASK")
+    assert "jump the 2-tile ledge" in decision_prompt and "HYDROGEN FEEDBACK" in decision_prompt
+
+    real._trace.clear()
+    real._trace_snap = None
+    client.post("/real_game_tick", json=_payload(pos={"x": 13, "y": 5}, hotbar=wood(9)))
+    client.post("/real_game_tick", json=_payload(pos={"x": 13, "y": 5}, hotbar=wood(9)))
+    assert "NO EFFECT" in real._trace_lines()[0]

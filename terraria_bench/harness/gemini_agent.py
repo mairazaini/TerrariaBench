@@ -380,12 +380,14 @@ class GeminiAgent:
     def _call_supervisor_model(
         self,
         prompt_text: str,
-        png_b64: str | None,
+        png_b64: str | list[str] | None,
         system: str | None = None,
         model: str | None = None,
         thinking_level: str | None = None,
     ) -> str:
         """Call a generate_content model with a JSON response. ``system``/``model`` default to the supervisor's.
+
+        ``png_b64`` is one frame or a list of frames in time order (a short clip).
 
         ``thinking_level`` (e.g. "low") is a latency hint. If the model rejects it, it is dropped for the rest of
         the run and the call is repeated without it.
@@ -396,8 +398,9 @@ class GeminiAgent:
         system = system or SUPERVISOR_SYSTEM
         client = self._genai_client()
         parts: list[Any] = [prompt_text]
-        if png_b64:
-            parts.append(types.Part.from_bytes(data=base64.b64decode(png_b64), mime_type="image/png"))
+        for frame in ([png_b64] if isinstance(png_b64, str) else list(png_b64 or [])):
+            if frame:
+                parts.append(types.Part.from_bytes(data=base64.b64decode(frame), mime_type="image/png"))
         rejected = self.__dict__.setdefault("_thinking_rejected", set())
         if thinking_level and (model, thinking_level) not in rejected:
             try:

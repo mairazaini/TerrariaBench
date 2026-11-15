@@ -1,0 +1,390 @@
+{
+ "deaths": 0,
+ "eye": {
+  "armor_peak": 13,
+  "armor_start": 0,
+  "fought": true,
+  "max_hp": 140,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "14996cbd7e22ce8b0aac92f7df4583758d88a158a87e9588f90adfa5f5bbc325",
+  "image_digest": "unpinned-local-run",
+  "python": "3.12.13",
+  "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
+  "source_commit": "da969a7f1a10bb3fa2b7049f2db1a1a24238f57d",
+  "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
+ },
+ "milestones": [
+  "ANVIL",
+  "CAVERN",
+  "CRAFT:anvil",
+  "CRAFT:furnace",
+  "CRAFT:iron_armor",
+  "CRAFT:iron_bar",
+  "CRAFT:iron_pickaxe",
+  "CRAFT:lesser_healing_potion",
+  "CRAFT:silver_armor",
+  "CRAFT:silver_bar",
+  "CRAFT:silver_bow",
+  "CRAFT:silver_broadsword",
+  "CRAFT:wood_armor",
+  "CRAFT:wooden_arrow",
+  "CRAFT:workbench",
+  "CRYSTAL1",
+  "CRYSTAL2",
+  "FURNACE",
+  "SHELTER",
+  "T1",
+  "T2",
+  "T3",
+  "WORKBENCH"
+ ],
+ "phi0": 1.08,
+ "phi_final": 408.18,
+ "seed": 7,
+ "sha256": "30f07fdab3253dee36cddc073effc04dc7b849f131e65cb9fef0b3ad03cc11b2",
+ "state_hash": "09ac49096e63846270a38c2ed1d48b8de33ba6b2580ea6a1d2c50286eba8c1eb",
+ "task": "full-progression",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 12,
+   "phi": 45.375,
+   "sheltered": true,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 1,
+   "phi": 45.375,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 12,
+   "phi": 58.83,
+   "sheltered": true,
+   "sla": [],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 3,
+   "phi": 58.83,
+   "sheltered": true,
+   "sla": [],
+   "w": 4
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 11,
+   "phi": 97.085,
+   "sheltered": true,
+   "sla": [],
+   "w": 5
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 12,
+   "phi": 112.085,
+   "sheltered": true,
+   "sla": [],
+   "w": 6
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 12,
+   "phi": 119.52,
+   "sheltered": true,
+   "sla": [],
+   "w": 7
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 12,
+   "phi": 173.905,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:1",
+     true
+    ]
+   ],
+   "w": 8
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 11,
+   "phi": 176.71,
+   "sheltered": true,
+   "sla": [],
+   "w": 9
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 9,
+   "phi": 177.4,
+   "sheltered": true,
+   "sla": [],
+   "w": 10
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 11,
+   "phi": 280.24,
+   "sheltered": true,
+   "sla": [],
+   "w": 11
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 9,
+   "phi": 280.66,
+   "sheltered": true,
+   "sla": [],
+   "w": 12
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 12,
+   "phi": 283.0,
+   "sheltered": true,
+   "sla": [],
+   "w": 13
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 12,
+   "phi": 389.715,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:2",
+     true
+    ]
+   ],
+   "w": 14
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 10,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 15
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 1,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 16
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 17
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 18
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 19
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [
+    [
+     "milestone:SIEGE",
+     false
+    ]
+   ],
+   "w": 20
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 21
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 22
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 23
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [
+    [
+     "arena",
+     false
+    ]
+   ],
+   "w": 24
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 25
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [
+    "The Eye of Cthulhu overwhelmed you and left."
+   ],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [
+    [
+     "boss:eye:0.6",
+     false
+    ]
+   ],
+   "w": 26
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 27
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 28
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [],
+   "w": 29
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 408.18,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:3",
+     true
+    ]
+   ],
+   "w": 30
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

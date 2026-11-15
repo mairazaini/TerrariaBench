@@ -17,11 +17,11 @@ policy). Eye progress is the 0-100% progress-toward-killing-the-Eye score.
 | do-nothing | anchor | 24 | 0.000 | 0% | 0% |
 | exploiter | anchor | 24 | 0.000 | 0% | 0% |
 | Human experts | evaluated | 1 | 0.489 | 0% | 19% |
-| Gemini 4 / 2.5 | evaluated | 2 | 0.195 | 0% | 19% |
-| Nemotron 3.5 VL | evaluated | 2 | 0.032 | 0% | 11% |
+| Gemini 4 / 2.5 | evaluated | 10 | 0.542 | 30% | 34% |
+| Nemotron 3.5 VL | evaluated | 10 | 0.185 | 0% | 13% |
 | Verda DeepSeek V4.1 Flash | not run | 0 | - | - | - |
 | Verda Kimi K3.1 Pro | not run | 0 | - | - | - |
-| Gemma Base | evaluated | 2 | 0.049 | 0% | 13% |
+| Gemma Base | evaluated | 4 | 0.046 | 0% | 12% |
 | Gemma Tuned | not run | 0 | - | - | - |
 
 Rows with few episodes cover only the cells that were actually played; they are not comparable
@@ -47,3 +47,41 @@ for both; one episode per cell. Reproduce with `modal run post_training/modal_gr
 
 Seed 7 cells of the training tasks were seen in training; seed 17 cells are unseen worlds;
 first-night and cavern-expedition are eval tasks the model never trained on.
+
+## Breakdown by failure area
+
+| Failure area | Tasks | smart-triage | rule-based | Gemini 4 / 2.5 | Nemotron 3.5 VL |
+|:---|:---|---:|---:|---:|---:|
+| Long-range strategy planning | goblin-siege, eye-of-cthulhu, wall-of-flesh, full-progression | 0.964 | 0.429 | 0.593 | 0.228 |
+| Short-range strategy & execution | first-night, blood-moon-survival | 1.000 | 0.668 | 0.384 | 0.163 |
+| Multimodal & 2D spatial modification | arena-architect, cavern-expedition | 0.998 | 0.495 | 0.653 | 0.110 |
+
+## GRPO post-training (BC-initialised, KL-regularised)
+
+GRPO on `google/gemma-4-E4B-it`, starting from the behaviour-cloned LoRA and rewarded only by the benchmark's own sealed-ledger grader (`post_training/terraria_reward.py`). Rows are read from `artifacts/post_training/grpo_eval.json`; base and tuned are evaluated on the same cells with the same turn budget.
+
+| Cell | Threshold | Base | Tuned | Base deaths | Tuned deaths |
+|:---|---:|---:|---:|---:|---:|
+| woodland-scramble:7 | 0.975 | 0.357 | 0.950 | 2 | 0 |
+| ore-rush:7 | 0.821 | 0.077 | 0.644 | 2 | 0 |
+| woodland-scramble:17 | 0.968 | 0.102 | 0.911 | 1 | 0 |
+| shelter-crunch:17 | 0.969 | 0.174 | 0.843 | 1 | 0 |
+| slime-rain:17 | 0.908 | 0.322 | 0.517 | 1 | 0 |
+| ore-rush:17 | 0.791 | 0.074 | 0.580 | 3 | 0 |
+| first-night:7 | 0.950 | 0.307 | 0.637 | 1 | 0 |
+| cavern-expedition:7 | 0.900 | 0.082 | 0.688 | 3 | 2 |
+| **Mean / total** | | **0.187** | **0.721** | **14** | **2** |
+
+Tuned cells passing the calibrated threshold: **0/8**. The small model improves sharply on reward and stops dying, yet still clears no pass gate: the benchmark keeps headroom after training.
+
+## Real Terraria (tModLoader live session)
+
+Reconciled from `artifacts/recordings/real_terraria_live.json` via `python -m terraria_bench.real_eval --save` (`artifacts/runs/real_terraria/latest_score.json`):
+
+| Metric | Value |
+|:---|---:|
+| Eye progress | 20.0% |
+| Passed (Eye killed) | no |
+| Recorded frames | 300 |
+| Deaths | 2 |
+| Milestones | WOOD_GATHERED, WORKBENCH, SHELTER, WEAPONS, ARMOR_EQUIPPED |

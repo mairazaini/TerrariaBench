@@ -1,0 +1,98 @@
+{
+ "deaths": 0,
+ "eye": {
+  "armor_peak": 9,
+  "armor_start": 0,
+  "fought": false,
+  "max_hp": 100,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "14996cbd7e22ce8b0aac92f7df4583758d88a158a87e9588f90adfa5f5bbc325",
+  "image_digest": "unpinned-local-run",
+  "python": "3.12.13",
+  "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
+  "source_commit": "da969a7f1a10bb3fa2b7049f2db1a1a24238f57d",
+  "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
+ },
+ "milestones": [
+  "ANVIL",
+  "CAVERN",
+  "CRAFT:anvil",
+  "CRAFT:furnace",
+  "CRAFT:iron_armor",
+  "CRAFT:iron_bar",
+  "CRAFT:iron_broadsword",
+  "CRAFT:workbench",
+  "FURNACE",
+  "SHELTER",
+  "T1",
+  "T2",
+  "WORKBENCH"
+ ],
+ "phi0": 0.48,
+ "phi_final": 217.45,
+ "seed": 11,
+ "sha256": "60c9c45c1315f1757b8e11b9ea0fa719c5ad6e682d50a75e80bee3db27e3c7f8",
+ "state_hash": "79fd3206726bf5d62e3115b951625538aace1609dd3f74a623c2cd5bf3b72480",
+ "task": "first-night",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 11,
+   "phi": 47.39,
+   "sheltered": false,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 5,
+   "phi": 46.58,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 78.65,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:1",
+     false
+    ]
+   ],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 12,
+   "phi": 217.45,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 4
+  }
+ ],
+ "world_hash": "846c4d061deef5ae53220563c5a3a676f7cbe7af8775821fa1f2acc74341ebf8"
+}

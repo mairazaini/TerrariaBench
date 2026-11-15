@@ -1,0 +1,219 @@
+{
+ "deaths": 7,
+ "eye": {
+  "armor_peak": 3,
+  "armor_start": 0,
+  "fought": true,
+  "max_hp": 100,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "14996cbd7e22ce8b0aac92f7df4583758d88a158a87e9588f90adfa5f5bbc325",
+  "image_digest": "unpinned-local-run",
+  "python": "3.12.13",
+  "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
+  "source_commit": "da969a7f1a10bb3fa2b7049f2db1a1a24238f57d",
+  "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
+ },
+ "milestones": [
+  "CRAFT:copper_bar",
+  "CRAFT:furnace",
+  "CRAFT:torch",
+  "CRAFT:wood_armor",
+  "CRAFT:wooden_bow",
+  "CRAFT:workbench",
+  "FURNACE",
+  "T1",
+  "WORKBENCH"
+ ],
+ "phi0": 1.08,
+ "phi_final": -0.585,
+ "seed": 11,
+ "sha256": "2bdea07779749f79e6da0847c93168d8878de5539d8f578e78c6df31d9cd3a47",
+ "state_hash": "2a13237108e3e567c4f9732deeeaeda32ba7da7caa870692b0131cca3065f62c",
+ "task": "eye-of-cthulhu",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 14.39,
+   "sheltered": false,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 20,
+   "phi": 8.615,
+   "sheltered": false,
+   "sla": [
+    [
+     "shelter",
+     false
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 14,
+   "phi": 49.355,
+   "sheltered": false,
+   "sla": [],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 2,
+   "phi": 21.4,
+   "sheltered": false,
+   "sla": [],
+   "w": 4
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 2,
+   "phi": 21.4,
+   "sheltered": false,
+   "sla": [],
+   "w": 5
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 2,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [],
+   "w": 6
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 5,
+   "phi": 2.01,
+   "sheltered": false,
+   "sla": [],
+   "w": 7
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 2,
+   "phi": 0.825,
+   "sheltered": false,
+   "sla": [
+    [
+     "tier:2",
+     false
+    ]
+   ],
+   "w": 8
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 14,
+   "phi": 0.6,
+   "sheltered": false,
+   "sla": [],
+   "w": 9
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 2,
+   "phi": -0.12,
+   "sheltered": false,
+   "sla": [
+    [
+     "arena",
+     false
+    ]
+   ],
+   "w": 10
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 4,
+   "phi": -0.12,
+   "sheltered": false,
+   "sla": [],
+   "w": 11
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "The Eye of Cthulhu overwhelmed you and left.",
+    "You were slain (the Eye of Cthulhu)."
+   ],
+   "ops_used": 6,
+   "phi": -0.48,
+   "sheltered": false,
+   "sla": [
+    [
+     "boss:eye:0.6",
+     false
+    ]
+   ],
+   "w": 12
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 1,
+   "phi": -0.48,
+   "sheltered": false,
+   "sla": [],
+   "w": 13
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 2,
+   "phi": -0.585,
+   "sheltered": false,
+   "sla": [
+    [
+     "kill:eye",
+     false
+    ]
+   ],
+   "w": 14
+  }
+ ],
+ "world_hash": "846c4d061deef5ae53220563c5a3a676f7cbe7af8775821fa1f2acc74341ebf8"
+}
