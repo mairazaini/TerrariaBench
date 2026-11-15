@@ -1,0 +1,2 @@
+{"event": "mount", "run_id": "test_drop_pickup", "seed": 7, "agent": "agent", "live_terraria": false}
+{"turn": 1, "time": "08:24 AM", "action": {"action": "gather", "resource": "wood"}, "msg": "Felled tree: +12 Wood, +12 Wood Blocks.", "score": 0.0, "housing_valid": false, "breakdown": {"res_gathered": false, "workbench_placed": false, "outer_frame_valid": false, "walls_and_lava_valid": false, "comfort_valid": false, "night_survival": false, "housing_valid": false, "details": []}, "hmac_sig": "878e594529bb2a876dd96e1516167be66c535275e801ab7c315fd2a5e6fed07f"}
