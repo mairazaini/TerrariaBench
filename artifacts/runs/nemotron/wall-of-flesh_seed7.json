@@ -1,5 +1,5 @@
 {
- "deaths": 3,
+ "deaths": 5,
  "eye": {
   "armor_peak": 16,
   "armor_start": 16,
@@ -13,7 +13,7 @@
   "image_digest": "unpinned-local-run",
   "python": "3.12.13",
   "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
-  "source_commit": "da969a7f1a10bb3fa2b7049f2db1a1a24238f57d",
+  "source_commit": "cdaee18568dc34a349636cf54f486fe88e8d5aea",
   "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
  },
  "milestones": [
@@ -26,10 +26,10 @@
   "UNDERWORLD"
  ],
  "phi0": 373.575,
- "phi_final": 599.798685,
+ "phi_final": 580.159839,
  "seed": 7,
- "sha256": "b53290c8353d32723cecfee5c5698e0d7278b3482b1e022b9be9747e1dc5cc86",
- "state_hash": "a7de6cb368d5babf00b621fabf4ddad3eaf73d71c10bdeb868a2dafbc02f350e",
+ "sha256": "f4a6bd9658ec6880f47c4e9627b9217dae85f8b8d483f493226485b5944624a4",
+ "state_hash": "dd85da492572b265fbb6d6aabff7e904319c16f75fabeb165c6bfc1c251f0458",
  "task": "wall-of-flesh",
  "windows": [
   {
@@ -40,7 +40,7 @@
     "You were slain (caught in the open)."
    ],
    "ops_used": 20,
-   "phi": 654.403685,
+   "phi": 685.069839,
    "sheltered": false,
    "sla": [],
    "w": 1
@@ -49,8 +49,8 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 13,
-   "phi": 650.828685,
+   "ops_used": 8,
+   "phi": 684.229839,
    "sheltered": false,
    "sla": [
     [
@@ -62,22 +62,22 @@
   },
   {
    "attended": true,
-   "deaths": 1,
-   "notes": [
-    "You were slain (caught in the open)."
-   ],
-   "ops_used": 3,
-   "phi": 625.528685,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 14,
+   "phi": 682.229839,
    "sheltered": false,
    "sla": [],
    "w": 3
   },
   {
    "attended": true,
-   "deaths": 0,
-   "notes": [],
-   "ops_used": 3,
-   "phi": 625.528685,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 2,
+   "phi": 656.074839,
    "sheltered": false,
    "sla": [],
    "w": 4
@@ -89,7 +89,7 @@
     "You were slain (caught in the open)."
    ],
    "ops_used": 5,
-   "phi": 600.483685,
+   "phi": 630.549839,
    "sheltered": false,
    "sla": [
     [
@@ -103,8 +103,8 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 6,
-   "phi": 600.603685,
+   "ops_used": 8,
+   "phi": 630.669839,
    "sheltered": false,
    "sla": [],
    "w": 6
@@ -113,8 +113,8 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 20,
-   "phi": 603.678685,
+   "ops_used": 2,
+   "phi": 630.669839,
    "sheltered": false,
    "sla": [],
    "w": 7
@@ -123,8 +123,8 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 10,
-   "phi": 602.638685,
+   "ops_used": 6,
+   "phi": 630.279839,
    "sheltered": false,
    "sla": [
     [
@@ -136,10 +136,12 @@
   },
   {
    "attended": true,
-   "deaths": 0,
-   "notes": [],
-   "ops_used": 6,
-   "phi": 601.678685,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 1,
+   "phi": 605.159839,
    "sheltered": false,
    "sla": [],
    "w": 9
@@ -148,8 +150,8 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 13,
-   "phi": 600.638685,
+   "ops_used": 2,
+   "phi": 605.159839,
    "sheltered": false,
    "sla": [
     [
@@ -161,10 +163,12 @@
   },
   {
    "attended": true,
-   "deaths": 0,
-   "notes": [],
-   "ops_used": 6,
-   "phi": 600.248685,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 7,
+   "phi": 580.159839,
    "sheltered": false,
    "sla": [],
    "w": 11
@@ -173,8 +177,8 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 3,
-   "phi": 599.798685,
+   "ops_used": 1,
+   "phi": 580.159839,
    "sheltered": false,
    "sla": [
     [

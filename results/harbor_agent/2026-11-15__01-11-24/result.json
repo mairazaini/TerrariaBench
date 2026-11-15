@@ -1,0 +1,45 @@
+{
+    "schema_version": 1,
+    "id": "34cddcd8-6b58-4edc-a99c-a570bd3e2563",
+    "started_at": "2026-11-15T01:11:33.611656",
+    "updated_at": "2026-11-15T01:31:07.430150",
+    "finished_at": "2026-11-15T01:31:07.430150",
+    "n_total_trials": 3,
+    "stats": {
+        "n_completed_trials": 3,
+        "n_errored_trials": 2,
+        "n_running_trials": 0,
+        "n_pending_trials": 0,
+        "n_cancelled_trials": 0,
+        "n_retries": 0,
+        "evals": {
+            "opencode__verda/kimi-k3-1-pro__adhoc": {
+                "n_trials": 1,
+                "n_errors": 2,
+                "metrics": [
+                    {
+                        "mean": 1.0
+                    }
+                ],
+                "pass_at_k": {},
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "terraria-eye-of-cthulhu-hardcore__74RhJD2"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "AgentSetupTimeoutError": [
+                        "terraria-eye-of-cthulhu-hardcore__uZSshJc",
+                        "terraria-eye-of-cthulhu-hardcore__iCPYjpU"
+                    ]
+                }
+            }
+        },
+        "n_input_tokens": 15857217,
+        "n_cache_tokens": 15760000,
+        "n_output_tokens": 18891,
+        "cost_usd": 3.8163639999999996
+    }
+}

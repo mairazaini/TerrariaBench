@@ -1161,3 +1161,46 @@ def test_real_game_hydrogen_watches_clip_and_measured_trace_every_decision(tmp_p
     client.post("/real_game_tick", json=_payload(pos={"x": 13, "y": 5}, hotbar=wood(9)))
     client.post("/real_game_tick", json=_payload(pos={"x": 13, "y": 5}, hotbar=wood(9)))
     assert "NO EFFECT" in real._trace_lines()[0]
+
+
+def test_real_recordings_rescore_with_one_command(tmp_path: Path, capsys):
+    """Every committed real-game recording rescores offline; the referee, not the model, decides a kill."""
+    from terraria_bench import real_eval
+
+    rows = real_eval.score_all()
+    assert rows, "no real-game recording is committed"
+    assert not any(r["recording"].endswith("real_terraria_live.json") for r in rows)  # rolling file is skipped
+    live = next(r for r in rows if r["recording"].endswith("real_terraria_run1.json"))
+    assert live["player"] == "model" and live["referee"]["consistent"] is True
+    assert live["house_built"] is True and live["passed"] is False
+    assert live["stalled_at"] == "ammunition_ready" and live["stages_done"] == 4
+    assert live["trajectory"]["milestones_gained_in_recording"] == []
+
+    checklist = {s: True for s in real_eval.STAGES}
+
+    def recording(name: str, downed: bool, player: str | None = None) -> None:
+        state = {"milestones": ["SHELTER"], "deaths": 0, "referee": {"downed_eye": downed, "deaths": 0}}
+        rec = {
+            "task_id": "real-terraria", "final_deaths": 0,
+            "score": {"eye_breakdown": {"eye_progress_pct": 100.0, "eye_killed": True, "task_checklist": checklist}},
+            "frames": [{"turn": 1, "state": state}],
+        }
+        if player:
+            rec["player"] = player
+        (tmp_path / name).write_text(json.dumps(rec), encoding="utf-8")
+
+    recording("human_reference.json", downed=True, player="human")
+    recording("forged_kill.json", downed=False)
+    (tmp_path / "sim_replay.json").write_text(json.dumps({"task_id": "first-night", "frames": []}), encoding="utf-8")
+    out = tmp_path / "scores"
+    scored = {Path(r["recording"]).name: r for r in real_eval.score_all(tmp_path, save=True, out_dir=out)}
+    assert set(scored) == {"human_reference.json", "forged_kill.json"}  # simulator replays are skipped
+    assert scored["human_reference.json"]["passed"] is True and scored["human_reference.json"]["player"] == "human"
+    assert scored["human_reference.json"]["stalled_at"] is None
+    # A recording that claims a kill the game never reported does not pass.
+    assert scored["forged_kill.json"]["passed"] is False
+    assert scored["forged_kill.json"]["referee"]["mismatches"] == ["eye_killed"]
+    assert (out / "summary.json").exists() and (out / "human_reference_score.json").exists()
+
+    assert real_eval.main(["--all"]) == 0
+    assert "real_terraria_run1.json" in capsys.readouterr().out

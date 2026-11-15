@@ -2,7 +2,7 @@
 
 Humans operate the environment through the exact same 24-tool surface,
 windowed operation budgets, and task briefings as LLM agents, with zero
-privileged information (hidden SLAs and scripted event parameters never leak).
+privileged information: they read the same task text, including the scoring rule and every checkpoint.
 Provides both a FastAPI server-rendered web UI and an interactive CLI.
 """
 from __future__ import annotations

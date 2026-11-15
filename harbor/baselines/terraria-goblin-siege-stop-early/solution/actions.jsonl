@@ -1,0 +1,38 @@
+{"tool": "build_blueprint", "args": {"preset": "shelter"}}
+{"tool": "explore_cavern", "args": {"target_depth": 64, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 64, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "loot_container_or_crystal", "args": {"kind": "life_crystal"}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "craft_item", "args": {"item_id": "furnace", "quantity": 1}}
+{"tool": "craft_item", "args": {"item_id": "wooden_arrow", "quantity": 1}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 64, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 64, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "stone", "max_tiles": 12}}
+{"tool": "loot_container_or_crystal", "args": {"kind": "life_crystal"}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "craft_item", "args": {"item_id": "furnace", "quantity": 1}}
+{"tool": "craft_item", "args": {"item_id": "wooden_arrow", "quantity": 2}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 64, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 64, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 70, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 76, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "silver_ore", "max_tiles": 12}}
+{"tool": "loot_container_or_crystal", "args": {"kind": "life_crystal"}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "craft_item", "args": {"item_id": "furnace", "quantity": 1}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 64, "auto_torch": false}}

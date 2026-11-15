@@ -1,0 +1,149 @@
+{
+    "schema_version": 1,
+    "id": "cb36f502-9710-45c2-a998-78e1f6d8bf6e",
+    "task_name": "terraria-first-night-hardcore",
+    "trial_name": "terraria-first-night-hardcore__ehs3396",
+    "trial_uri": "file:///C:/Users/User/AppData/Local/Temp/harbor_agent/2026-11-15__00-49-14/terraria-first-night-hardcore__ehs3396",
+    "task_id": {
+        "path": "harbor\\tasks\\terraria-first-night-hardcore"
+    },
+    "source": null,
+    "task_checksum": "9a9a1a97500ab7588be52374dfbe3a276b032f30085c221e2177ccbb80321176",
+    "config": {
+        "schema_version": 1,
+        "task": {
+            "path": "harbor\\tasks\\terraria-first-night-hardcore",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "terraria-first-night-hardcore__ehs3396",
+        "trials_dir": "C:\\Users\\User\\AppData\\Local\\Temp\\harbor_agent\\2026-11-15__00-49-14",
+        "install_only": false,
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "opencode",
+            "import_path": null,
+            "model_name": "verda/deepseek-4-1-flash-1017",
+            "base_url": null,
+            "model_api_key_name": "VERDA_API_KEY",
+            "model_api_format": null,
+            "skip_model_parsing": false,
+            "n_concurrent": null,
+            "concurrency_group": null,
+            "skills": [],
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "resume_trajectory": false,
+            "load_trajectory": null,
+            "extra_allowed_hosts": [],
+            "kwargs": {
+                "opencode_config": {
+                    "provider": {
+                        "verda": {
+                            "npm": "@ai-sdk/openai-compatible",
+                            "options": {
+                                "baseURL": "https://inference.verda.com/v1",
+                                "apiKey": "{env:VERDA_API_KEY}"
+                            },
+                            "models": {
+                                "deepseek-4-1-flash-1017": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "mcp_servers": []
+        },
+        "user_agent": null,
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "stream": false,
+            "cpu_enforcement_policy": "auto",
+            "memory_enforcement_policy": "auto",
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "override_tpu": null,
+            "mounts": null,
+            "extra_docker_compose": [],
+            "kwargs": {},
+            "extra_allowed_hosts": []
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "override_error_policy": {},
+        "artifacts": [],
+        "extra_instruction_paths": [],
+        "extra_instructions": [],
+        "job_id": "57835980-ff2b-4468-951b-b9ac230e845f",
+        "source_trial": null
+    },
+    "agent_info": {
+        "name": "opencode",
+        "version": "1.19.5",
+        "model_info": {
+            "name": "verda/deepseek-4-1-flash-1017",
+            "provider": null
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 1964318,
+        "n_cache_tokens": 1925120,
+        "n_output_tokens": 10735,
+        "cost_usd": null,
+        "model_usage": {
+            "verda/deepseek-4-1-flash-1017": {
+                "n_input_tokens": 1964318,
+                "n_cache_tokens": 1925120,
+                "n_output_tokens": 10735,
+                "cost_usd": null
+            }
+        },
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.81
+        }
+    },
+    "verifier_environment_mode": "shared",
+    "exception_info": null,
+    "started_at": "2026-11-14T22:49:20.096488Z",
+    "finished_at": "2026-11-14T22:54:15.596786Z",
+    "environment_setup": {
+        "started_at": "2026-11-14T22:49:20.177942Z",
+        "finished_at": "2026-11-14T22:49:33.637526Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-11-14T22:49:33.637572Z",
+        "finished_at": "2026-11-14T22:52:42.509956Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-11-14T22:52:42.510488Z",
+        "finished_at": "2026-11-14T22:54:08.828191Z"
+    },
+    "verifier": {
+        "started_at": "2026-11-14T22:54:09.966555Z",
+        "finished_at": "2026-11-14T22:54:11.508072Z"
+    },
+    "step_results": null,
+    "reward_valid": true
+}

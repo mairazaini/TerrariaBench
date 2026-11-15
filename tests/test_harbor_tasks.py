@@ -51,11 +51,16 @@ def test_task_copies_are_not_stale(task_id):
     assert (game / "server.py").read_bytes() == (HARBOR / "template" / "environment" / "game" / "server.py").read_bytes()
 
 
-def test_instruction_does_not_leak_the_hidden_deadlines_or_seed():
+def test_instruction_states_every_deadline_and_never_the_seed():
+    """Fair difficulty: the agent is told every checkpoint it is scored on. The world seed stays private."""
+    from terraria_bench.tasks import TASKS
+
     for task_id in EVAL_TASKS:
         text = (HARBOR / "tasks" / f"terraria-{task_id}" / "instruction.md").read_text(encoding="utf-8")
         assert "seed" not in text.lower()
-        assert "sla" not in text.lower()
+        task = TASKS[task_id]
+        assert task.sla and text.count("- End of window ") == len(task.sla)
+        assert task.checkpoint_text in text
 
 
 def test_oracle_actions_are_well_formed():

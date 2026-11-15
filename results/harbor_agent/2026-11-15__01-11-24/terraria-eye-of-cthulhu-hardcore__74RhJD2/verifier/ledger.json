@@ -1,0 +1,239 @@
+{
+ "deaths": 0,
+ "eye": {
+  "armor_peak": 16,
+  "armor_start": 0,
+  "fought": true,
+  "max_hp": 220,
+  "min_hp_ratio": 0.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "a5a810b1cba54deca4763eddf79ef69aa93e40c8bbc07bb3323a22dbeb0c61ac",
+  "image_digest": "terrariabench-harbor-game",
+  "python": "3.11.18",
+  "seed_data_sha256": "c3529f17c34fdb5e5149f999a4928ba182a6e216d6b17ae01706fd5bffe80845",
+  "source_commit": "unknown",
+  "source_hash": "d980165f6117a07ca80d1c996b1cd6b64df4f4e34e693df41cfc2ed68593b564"
+ },
+ "milestones": [
+  "ANVIL",
+  "ARENA",
+  "CAVERN",
+  "CRAFT:anvil",
+  "CRAFT:campfire",
+  "CRAFT:copper_bar",
+  "CRAFT:door",
+  "CRAFT:furnace",
+  "CRAFT:gold_armor",
+  "CRAFT:gold_bar",
+  "CRAFT:gold_bow",
+  "CRAFT:gold_broadsword",
+  "CRAFT:gold_pickaxe",
+  "CRAFT:iron_armor",
+  "CRAFT:iron_bar",
+  "CRAFT:iron_bow",
+  "CRAFT:iron_broadsword",
+  "CRAFT:iron_pickaxe",
+  "CRAFT:lesser_healing_potion",
+  "CRAFT:silver_armor",
+  "CRAFT:silver_bar",
+  "CRAFT:silver_bow",
+  "CRAFT:silver_broadsword",
+  "CRAFT:silver_pickaxe",
+  "CRAFT:torch",
+  "CRAFT:wood_armor",
+  "CRAFT:wood_platform",
+  "CRAFT:wooden_arrow",
+  "CRAFT:wooden_bow",
+  "CRAFT:wooden_sword",
+  "CRAFT:workbench",
+  "CRYSTAL1",
+  "CRYSTAL2",
+  "CRYSTAL3",
+  "FURNACE",
+  "HELLBRIDGE",
+  "KILL:eye",
+  "SHELTER",
+  "T1",
+  "T2",
+  "T3",
+  "T4",
+  "UNDERWORLD",
+  "WORKBENCH"
+ ],
+ "phi0": 1.08,
+ "phi_final": 1082.12,
+ "seed": 7,
+ "sha256": "0ba84816ae67ef9216ba3a5787a49627942b9115f4d6edf85ce28357ed3f8028",
+ "state_hash": "3dfa7126a4d906063e43ed3647895ec92c1cee639135e8e66ea4d7fbedc6e283",
+ "task": "eye-of-cthulhu-hardcore",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 98.25,
+   "sheltered": true,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 195.52,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 300.3,
+   "sheltered": true,
+   "sla": [],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 350.14,
+   "sheltered": true,
+   "sla": [],
+   "w": 4
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 463.71,
+   "sheltered": true,
+   "sla": [],
+   "w": 5
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 649.715,
+   "sheltered": true,
+   "sla": [],
+   "w": 6
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 708.41,
+   "sheltered": true,
+   "sla": [],
+   "w": 7
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 1019.54,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:2",
+     true
+    ]
+   ],
+   "w": 8
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 15,
+   "phi": 1049.025,
+   "sheltered": true,
+   "sla": [],
+   "w": 9
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 14,
+   "phi": 1056.85,
+   "sheltered": true,
+   "sla": [
+    [
+     "arena",
+     true
+    ]
+   ],
+   "w": 10
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 18,
+   "phi": 1064.14,
+   "sheltered": true,
+   "sla": [],
+   "w": 11
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 1072.08,
+   "sheltered": true,
+   "sla": [
+    [
+     "boss:eye:0.6",
+     true
+    ]
+   ],
+   "w": 12
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 18,
+   "phi": 1076.64,
+   "sheltered": true,
+   "sla": [],
+   "w": 13
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 18,
+   "phi": 1082.12,
+   "sheltered": true,
+   "sla": [
+    [
+     "kill:eye",
+     true
+    ]
+   ],
+   "w": 14
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

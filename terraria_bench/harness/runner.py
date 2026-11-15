@@ -13,7 +13,7 @@ from typing import Any, Protocol, runtime_checkable
 from .. import provenance
 from ..engine import AIR, CAMPFIRE, DOOR, WORKBENCH
 from ..grader import components, compute_eye_progress, grade
-from ..provenance import ARTIFACTS_DIR, CALIBRATION_PATH, ProvenanceError, load_sealed, verify_seal, write_sealed
+from ..provenance import ARTIFACTS_DIR, CALIBRATION_PATH, REPO_DIR, ProvenanceError, load_sealed, verify_seal, write_sealed
 from ..tasks import EVAL_TASKS, REPORTED_SEEDS, TASKS, Task
 from ..tools import Episode
 from .gemini_agent import GeminiAgent, GeminiLiveError
@@ -422,8 +422,22 @@ def _aggregate_graded(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+_RESULTS_RUN_FALLBACKS = {
+    "verda_deepseek": "deepseek-4-1-flash-1017",
+    "verda_kimi": "kimi-k3-1-pro",
+}
+
+
 def _load_saved_runs(agent_name: str, cal: dict[str, Any]) -> list[dict[str, Any]]:
     folder = ARTIFACTS_DIR / "runs" / agent_name
+    using_fallback = False
+    if (not folder.exists() or not any(folder.glob("*.json"))) and ARTIFACTS_DIR == REPO_DIR / "artifacts":
+        fallback_name = _RESULTS_RUN_FALLBACKS.get(agent_name)
+        if fallback_name:
+            fallback = REPO_DIR / "results" / "runs" / fallback_name
+            if fallback.exists():
+                folder = fallback
+                using_fallback = True
     if not folder.exists():
         return []
     out = []
@@ -434,6 +448,8 @@ def _load_saved_runs(agent_name: str, cal: dict[str, Any]) -> list[dict[str, Any
             continue
         ledger = obj.get("ledger", obj) if isinstance(obj, dict) else None
         if not isinstance(ledger, dict) or not verify_seal(ledger):
+            continue
+        if using_fallback and ledger.get("task") not in EVAL_TASKS:
             continue
         cell_key = f"{ledger.get('task')}:{ledger.get('seed')}"
         cell = cal.get("cells", {}).get(cell_key)

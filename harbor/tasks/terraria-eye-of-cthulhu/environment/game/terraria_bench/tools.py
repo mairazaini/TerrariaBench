@@ -4,7 +4,7 @@ Every tool call returns a dict with ``header`` (the deterministic one-line statu
 banner) and ``text`` (header + JSON body). All tools except ``terraria_status``
 spend 1 operation from the current 12-hour window budget. Spending the final
 operation in a window or calling ``end_window`` settles the window and evaluates
-any hidden SLA checkpoints scheduled for that window.
+any SLA checkpoints scheduled for that window.
 """
 from __future__ import annotations
 
@@ -169,10 +169,26 @@ class Episode:
         self._armor_start = self._armor_defense()
         self._armor_peak = self._armor_start
         self._sealed_ledger: dict[str, Any] | None = None
+        self._perished = False  # Hardcore tasks: set at the first death; the agent's run ends there
+        self._frozen: dict[str, Any] | None = None
+        self._death_logged = False
 
     @property
     def done(self) -> bool:
-        return self.world.done
+        return self.world.done or self._perished
+
+    def _check_perished(self, body: dict[str, Any]) -> None:
+        if self.task.hardcore and not self._perished and self.world.deaths > 0:
+            self._perished = True
+            # The dead stay dead: what the run achieved is frozen here. The remaining windows are still
+            # stepped (so the ledger covers the whole task) but can neither add nor remove anything.
+            self._frozen = {"phi": self.world.phi(), "milestones": sorted(self.world.milestones),
+                            "deaths": self.world.deaths, "max_hp": self.world.max_hp,
+                            "eye_fought": "eye" in self.world.boss_min,
+                            "eye_min": round(float(self.world.boss_min.get("eye", 1.0)), 6)}
+            body["hardcore"] = ("You died. This is a Hardcore run: it is over. The remaining windows play out "
+                                "without you.")
+            body["done"] = True
 
     def header(self) -> str:
         w = self.world
@@ -181,7 +197,7 @@ class Episode:
         tier_label = f"{tier} ({TIER_NAMES[tier]})"
         seed_part = "World: locked | " if self.redact_seed else f"Seed: {self.seed} | "
         return (
-            f"[{seed_part}Win: {w.window}/{self.task.windows} ({w.phase}) | "
+            f"[{'HARDCORE | ' if self.task.hardcore else ''}{seed_part}Win: {w.window}/{self.task.windows} ({w.phase}) | "
             f"Ops: {self.ops_left}/{self.window_budget} | HP: {w.hp}/{w.max_hp} | "
             f"Mana: {w.mana}/20 | Def: {w.defense} | NetProg: {w.phi():.1f} | "
             f"TechTier: {tier_label} | Threat: {threat}]"
@@ -191,14 +207,21 @@ class Episode:
         w_idx = self.world.window
         used = self.window_budget - self.ops_left
         res = self.world.settle()
-        sla_checks = [[kind, sla_met(self.world, kind, res["sheltered"])] for dw, kind in self.task.sla if dw == w_idx]
+        # Hardcore: a player who died before this settlement meets no further checkpoint.
+        sla_checks = [[kind, (not self._perished) and sla_met(self.world, kind, res["sheltered"])]
+                      for dw, kind in self.task.sla if dw == w_idx]
+        # A Hardcore run records exactly one death, in the window where it happened.
+        deaths_here = res["deaths"]
+        if self._frozen:
+            deaths_here = 0 if self._death_logged else 1
+        self._death_logged = self._death_logged or deaths_here > 0
         rec = {
             "w": w_idx,
             "attended": self.attended,
             "ops_used": used,
-            "phi": self.world.phi(),
-            "deaths": res["deaths"],
-            "sheltered": res["sheltered"],
+            "phi": self._frozen["phi"] if self._frozen else self.world.phi(),
+            "deaths": deaths_here,
+            "sheltered": False if self._frozen else res["sheltered"],
             "sla": sla_checks,
             "notes": res["notes"],
         }
@@ -220,6 +243,8 @@ class Episode:
             return self._wrap({"ok": False, "error": f"unknown tool '{tool_name}'"})
         if self.world.done:
             return self._wrap({"ok": False, "error": "episode already finished", "done": True})
+        if self._perished:
+            return self._wrap({"ok": False, "error": "you died; this Hardcore run is over", "done": True})
 
         self.attended = True
         cost = TOOL_SCHEMAS[tool_name]["cost"]
@@ -232,13 +257,16 @@ class Episode:
         self.ops_left = max(0, self.ops_left - cost)
         if tool_name == "end_window":
             settled = self._settle_current_window()
-            return self._wrap({"ok": True, "window_settled": settled, "done": self.world.done})
+            body = {"ok": True, "window_settled": settled, "done": self.world.done}
+            self._check_perished(body)
+            return self._wrap(body)
 
         handler = getattr(self, f"_tool_{tool_name}")
         body = handler(**kwargs)
         if self.ops_left <= 0 and not self.world.done:
             body["window_settled"] = self._settle_current_window()
             body["done"] = self.world.done
+        self._check_perished(body)
         return self._wrap(body)
 
     def _armor_defense(self) -> int:
@@ -258,23 +286,25 @@ class Episode:
             return self._sealed_ledger
         while not self.world.done:
             self._settle_current_window()
+            self._check_perished({})  # a Hardcore player who quit alive can still die once, unattended
+        frozen = self._frozen
         raw = {
             "task": self.task.id,
             "seed": self.seed,
             "world_hash": world_hash(self.seed),
             "state_hash": self.world.state_hash(),
             "phi0": self.world.phi0,
-            "phi_final": self.world.phi(),
+            "phi_final": frozen["phi"] if frozen else self.world.phi(),
             "windows": self.windows_log,
-            "milestones": sorted(self.world.milestones),
-            "deaths": self.world.deaths,
+            "milestones": frozen["milestones"] if frozen else sorted(self.world.milestones),
+            "deaths": frozen["deaths"] if frozen else self.world.deaths,
             "eye": {
                 "start_max_hp": self.task.start_max_hp,
-                "max_hp": self.world.max_hp,
+                "max_hp": frozen["max_hp"] if frozen else self.world.max_hp,
                 "armor_start": self._armor_start,
                 "armor_peak": max(self._armor_peak, self._armor_defense()),
-                "fought": "eye" in self.world.boss_min,
-                "min_hp_ratio": round(float(self.world.boss_min.get("eye", 1.0)), 6),
+                "fought": frozen["eye_fought"] if frozen else "eye" in self.world.boss_min,
+                "min_hp_ratio": frozen["eye_min"] if frozen else round(float(self.world.boss_min.get("eye", 1.0)), 6),
             },
             "manifest": run_manifest(calibration),
         }

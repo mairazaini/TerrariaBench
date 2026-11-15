@@ -13,7 +13,7 @@
   "image_digest": "unpinned-local-run",
   "python": "3.12.13",
   "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
-  "source_commit": "da969a7f1a10bb3fa2b7049f2db1a1a24238f57d",
+  "source_commit": "cdaee18568dc34a349636cf54f486fe88e8d5aea",
   "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
  },
  "milestones": [
@@ -33,35 +33,33 @@
   "WORKBENCH"
  ],
  "phi0": 373.575,
- "phi_final": 813.79927,
+ "phi_final": 868.834095,
  "seed": 7,
- "sha256": "8e84d5c62047e78e0aed45749ce3349aea234caf1a277b5256bc76379d967cdb",
- "state_hash": "be3dbff21210a6e6d870e601cb7aef5a4dfef56974b8ea8715e5520cfff8ac9f",
+ "sha256": "1bab68f0c74f0221ac8e8771ea95b6d38666242fdb1d3f0b125297c1c04ca74c",
+ "state_hash": "70544f2b9a07b8ccc19dd2013408cb0387c4be89a145b1e1bb4e4c99e94b0c38",
  "task": "wall-of-flesh",
  "windows": [
   {
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 19,
-   "phi": 533.085,
-   "sheltered": true,
+   "ops_used": 8,
+   "phi": 472.675,
+   "sheltered": false,
    "sla": [],
    "w": 1
   },
   {
    "attended": true,
    "deaths": 0,
-   "notes": [
-    "The Wall of Flesh overwhelmed you and left."
-   ],
-   "ops_used": 20,
-   "phi": 808.64427,
-   "sheltered": false,
+   "notes": [],
+   "ops_used": 8,
+   "phi": 535.905,
+   "sheltered": true,
    "sla": [
     [
      "shelter",
-     false
+     true
     ]
    ],
    "w": 2
@@ -70,20 +68,18 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 19,
-   "phi": 806.78427,
+   "ops_used": 20,
+   "phi": 532.525,
    "sheltered": false,
    "sla": [],
    "w": 3
   },
   {
    "attended": true,
-   "deaths": 1,
-   "notes": [
-    "You were slain (caught in the open)."
-   ],
-   "ops_used": 20,
-   "phi": 809.33927,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 15,
+   "phi": 532.305,
    "sheltered": false,
    "sla": [],
    "w": 4
@@ -92,8 +88,8 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 13,
-   "phi": 809.05427,
+   "ops_used": 8,
+   "phi": 532.505,
    "sheltered": false,
    "sla": [
     [
@@ -105,10 +101,13 @@
   },
   {
    "attended": true,
-   "deaths": 0,
-   "notes": [],
-   "ops_used": 18,
-   "phi": 809.05427,
+   "deaths": 1,
+   "notes": [
+    "The Wall of Flesh overwhelmed you and left.",
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 20,
+   "phi": 823.464095,
    "sheltered": false,
    "sla": [],
    "w": 6
@@ -117,8 +116,8 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 20,
-   "phi": 814.20427,
+   "ops_used": 14,
+   "phi": 822.774095,
    "sheltered": false,
    "sla": [],
    "w": 7
@@ -128,7 +127,7 @@
    "deaths": 0,
    "notes": [],
    "ops_used": 20,
-   "phi": 813.79927,
+   "phi": 822.024095,
    "sheltered": false,
    "sla": [
     [
@@ -142,18 +141,18 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 1,
-   "phi": 813.79927,
+   "ops_used": 20,
+   "phi": 851.464095,
    "sheltered": false,
    "sla": [],
    "w": 9
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 0,
-   "phi": 813.79927,
+   "ops_used": 20,
+   "phi": 857.029095,
    "sheltered": false,
    "sla": [
     [
@@ -164,21 +163,21 @@
    "w": 10
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 0,
-   "phi": 813.79927,
+   "ops_used": 20,
+   "phi": 868.639095,
    "sheltered": false,
    "sla": [],
    "w": 11
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 0,
-   "phi": 813.79927,
+   "ops_used": 20,
+   "phi": 868.834095,
    "sheltered": false,
    "sla": [
     [

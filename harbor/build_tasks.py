@@ -24,7 +24,9 @@ sys.path.insert(0, str(REPO))
 from terraria_bench.grader import grade  # noqa: E402
 from terraria_bench.policies import run_policy_episode  # noqa: E402
 from terraria_bench.provenance import load_calibration  # noqa: E402
-from terraria_bench.tasks import EVAL_TASKS, TASKS  # noqa: E402
+from terraria_bench.tasks import EVAL_TASKS, HARDCORE_TASKS, TASKS  # noqa: E402
+
+BUILT_TASKS = tuple(HARDCORE_TASKS) + tuple(EVAL_TASKS)
 
 TEMPLATE = HERE / "template"
 OUT = HERE / "tasks"
@@ -89,14 +91,31 @@ def build(task_id: str, seed: int, calibration: dict) -> Path:
     return dest
 
 
+def build_stop_early(task_id: str, seed: int, fraction: float = 0.25) -> Path:
+    """A copy of a built task whose 'solution' is the first quarter of the reference run and then nothing.
+    `harbor run -p harbor/baselines/<name> -a oracle` is therefore a stop-early baseline that plays as well
+    as possible before it quits."""
+    name = f"terraria-{task_id}" if seed == 7 else f"terraria-{task_id}-seed{seed}"
+    dest = HERE / "baselines" / f"{name}-stop-early"
+    if dest.exists():
+        shutil.rmtree(dest)
+    shutil.copytree(OUT / name, dest)
+    actions = (dest / "solution" / "actions.jsonl").read_text(encoding="utf-8").splitlines()
+    kept = actions[: int(len(actions) * fraction)]
+    (dest / "solution" / "actions.jsonl").write_text("\n".join(kept) + "\n", encoding="utf-8", newline="\n")
+    print(f"{dest.name}: first {len(kept)} of {len(actions)} oracle calls")
+    return dest
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--tasks", nargs="*", default=list(EVAL_TASKS), choices=list(EVAL_TASKS))
+    parser.add_argument("--tasks", nargs="*", default=list(BUILT_TASKS), choices=list(BUILT_TASKS))
     args = parser.parse_args()
     calibration = load_calibration()
     for task_id in args.tasks:
         build(task_id, args.seed, calibration)
+        build_stop_early(task_id, args.seed)
 
 
 if __name__ == "__main__":

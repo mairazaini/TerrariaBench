@@ -60,7 +60,7 @@
 {\small\color{sbmuted}Junction 2026 --- Break the Agent Track\par}
 \vspace{12pt}
 
-\noindent Reinforcement learning (RL) environments are increasingly central to training and evaluating autonomous agents, yet most agentic benchmarks test short, resettable tasks where time advances only when the agent acts and success is a binary terminal check. We introduce \textbf{TerrariaBench}, a deterministic, long-horizon survival and progression benchmark over the Model Context Protocol (MCP) and the containerized Harbor harness, engineered directly on the anchor-calibration and anti-exploit methodology of StoreBench. An agent operates a procedurally seeded Terraria-like world across 4 to 30 alternating 12-hour Day/Night windows through 24 game tools under a strict per-window operation budget, where simulated time advances as a pure function of actions taken so model latency cannot buy extra time. Pass thresholds are calibrated across 60 task-seed cells against six scripted anchor policies (\texttt{do-nothing}, \texttt{absentee}, \texttt{blast-list}, \texttt{rule-based}, \texttt{smart-triage}, and \texttt{exploiter}) and four structural gates, while twelve closed reward exploits are regression-tested on every commit. Every episode is byte-reproducible from purpose-keyed SHA-256 random streams and sealed ledgers, and an optional \texttt{tModLoader} bridge projects the same decision architecture into live 60\,Hz Terraria. Across the 24-cell evaluation suite, the scripted \texttt{smart-triage} reference achieves a mean composite of 0.982 (100\% pass rate), whereas frontier and open-weight models evaluated on ten live episodes each struggle across three distinct capability axes---long-range strategy planning, short-range tactical execution, and 2D spatial/multimodal modification (Gemini 4 / 2.5: 0.542 composite, 30\% pass; Nemotron 3.5 VL: 0.185 composite, 0\% pass; on \texttt{eye-of-cthulhu:7} Gemini scores 0.120 vs.\ the reference's 0.950). Finally, closed-loop behavior-cloning (BC) LoRA post-training of \texttt{google/gemma-4-E4B-it} on 652 verified expert steps raises mean composite across eight evaluation cells from 0.249 to 0.720 (deaths $13 \to 3$). Initializing wiki-grounded GRPO from the BC LoRA checkpoint with KL regularization ($\beta=0.05$) lifts closed-loop performance over its matched base run from 0.187 to 0.721 (deaths $14 \to 2$, improving 8/8 cells and boosting held-out \texttt{cavern-expedition:7} from 0.082 to 0.688 and unseen-seed \texttt{shelter-crunch:17} from 0.174 to 0.843).
+\noindent Reinforcement learning (RL) environments are increasingly central to training and evaluating autonomous agents, yet most agentic benchmarks test short, resettable tasks where time advances only when the agent acts and success is a binary terminal check. We introduce \textbf{TerrariaBench}, a deterministic, long-horizon survival and progression benchmark over the Model Context Protocol (MCP) and the containerized Harbor harness, engineered directly on the anchor-calibration and anti-exploit methodology of StoreBench. An agent operates a procedurally seeded Terraria-like world across 4 to 30 alternating 12-hour Day/Night windows through 24 game tools under a strict per-window operation budget, where simulated time advances as a pure function of actions taken so model latency cannot buy extra time. Pass thresholds are calibrated across 70 task-seed cells (14 task lenses $\times$ 5 seeds, including two one-life Hardcore headline tasks) against six scripted anchor policies (\texttt{do-nothing}, \texttt{absentee}, \texttt{blast-list}, \texttt{rule-based}, \texttt{smart-triage}, and \texttt{exploiter}) and four structural gates, while twelve closed reward exploits are regression-tested on every commit. Task prompts disclose the full scoring formula, every checkpoint deadline, and the Hardcore rule while keeping the world seed locked. Across the 24-cell evaluation suite, \texttt{smart-triage} achieves 0.982 (100\% pass); across 8-task standard evaluations, Gemini 4 / 2.5 averages 0.652 (47\% pass, 12 runs; 0.884 over 3 runs on \texttt{eye-of-cthulhu:7}), Nemotron 3.5 VL averages 0.144 (0\% pass, 12 runs), Verda DeepSeek V4.1 Flash scores 0.801 (2 cells, 6 runs), and Verda Kimi K3.1 Pro scores 0.975 (2 cells, 6 runs). Adding the one-life Hardcore rule on \texttt{eye-of-cthulhu-hardcore:7} preserves a stark capability gap against \texttt{smart-triage} (0.985, 0 deaths): across 42 replay-verified transcripts, Kimi K3.1 Pro averages 0.759 (9 runs: 6 wins at 1.00, 3 Window-4 deaths at 0.27--0.28 after its own 25-tile arena overwrote its shelter wall without re-checking), Gemma 4 31B averages 0.403, and DeepSeek V4.1 Flash averages 0.284 on the minimal loop (0.840 via Harbor + OpenCode). Across 23 fatal runs, 14 agents explicitly declared themselves safe immediately before dying. On live 60\,Hz Terraria via our \texttt{tModLoader} bridge, a three-tier vision agent reaches 20\% and 22\% Eye progress across two recorded sessions vs.\ 90\% in symbolic MCP. Finally, closed-loop behavior-cloning (BC) LoRA post-training of \texttt{google/gemma-4-E4B-it} on 652 expert steps raises 8-cell mean composite from 0.249 to 0.720 (deaths $13 \to 3$), and BC-initialized wiki-grounded KL-regularized GRPO ($\beta=0.05$) lifts closed-loop composite from 0.187 to 0.721 (deaths $14 \to 2$, improving 8/8 cells and raising held-out \texttt{cavern-expedition:7} from 0.082 to 0.688 and unseen-seed \texttt{shelter-crunch:17} from 0.174 to 0.843).
 
 \vspace{10pt}
 {\small\textbf{Public Set \& Code:} \texttt{https://github.com/mairazaini/TerrariaBench} \hfill \textbf{TerrariaBench}}
@@ -80,9 +80,9 @@ Reinforcement learning with verifiable rewards has become a primary driver of re
 We introduce \textbf{TerrariaBench} (Figure~\ref{fig:overview}), a deterministic, long-horizon survival and boss-progression environment that adapts the StoreBench methodology \citep{raghuvanshi2026storebench} to spatial resource management, tech-tree crafting, base defense, and boss combat. The agent interacts exclusively through 24 MCP tools (also exposed via a \texttt{terraria} CLI inside containerized Harbor sandboxes \citep{harbor2026}) over 4 to 30 alternating 12-hour Day/Night windows. A pure-Python headless simulator enables fast, byte-reproducible rollouts for calibration, exploit testing, and post-training, while a thin \texttt{tModLoader} socket bridge projects the same hierarchical planner onto live 60\,Hz Terraria. Our contributions are threefold:
 
 \begin{itemize}[leftmargin=18pt,itemsep=3pt]
-  \item \textbf{A deterministic, dual-mode long-horizon environment.} TerrariaBench combines spatial exploration, tech-tree dependencies, three perturbation channels (announced, rumored, and silent), and unstated survival deadlines in a single non-resetting world with zero external runtime dependencies.
-  \item \textbf{Calibrated, exploit-hardened evaluation.} Six scripted anchor policies calibrate all 60 task-seed cells (8 evaluation tasks + 4 training tasks across 3 reported and 2 held-out seeds) through four quantitative gates, while 12 known reward exploits are structurally closed and pinned by regression tests.
-  \item \textbf{Measurable frontier gaps and smaller-model improvement.} On complex multi-window tasks such as \texttt{eye-of-cthulhu}, frontier agents score far below the scripted reference due to inspection paralysis and unsequenced preparation, while LoRA post-training on \texttt{google/gemma-4-E4B-it} raises mean composite from 0.249 to 0.720.
+  \item \textbf{A deterministic, dual-mode long-horizon environment.} TerrariaBench combines spatial exploration, tech-tree dependencies, three perturbation channels (announced, rumored, and silent), full checkpoint/scoring disclosure, and one-life Hardcore risk in a single non-resetting world with zero external runtime dependencies, alongside a live 60\,Hz \texttt{tModLoader} bridge.
+  \item \textbf{Calibrated, exploit-hardened evaluation.} Six scripted anchor policies calibrate all 70 task-seed cells (2 Hardcore headline tasks + 8 evaluation tasks + 4 training tasks across 3 reported and 2 held-out seeds) through four quantitative gates, while 12 known reward exploits are structurally closed and pinned by regression tests.
+  \item \textbf{Measurable frontier gaps and smaller-model improvement.} On \texttt{eye-of-cthulhu-hardcore} and long-horizon tasks, frontier agents score below the scripted reference due to stale world-state assumptions, budget miscalculation, and cave return failures (even with full scoring and checkpoint transparency), while LoRA post-training on \texttt{google/gemma-4-E4B-it} raises mean composite from 0.249 to 0.720 (BC) and 0.187 to 0.721 (BC+GRPO).
 \end{itemize}
 
 \section{Related Work}
@@ -147,10 +147,10 @@ World hazards and obligations evolve across alternating 12-hour Day and Night wi
   \item \textbf{Rumored:} vague environmental cues without exact timing or numbers (e.g., \texttt{eye\_spawn}, \texttt{cave\_chill}).
   \item \textbf{Silent:} unannounced hazards visible only through telemetry or combat outcomes (e.g., nocturnal spawn spikes, hidden cavern traps, corruption spread, and Eye of Cthulhu Phase 2 enrage).
 \end{itemize}
-To prevent prompt leakage, evaluation runs set \texttt{redact\_seed=True}, replacing the world seed in the status header with \texttt{World: locked} and withholding all hidden SLA checkpoints from the agent's context.
+To prevent seed overfitting, evaluation runs set \texttt{redact\_seed=True}, replacing the world seed in the status header with \texttt{World: locked}. To eliminate artificial specification surprises, every task prompt (\texttt{Task.prompt}) explicitly states the full composite scoring rule, every SLA checkpoint deadline, and (for Hardcore variants) the one-life termination rule and main causes of death; a test in \texttt{tests/test\_evaluation.py} fails if any graded checkpoint is omitted from the prompt.
 
 \subsection{Tasks as Lenses}
-TerrariaBench defines 12 task lenses over the shared seeded world: 8 evaluation tasks (\texttt{EVAL\_TASKS}) and 4 disjoint shorter-horizon training tasks (\texttt{TRAIN\_TASKS}), summarized in Appendix~\ref{app:tasks}. Each lens configures the horizon $W \in [4, 30]$ windows, per-window operation budget $B \in [11, 20]$, starting kit, event script, and hidden SLA deadlines (e.g., enclosed shelter by dusk, iron-tier gear by window 8, multi-tier boss arena by window 10, Eye of Cthulhu defeat by window 14). Three world seeds (7, 11, 13) form the reported evaluation grid (24 task-seed cells), while seeds 17 and 23 serve as held-out calibration and generalization seeds (60 calibrated cells total).
+TerrariaBench defines 14 task lenses over the shared seeded world: 2 one-life Hardcore variants (\texttt{first-night-hardcore}, \texttt{eye-of-cthulhu-hardcore}), 8 evaluation tasks (\texttt{EVAL\_TASKS}), and 4 disjoint shorter-horizon training tasks (\texttt{TRAIN\_TASKS}), summarized in Appendix~\ref{app:tasks}. Each lens configures the horizon $W \in [4, 30]$ windows, per-window operation budget $B \in [11, 20]$, starting kit, event script, and stated SLA deadlines (e.g., enclosed shelter by dusk, iron-tier gear by window 8, multi-tier boss arena by window 10, Eye of Cthulhu defeat by window 14). Three world seeds (7, 11, 13) form the reported evaluation grid, while seeds 17 and 23 serve as held-out calibration and generalization seeds (70 calibrated cells total).
 
 \subsection{Tool Surface and Metered Time}
 The agent acts through 24 tools spanning five families (Appendix~\ref{app:tools}): Status \& Time (2), Observation \& Spatial Inspection (5), Gathering, Mining \& Navigation (5), Crafting, Building \& Blueprints (6), and Combat \& Boss Control (6). Every tool reply prepends a one-line state header:
@@ -159,8 +159,8 @@ The agent acts through 24 tools spanning five families (Appendix~\ref{app:tools}
 \end{center}
 Every tool call costs 1 operation except \texttt{terraria\_status} (0 operations). Operations do not roll over across windows. Thus, reading the viewport (\texttt{observe\_viewport}) or scanning ores (\texttt{scan\_biome\_and\_ores}) competes directly with gathering, crafting, and combat for the same scarce budget. When operations reach zero or the agent calls \texttt{end\_window}, the remaining ticks of the 12-hour window resolve with the player standing at its current position: an unsheltered agent at night takes hostile damage, and dying forfeits 50\% of raw materials plus operations in the following window.
 
-\subsection{Live \texttt{tModLoader} Bridge and Hierarchical Skill Mode}
-Beyond the fast headless simulator, TerrariaBench includes an optional C\# mod (\texttt{mod/TerrariaRLBridge/}) that forwards live 60\,Hz Terraria state over a JSON-RPC bridge on port 8765 (\texttt{terraria\_bench/human\_recorder.py}). In skill mode (\texttt{terraria\_bench/eye\_planner.py}), a two-tier planner separates long-term strategy (bow/armor tier, Life Crystal target, arrow count, night wall-in policy) from per-step skill selection executed at 60\,Hz by closed-loop mod skills, with \texttt{TERRARIA\_AUTOPILOT=1} providing the deterministic scripted reference.
+\subsection{Live \texttt{tModLoader} Bridge and Real-Game Recording}
+Beyond the fast headless simulator, TerrariaBench includes a C\# \texttt{tModLoader} mod (\texttt{mod/TerrariaRLBridge/}) that exports 60\,Hz Terraria state and referee kill/death telemetry alongside skill macros (\texttt{Skills.cs}) executed via OS keyboard and mouse control (\texttt{real\_game.py}, \texttt{live\_play.py}). A three-tier Gemini vision-and-strategy loop runs against live Terraria pixels, while \texttt{terraria\_bench/real\_eval.py} scores committed recordings offline across 13 Eye-of-Cthulhu progression stages with tamper-evident referee consistency checks.
 
 \section{Grader Design}
 
@@ -177,14 +177,14 @@ where $\Delta\mathrm{net}$ is the growth in Net Progression Value (crafted gear,
 Alongside the composite score, every simulator grade and live \texttt{tModLoader} session reports \textbf{Eye progress} (0--100\%, \texttt{compute\_eye\_progress}), a monotonic high-water-mark metric toward defeating the Eye of Cthulhu: Health (+10\% up to +80 max HP), Armor (+10\% up to 8 defense), Tech-tree milestones (+35\%), Boss damage (+5\% on first hit plus up to +20\% by lowest Eye HP reached), and Boss kill (exact 100\%; capped at 80\% without a kill).
 
 \subsection{Anchor Calibration and Structural Gates}
-For every task-seed cell (60 cells across all 12 tasks and 5 seeds), TerrariaBench runs six scripted anchor policies through the exact tool surface: \texttt{do-nothing}, \texttt{absentee} (calls \texttt{end\_window} every window), \texttt{blast-list} (spends ops on naive gathering/inspection), \texttt{rule-based} (checklist progression), \texttt{smart-triage} (prioritized survival, SLA timing, and combat), and \texttt{exploiter} (replays the playable reward-exploit catalogue). The pass threshold is placed between the top two honest anchors and must pass four automated calibration gates (\texttt{tests/test\_calibration\_gates.py}):
+For every task-seed cell (70 cells across all 14 tasks and 5 seeds), TerrariaBench runs six scripted anchor policies through the exact tool surface: \texttt{do-nothing}, \texttt{absentee} (calls \texttt{end\_window} every window), \texttt{blast-list} (spends ops on naive gathering/inspection), \texttt{rule-based} (checklist progression), \texttt{smart-triage} (prioritized survival, SLA timing, paced housing safety, and combat), and \texttt{exploiter} (replays the playable reward-exploit catalogue). The pass threshold is placed between the top two honest anchors and must pass four automated calibration gates (\texttt{tests/test\_calibration\_gates.py}):
 \begin{enumerate}[leftmargin=18pt,itemsep=2pt]
   \item \textbf{Ordering:} both judgment anchors (\texttt{rule-based}, \texttt{smart-triage}) must strictly outscore \texttt{blast-list}, \texttt{absentee}, and \texttt{do-nothing}.
   \item \textbf{Judgment gap:} the top honest anchor must exceed \texttt{blast-list} by at least 0.15.
   \item \textbf{Flap margin:} the pass threshold must clear adjacent anchors by at least 0.02.
   \item \textbf{Exploit suppression:} \texttt{exploiter} must score below 0.05 and below every honest trading anchor.
 \end{enumerate}
-All 60 cells in \texttt{artifacts/calibration.json} pass all four gates (\texttt{all\_gates\_passed = True}; Figure~\ref{fig:ladder}).
+All 70 cells in \texttt{artifacts/calibration.json} pass all four gates (\texttt{all\_gates\_passed = True}; Figure~\ref{fig:ladder}).
 
 \begin{figure}[t]
 \centering
@@ -232,62 +232,90 @@ In Harbor evaluations, the simulator, sealed calibration, and ledger reside in a
 
 \section{Experimental Setup}
 
-\textbf{Protocol.} We evaluate the six scripted anchors deterministically over all 24 reported cells (8 evaluation tasks $\times$ seeds $\{7, 11, 13\}$). In addition, we run Harbor containerized evaluations \citep{harbor2026} with the OpenCode agent over MCP on \texttt{terraria-first-night} and \texttt{terraria-eye-of-cthulhu}, and record partial live-model ledgers in the Python harness (\texttt{artifacts/runs/}) for Gemini 4 / 2.5, Nemotron 3.5 VL, Gemma 4 E4B Base, and a human operator. All live model rows in Table~\ref{tab:leaderboard} come strictly from sealed ledgers; unrun models are reported as \textit{not run}.
+\textbf{Protocol.} We evaluate all six scripted anchors deterministically across the 24 reported standard evaluation cells (8 evaluation tasks $\times$ seeds $\{7, 11, 13\}$) and both one-life Hardcore headline tasks (\texttt{first-night-hardcore}, \texttt{eye-of-cthulhu-hardcore}). For model evaluation, we combine (i) sealed runs on the 8-task standard grid (\texttt{EVAL\_RESULTS.md}, covering Gemini 4 / 2.5, Nemotron 3.5 VL, Verda Kimi K3.1 Pro, Verda DeepSeek V4.1 Flash, Gemma 4 E4B Base, and a human operator), (ii) 42 single-call minimal-loop transcripts (\texttt{evaluation/run\_model.py}, replayed offline by \texttt{evaluation/judge.py} across Hardcore and normal tasks for Kimi K3.1 Pro, DeepSeek V4.1 Flash, and Gemma 4 31B), (iii) Harbor + OpenCode over MCP trials (\texttt{results/harbor\_agent/}), and (iv) two live 60\,Hz real-Terraria recordings scored offline against referee telemetry (\texttt{terraria\_bench/real\_eval.py}). All model numbers derive strictly from sealed ledgers and engine replay.
 
 \textbf{Post-training setup.} To test whether smaller open models can improve from environment experience, we extract 652 turn-by-turn expert trajectories from \texttt{smart-triage} across the four disjoint training tasks (\texttt{woodland-scramble}, \texttt{ore-rush}, \texttt{slime-rain}, \texttt{shelter-crunch}; seeds 7, 11, 13), keeping only episodes grading $\ge 0.95$ with zero deaths. We fine-tune \texttt{google/gemma-4-E4B-it} with a rank-32 LoRA \citep{hu2022lora} via behavior cloning (\texttt{post\_training/modal\_grpo\_gemma.py}) and evaluate base vs.\ tuned checkpoints with identical prompts and greedy decoding over eight cells spanning seen training cells, unseen seed 17, and unseen evaluation tasks (\texttt{first-night:7}, \texttt{cavern-expedition:7}).
 
 \section{Evaluation Results}
 
-\subsection{Main Benchmark and Harbor Trials}
-Table~\ref{tab:leaderboard} reports the reproducible leaderboard from \texttt{reporting/generate\_report.py}. Across the full 24-cell evaluation suite, \texttt{smart-triage} achieves a mean composite of \textbf{0.982} (100\% pass rate, 57\% Eye progress), \texttt{rule-based} reaches \textbf{0.505} (0\% pass rate), and \texttt{blast-list} scores \textbf{0.116}. All three non-progress baselines---\texttt{do-nothing}, \texttt{absentee}, and \texttt{exploiter}---score exactly \textbf{0.000}.
+\subsection{Standard Grid, Hardcore Gap, and 42-Run Autopsy}
+Table~\ref{tab:leaderboard} reports the reproducible standard leaderboard from \texttt{reporting/generate\_report.py}. Across the full 24-cell evaluation suite, \texttt{smart-triage} achieves a mean composite of \textbf{0.982} (100\% pass rate, 57\% Eye progress), \texttt{rule-based} reaches \textbf{0.505} (0\% pass rate), and \texttt{blast-list} scores \textbf{0.116}. All three non-progress baselines---\texttt{do-nothing}, \texttt{absentee}, and \texttt{exploiter}---score \textbf{0.000}. Notice that repeat runs of one cell are averaged into that cell first so repeated headline episodes do not re-weight a model's row. Across 10 evaluated cells (12 sealed runs), Gemini 4 / 2.5 averages \textbf{0.652} (47\% pass rate; averaging \textbf{0.884} over three uncapped \texttt{eye-of-cthulhu:7} runs: 0.971, 0.682, 1.000), while Nemotron 3.5 VL averages \textbf{0.144} across 10 cells (12 runs, 0\% pass; \textbf{0.108} on \texttt{eye-of-cthulhu:7}). On the 2-cell seed-7 replay subset (\texttt{first-night:7}, \texttt{eye-of-cthulhu:7}), Verda DeepSeek V4.1 Flash averages \textbf{0.801} (50\% pass, 6 runs) and Verda Kimi K3.1 Pro averages \textbf{0.975} (67\% pass, 6 runs).
 
 \begin{table}[t]
 \centering
-\caption{TerrariaBench simulator leaderboard (\texttt{reporting/generate\_report.py}). Scripted anchors span all 24 cells (8 eval tasks $\times$ seeds 7, 11, 13). Live model and human rows reflect only sealed ledgers currently saved in \texttt{artifacts/runs/} and are therefore partial-grid measurements.}
+\caption{TerrariaBench standard simulator leaderboard (\texttt{reporting/generate\_report.py}). Scripted anchors span all 24 cells (8 eval tasks $\times$ seeds 7, 11, 13). Model and human rows average cells first (repeating \texttt{eye-of-cthulhu:7} does not re-weight the mean) over all sealed ledgers in \texttt{artifacts/runs/} and verified normal-task transcripts in \texttt{results/runs/}.}
 \label{tab:leaderboard}
-\begin{tabular}{llrrrr}
+\begin{tabular}{llrrrrr}
 \toprule
-Policy / Model & Status & Episodes & Composite & Pass rate & Eye progress \\
+Policy / Model & Status & Cells & Runs & Composite & Pass rate & Eye progress \\
 \midrule
-\textit{smart-triage} & anchor & 24 & \textbf{0.982} & \textbf{100\%} & \textbf{57\%} \\
-\textit{rule-based} & anchor & 24 & 0.505 & 0\% & 32\% \\
-\textit{blast-list} & anchor & 24 & 0.116 & 0\% & 4\% \\
-\textit{absentee} (stop-early) & anchor & 24 & 0.000 & 0\% & 0\% \\
-\textit{do-nothing} & anchor & 24 & 0.000 & 0\% & 0\% \\
-\textit{exploiter} & anchor & 24 & 0.000 & 0\% & 0\% \\
+\textit{smart-triage} & anchor & 24 & 24 & \textbf{0.982} & \textbf{100\%} & \textbf{57\%} \\
+\textit{rule-based} & anchor & 24 & 24 & 0.505 & 0\% & 32\% \\
+\textit{blast-list} & anchor & 24 & 24 & 0.116 & 0\% & 4\% \\
+\textit{absentee} (stop-early) & anchor & 24 & 24 & 0.000 & 0\% & 0\% \\
+\textit{do-nothing} & anchor & 24 & 24 & 0.000 & 0\% & 0\% \\
+\textit{exploiter} & anchor & 24 & 24 & 0.000 & 0\% & 0\% \\
 \midrule
-Human experts & evaluated & 1 & 0.489 & 0\% & 19\% \\
-Gemini 4 / 2.5 & evaluated & 10 & 0.542 & 30\% & 34\% \\
-Nemotron 3.5 VL & evaluated & 10 & 0.185 & 0\% & 13\% \\
-Gemma 4 E4B Base & evaluated & 4 & 0.046 & 0\% & 12\% \\
+Verda Kimi K3.1 Pro & evaluated & 2 & 6 & 0.975 & 67\% & 70\% \\
+Verda DeepSeek V4.1 Flash & evaluated & 2 & 6 & 0.801 & 50\% & 66\% \\
+Gemini 4 / 2.5 & evaluated & 10 & 12 & 0.652 & 47\% & 45\% \\
+Human experts & evaluated & 1 & 1 & 0.489 & 0\% & 19\% \\
+Nemotron 3.5 VL & evaluated & 10 & 12 & 0.144 & 0\% & 15\% \\
+Gemma 4 E4B Base & evaluated & 4 & 4 & 0.046 & 0\% & 12\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-On the 10-episode live sample (all eight evaluation tasks on seed 7, plus \texttt{first-night} and \texttt{eye-of-cthulhu} on seed 11), Gemini 4 / 2.5 averages \textbf{0.542} composite (3/10 cells passed: \texttt{cavern-expedition}, \texttt{goblin-siege}, \texttt{wall-of-flesh}) and Nemotron 3.5 VL averages \textbf{0.185} (0/10 passed), both far below \texttt{smart-triage} (\textbf{0.982}, 100\% pass rate). Specifically on \texttt{eye-of-cthulhu:7} (14 windows $\times$ 20 ops), the scripted \texttt{smart-triage} reference scores \textbf{0.9500} (100.0\% Eye progress, killing the Eye), whereas Gemini scores \textbf{0.1201} (20.8\% Eye progress) and Nemotron \textbf{0.0143} (7 deaths). Under the containerized Harbor harness on the short 4-window \texttt{terraria-first-night} task, OpenCode with \texttt{gemini-4-carbon}, \texttt{gemini-4-argon}, and \texttt{gemini-4-hydrogen} all reach \textbf{1.000} (matching \texttt{oracle}), while \texttt{nop} scores \textbf{0.000} and \texttt{gemini-3.8-flash} scores \textbf{0.8943}; this confirms that short 4-window survival is within reach of frontier agents, whereas multi-stage progression (\texttt{terraria-eye-of-cthulhu}) exposes a large capability gap.
+\textbf{Why Hardcore exposes the true capability gap (42-run autopsy).} When scoring rules and checkpoints are disclosed on normal soft-death tasks, strong models match or exceed the scripted reference on single runs (\texttt{eye-of-cthulhu:7}: Kimi K3.1 Pro \textbf{0.989}, DeepSeek V4.1 Flash \textbf{0.908} vs.\ reference \textbf{0.950}), yet frequently die during preparation (Kimi dies once in 5 of 6 normal-task runs; DeepSeek dies 5 times in one run and still scores 0.758). Enabling the one-life Hardcore rule (Table~\ref{tab:hardcore}) separates agents cleanly even when all rules are disclosed: on \texttt{eye-of-cthulhu-hardcore:7}, \texttt{smart-triage} scores \textbf{0.985} (0 deaths), whereas DeepSeek averages \textbf{0.284} (3 runs), Gemma 4 31B averages \textbf{0.403} (3 runs), and Kimi K3.1 Pro averages \textbf{0.759} across 9 runs---scoring a perfect \textbf{1.000} on 6/9 runs yet dying in Window 4 at \textbf{0.267--0.283} on 3/9 runs. Over Harbor + OpenCode via MCP, scaffolding lifts DeepSeek V4.1 Flash on \texttt{terraria-eye-of-cthulhu-hardcore} to \textbf{0.840} mean across 3 trials (0.523, 0.996, 1.000), and Kimi scores \textbf{1.000} on the 1 trial that started.
 
-\subsection{Three Failure Areas}
-Table~\ref{tab:areas} groups the evaluation suite into three distinct capability axes, revealing why models fail despite having full tool access and unredacted mechanics:
 \begin{table}[t]
 \centering
-\caption{Mean composite score by failure area across scripted anchors (all 3 reported seeds) and live 6-task evaluations (seed 7).}
+\caption{Hardcore vs.\ normal headline results on seed 7 under full checkpoint and scoring disclosure (\texttt{evaluation/run\_model.py}, replayed in \texttt{RESULTS.md}, 42 transcripts). Number of runs in parentheses.}
+\label{tab:hardcore}
+\begin{tabular}{lcccc}
+\toprule
+Player & \texttt{first-night-hc} & \texttt{eye-cthulhu-hc} & \texttt{first-night} & \texttt{eye-cthulhu} \\
+\midrule
+\textbf{Reference (\textit{smart-triage})} & \textbf{1.000} & \textbf{0.985} & \textbf{1.000} & \textbf{0.950} \\
+Pass threshold & 0.860 & 0.659 & 0.950 & 0.696 \\
+\midrule
+Kimi K3.1 Pro & 0.827 (3) & 0.759 (9) & 0.961 (3) & 0.989 (3) \\
+Gemma 4 31B & 0.648 (3) & 0.403 (3) & 0.716 (3) & 0.711 (3) \\
+DeepSeek V4.1 Flash & 0.660 (3) & 0.284 (3) & 0.695 (3) & 0.908 (3) \\
+Do nothing & 0.000 & 0.000 & 0.000 & 0.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Replaying all 42 transcripts reveals \textbf{23 runs with at least one death} across three failure mechanisms (\texttt{FAILURE\_ANALYSIS.md}):
+(1) \emph{Trusting stale world state} (\textbf{9/23} first deaths, including all 3 of Kimi's Hardcore deaths): building a 25-tile boss arena beside home breaks the shelter wall; 7/9 Kimi runs caused this collision---the 4 that spent one operation re-checking and repaired scored \textbf{1.000}, whereas the 3 that failed to verify or dismissed an \texttt{invalid} warning died in their sleep (\textbf{0.27--0.28}).
+(2) \emph{Unwinnable boss clock} (\textbf{7/23} deaths): summoning the 2,800-HP Eye late in a window when observable per-burst damage makes finishing before window close impossible.
+(3) \emph{Zero cave return margin} (\textbf{7/23} deaths): exhausting operations underground instead of tracking \texttt{navigate\_to} return distance. Across \textbf{14 of the 23 fatal runs}, the model's stated reason for its final action explicitly claimed it was safe immediately before dying.
+
+\textbf{Sim-to-Real 60\,Hz Terraria gap.} In symbolic MCP simulation, the Gemini two-tier agent averages \textbf{90\%} Eye progress (killing the Eye in 3 of 4 runs). Projecting into live 60\,Hz \texttt{tModLoader} Terraria via pixels, keyboard, and mouse (\texttt{real\_eval.py}), two 300-frame live sessions reach \textbf{20\%} Eye progress (\texttt{real\_terraria\_run1.json}: 4/13 stages, 2 deaths) and \textbf{22\%} Eye progress (\texttt{real\_terraria\_run2.json}: 6/13 stages adding furnace smelting and armor equipping, 0 deaths), both stalling at \texttt{ammunition\_ready} with consistent offline referee telemetry.
+
+\subsection{Three Failure Areas}
+Table~\ref{tab:areas} groups the 8-task standard evaluation suite into three capability axes (\texttt{EVAL\_RESULTS.md}):
+\begin{table}[t]
+\centering
+\caption{Mean composite score by failure area across scripted anchors (all 3 reported seeds) and evaluated cells (\texttt{EVAL\_RESULTS.md}).}
 \label{tab:areas}
 \begin{tabular}{llcccc}
 \toprule
 Failure area & Tasks & \textit{smart-triage} & \textit{rule-based} & Gemini 4 / 2.5 & Nemotron 3.5 VL \\
 \midrule
-Long-range strategy planning & \texttt{goblin-siege}, \texttt{eye-of-cthulhu}, & \textbf{0.964} & 0.429 & 0.593 & 0.228 \\
+Long-range strategy planning & \texttt{goblin-siege}, \texttt{eye-of-cthulhu}, & \textbf{0.964} & 0.429 & 0.813 & 0.146 \\
  & \texttt{wall-of-flesh}, \texttt{full-progression} & & & & \\
 Short-range strategy \& execution & \texttt{first-night}, \texttt{blood-moon-survival} & \textbf{1.000} & 0.668 & 0.384 & 0.163 \\
-Multimodal \& 2D spatial mod. & \texttt{arena-architect}, \texttt{cavern-expedition} & \textbf{0.998} & 0.495 & 0.653 & 0.110 \\
+Multimodal \& 2D spatial mod. & \texttt{arena-architect}, \texttt{cavern-expedition} & \textbf{0.998} & 0.495 & 0.653 & 0.108 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{enumerate}[leftmargin=18pt,itemsep=3pt]
-  \item \textbf{Long-range task strategy planning} (Gemini \textbf{0.593}, Nemotron \textbf{0.228} vs.\ \texttt{smart-triage} \textbf{0.964}). Across 12--30 windows, agents fail to pace scarce operations along the tech tree (Work Bench $\to$ Furnace $\to$ Anvil $\to$ Armor/Bow $\to$ Arena) before boss or siege deadlines. Gemini clears the two siege-style lenses (\texttt{goblin-siege:7} 0.900, \texttt{wall-of-flesh:7} 0.911) but collapses when preparation must be sequenced over many windows: 0.120 on \texttt{eye-of-cthulhu:7}, 0.594 on \texttt{eye-of-cthulhu:11}, and 0.438 on the 30-window \texttt{full-progression:7}. Nemotron dies 7 times on each \texttt{eye-of-cthulhu} seed (0.014 and 0.024) and scores 0.017 on \texttt{full-progression:7}.
-  \item \textbf{Short-range task strategy and execution} (Gemini \textbf{0.384}, Nemotron \textbf{0.163} vs.\ \texttt{smart-triage} \textbf{1.000}). Under tight 4--8 window budgets, agents suffer from inspection paralysis (spending ops on \texttt{observe\_viewport} and \texttt{scan\_biome\_and\_ores} instead of acting) or fail to enclose/defend before dusk, triggering death-penalty spirals (50\% material loss + lost next-window ops; e.g., Gemini \texttt{first-night:7}: 0.269 and \texttt{blood-moon-survival:7}: 0.352, one death each).
-  \item \textbf{Multimodal decisions and modifications in 2D space} (Gemini \textbf{0.653}, Nemotron \textbf{0.110} vs.\ \texttt{smart-triage} \textbf{0.998}). Reading 2D tile grids (\texttt{observe\_viewport} PNG + 61$\times$35 ASCII) and modifying 2D structures via flood-fill housing, cavern descent, and multi-tier boss arenas separates models sharply: Nemotron scores 0.0453 on \texttt{arena-architect:7} (3 deaths, 0/3 SLAs) and 0.1739 on \texttt{cavern-expedition:7} (2 deaths), while Gemini scores 0.3793 with 3 deaths on \texttt{arena-architect:7}.
+  \item \textbf{Long-range task strategy planning} (Gemini \textbf{0.813}, Nemotron \textbf{0.146} vs.\ \texttt{smart-triage} \textbf{0.964}). Across 12--30 windows, agents must sequence the tech tree (Work Bench $\to$ Furnace $\to$ Anvil $\to$ Armor/Bow $\to$ Arena) alongside combat deadlines. Uncapped Gemini passes siege and boss lenses (\texttt{goblin-siege:7} 0.988, \texttt{wall-of-flesh:7} 0.988, \texttt{eye-of-cthulhu:11} 0.767, \texttt{eye-of-cthulhu:7} 0.884 mean over 3 runs) yet drops to 0.438 on the 30-window \texttt{full-progression:7} marathon. Nemotron stalls at 0.017 on \texttt{full-progression:7}, 0.038 on \texttt{goblin-siege:7}, 0.108 on \texttt{eye-of-cthulhu:7}, and 0.024 on \texttt{eye-of-cthulhu:11}.
+  \item \textbf{Short-range task strategy and execution} (Gemini \textbf{0.384}, Nemotron \textbf{0.163} vs.\ \texttt{smart-triage} \textbf{1.000}). Under tight 4--8 window budgets, models suffer inspection paralysis or fail to secure housing before dusk (Gemini \texttt{first-night:7}: 0.269, \texttt{first-night:11}: 0.531, \texttt{blood-moon-survival:7}: 0.352; Nemotron: 0.050, 0.117, 0.322).
+  \item \textbf{Multimodal decisions and modifications in 2D space} (Gemini \textbf{0.653}, Nemotron \textbf{0.108} vs.\ \texttt{smart-triage} \textbf{0.998}). Interpreting 2D tile grids (\texttt{observe\_viewport} PNG + 61$\times$35 ASCII) and editing flood-fill shelters or multi-tier arenas separates models sharply: Gemini passes \texttt{cavern-expedition:7} (0.927) yet scores 0.379 on \texttt{arena-architect:7}, while Nemotron scores 0.045 on \texttt{arena-architect:7} and 0.171 on \texttt{cavern-expedition:7}.
 \end{enumerate}
 
 \section{Post-Training Results}
@@ -320,17 +348,17 @@ Task : Seed & Base & BC & BC+GRPO & Pass threshold & Deaths (Base / BC / GRPO) \
 
 \section{Discussion and Limitations}
 
-\textbf{Why short tasks saturate while boss tasks separate.} Harbor trials show that frontier models can already solve 4-window survival (\texttt{terraria-first-night}), whereas 14-window boss progression (\texttt{terraria-eye-of-cthulhu}) exposes severe planning and resource-budget failures. Long-horizon benchmarks should therefore anchor evaluation on multi-stage tasks where early mistakes compound.
+\textbf{Why Hardcore boss tasks separate where short soft-death tasks saturate.} Containerized Harbor trials and 42 minimal-loop replays confirm that 4-window soft-death survival leaves minimal headroom for strong models, whereas one-life Hardcore boss progression (\texttt{terraria-eye-of-cthulhu-hardcore}) exposes compounding spatial-verification failures, unwinnable boss timing, and cave margin exhaustion even when the prompt states every checkpoint and scoring rule. Long-horizon benchmarks should therefore test consequence-bearing world state under full disclosure rather than hiding rubric rules.
 
-\textbf{Limitations.} First, live frontier evaluations in \texttt{artifacts/runs/} cover 10 episodes each for Gemini 4 / 2.5 and Nemotron 3.5 VL (all eight tasks on seed 7 plus two seed-11 cells), 4 for Gemma Base and 1 for a human operator, rather than the full 24-cell grid; expanding full-grid Harbor/OpenCode evaluations across all 8 tasks $\times$ 3 seeds is immediate future work. Second, while closed-loop BC ($0.249 \to 0.720$) and BC-initialized, KL-regularized wiki-grounded GRPO ($0.187 \to 0.721$, deaths $14 \to 2$) substantially improve \texttt{google/gemma-4-E4B-it}, each cell is a single episode, the two base runs differ (0.249 vs.\ 0.187) across evaluation runs, the BC+GRPO adapter passes no calibrated threshold (0/8), and we retain no artifact for GRPO without BC initialization, so we make no claim about it; LoRA weights are hosted externally on Modal rather than in-repo. Third, the headless simulator abstracts continuous 60\,Hz combat physics into discrete metered actions; the \texttt{tModLoader} bridge provides live-game grounding, though end-to-end live-game Eye kills remain ongoing.
+\textbf{Limitations.} First, standard grid evaluations in \texttt{artifacts/runs/} cover 10 cells (12 runs) each for Gemini 4 / 2.5 and Nemotron 3.5 VL, 2 cells (6 runs) each for Verda DeepSeek V4.1 Flash and Verda Kimi K3.1 Pro, 4 for Gemma Base, and 1 for a human operator rather than the full 24-cell grid, while the 42 transcript replays focus on seed 7 across the 4 headline Hardcore/normal tasks (with 9 runs for Kimi on \texttt{eye-of-cthulhu-hardcore} and 3 for other cells); expanding multi-seed Harbor/OpenCode sweeps is immediate future work. Second, while closed-loop BC ($0.249 \to 0.720$) and BC-initialized, KL-regularized wiki-grounded GRPO ($0.187 \to 0.721$, deaths $14 \to 2$) substantially improve \texttt{google/gemma-4-E4B-it}, each cell is a single episode, the two base runs differ (0.249 vs.\ 0.187) across evaluation runs, the BC+GRPO adapter passes 0/8 calibrated thresholds, and open-loop GRPO from base without BC initialization degraded closed-loop survival ($0.187 \to 0.078$, deaths $14 \to 22$); LoRA weights are hosted externally on Modal rather than in-repo. Third, two real-game 60\,Hz \texttt{tModLoader} recordings reach 20\% and 22\% Eye progress (4/13 and 6/13 stages) with zero live-game kills to date.
 
 \section{Conclusion}
 
-We presented \textbf{TerrariaBench}, a deterministic, exploit-hardened survival and boss-progression environment built on StoreBench's anchor-calibrated evaluation methodology. With 60 gate-validated task-seed cells, 12 regression-tested reward exploits, one-command Harbor and Python reproducibility, and demonstrated smaller-model transfer ($0.249 \to 0.720$), TerrariaBench provides a rigorous testbed for diagnosing and training long-horizon autonomous agents.
+We presented \textbf{TerrariaBench}, a deterministic, exploit-hardened survival and boss-progression environment built on StoreBench's anchor-calibrated evaluation methodology. With 70 gate-validated task-seed cells, 12 regression-tested reward exploits, 42 replay-verified transcripts diagnosing concrete failure modes, live 60\,Hz \texttt{tModLoader} grounding, one-command Harbor and Python reproducibility, and demonstrated smaller-model transfer ($0.249 \to 0.720$ BC; $0.187 \to 0.721$ BC+GRPO), TerrariaBench provides a rigorous testbed for diagnosing and training long-horizon autonomous agents.
 
-\paragraph{Reproducibility statement.} All 6 scripted anchors, 4 calibration gates, 12 exploit regressions, and Harbor task-sync checks run deterministically offline via \texttt{uv run python reporting/generate\_report.py}, \texttt{uv run python scripts/run\_judging\_baselines.py}, and \texttt{uv run --extra dev --extra agents pytest}. Harbor tasks are generated from \texttt{harbor/template/} by \texttt{harbor/build\_tasks.py} and verified against the live simulator source hash.
+\paragraph{Reproducibility statement.} All 6 scripted anchors, 4 calibration gates, 12 exploit regressions, 42 transcript replays, and Harbor task-sync checks run deterministically offline via \texttt{uv run python -m evaluation.judge}, \texttt{uv run python reporting/generate\_report.py}, \texttt{uv run python scripts/run\_judging\_baselines.py}, \texttt{uv run python -m terraria\_bench.real\_eval --all --save}, and \texttt{uv run --extra dev --extra agents pytest -q}. Harbor tasks are generated from \texttt{harbor/template/} by \texttt{harbor/build\_tasks.py} and verified against the live simulator source hash.
 
-\paragraph{AI use statement.} Large language models are the subjects of this benchmark; generative AI coding assistants were also used during environment development, test authoring, and manuscript drafting. All claims, tables, and figures were verified directly against exported artifacts (\texttt{artifacts/calibration.json}, \texttt{artifacts/post\_training/bc\_eval.json}, \texttt{artifacts/post\_training/grpo\_eval.json}, \texttt{EVAL\_RESULTS.md}) and passing test suites.
+\paragraph{AI use statement.} Large language models are the subjects of this benchmark; generative AI coding assistants were also used during environment development, test authoring, and manuscript drafting. All claims, tables, and figures were verified directly against exported artifacts (\texttt{artifacts/calibration.json}, \texttt{artifacts/post\_training/bc\_eval.json}, \texttt{artifacts/post\_training/grpo\_eval.json}, \texttt{artifacts/runs/real\_terraria/summary.json}, \texttt{EVAL\_RESULTS.md}, \texttt{RESULTS.md}) and passing test suites.
 
 \paragraph{Ethics statement.} TerrariaBench is a fully synthetic game simulation with no personal data or external network side effects.
 
@@ -341,15 +369,18 @@ We presented \textbf{TerrariaBench}, a deterministic, exploit-hardened survival 
 \section{Task Suite}
 \label{app:tasks}
 
-Table~\ref{tab:tasks} lists all 12 task lenses in TerrariaBench: 8 evaluation tasks and 4 disjoint training tasks.
+Table~\ref{tab:tasks} lists all 14 task lenses in TerrariaBench: 2 one-life Hardcore headline tasks, 8 evaluation tasks, and 4 disjoint training tasks.
 
 \begin{table}[h]
 \centering
-\caption{The 12 TerrariaBench task lenses. All tasks share the deterministic seeded world.}
+\caption{The 14 TerrariaBench task lenses. All tasks share the deterministic seeded world.}
 \label{tab:tasks}
 \begin{tabular}{llcccl}
 \toprule
 Task ID & Split & Windows & Ops/win & Events & Title \\
+\midrule
+\texttt{first-night-hardcore} & hardcore & 4 & 20 & 1 & Survive the first night (Hardcore) \\
+\texttt{eye-of-cthulhu-hardcore} & hardcore & 14 & 20 & 2 & Defeat the Eye (Hardcore) \\
 \midrule
 \texttt{first-night} & eval & 4 & 20 & 1 & Survive the first night \\
 \texttt{cavern-expedition} & eval & 10 & 16 & 1 & Go deep and come back \\
@@ -386,16 +417,18 @@ For RL training, TerrariaBench exports a per-window dense reward channel clipped
 \section{Calibration Tables}
 \label{app:calibration}
 
-Table~\ref{tab:calibration} reports the exact calibrated anchor scores and pass thresholds across seeds $\{7, 11, 13\}$ from \texttt{artifacts/calibration.json}. All 60 cells (including held-out seeds 17 and 23 and the 4 training tasks) pass all four calibration gates.
+Table~\ref{tab:calibration} reports the exact calibrated anchor scores and pass thresholds across seeds $\{7, 11, 13\}$ from \texttt{artifacts/calibration.json}. All 70 cells (including held-out seeds 17 and 23 and the 4 training tasks) pass all four calibration gates.
 
 \begin{table}[h]
 \centering
-\caption{Anchor composites and calibrated pass thresholds for the 8 evaluation tasks (seeds 7 / 11 / 13). BL = \texttt{blast-list}, RB = \texttt{rule-based}, ST = \texttt{smart-triage}. \texttt{do-nothing}, \texttt{absentee}, and \texttt{exploiter} score $0.00$ across all cells.}
+\caption{Anchor composites and calibrated pass thresholds for the Hardcore and evaluation tasks (seeds 7 / 11 / 13). BL = \texttt{blast-list}, RB = \texttt{rule-based}, ST = \texttt{smart-triage}. \texttt{do-nothing}, \texttt{absentee}, and \texttt{exploiter} score $0.00$ across all cells.}
 \label{tab:calibration}
 \begin{tabular}{lcccc}
 \toprule
 Task & BL & RB & ST & Threshold \\
 \midrule
+\texttt{first-night-hardcore} & 0.03/0.03/0.03 & 0.72/0.59/0.73 & 1.00/1.00/1.00 & 0.86/0.79/0.86 \\
+\texttt{eye-of-cthulhu-hardcore} & 0.01/0.01/0.01 & 0.33/0.32/0.45 & 0.98/0.96/0.96 & 0.66/0.64/0.71 \\
 \texttt{first-night} & 0.08/0.09/0.10 & 0.90/0.59/0.89 & 1.00/1.00/1.00 & 0.95/0.79/0.95 \\
 \texttt{cavern-expedition} & 0.15/0.06/0.11 & 0.80/0.52/0.56 & 1.00/0.99/1.00 & 0.90/0.75/0.78 \\
 \texttt{goblin-siege} & 0.25/0.25/0.07 & 0.63/0.63/0.63 & 0.95/0.93/0.95 & 0.79/0.78/0.79 \\

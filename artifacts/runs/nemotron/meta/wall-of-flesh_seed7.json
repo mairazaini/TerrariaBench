@@ -1,0 +1,16 @@
+{
+  "task": "wall-of-flesh",
+  "seed": 7,
+  "run": 1,
+  "turns": 101,
+  "max_turns": 600,
+  "ended_by": "episode_complete",
+  "agent": "nemotron",
+  "model": "nemotron-3.5-super-vl",
+  "agent_stats": {
+    "live_calls": 101,
+    "live_errors": 0,
+    "last_error": ""
+  },
+  "ledger_sha256": "f4a6bd9658ec6880f47c4e9627b9217dae85f8b8d483f493226485b5944624a4"
+}

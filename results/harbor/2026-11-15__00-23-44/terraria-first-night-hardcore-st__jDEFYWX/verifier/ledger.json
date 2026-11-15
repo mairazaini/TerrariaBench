@@ -1,0 +1,94 @@
+{
+ "deaths": 0,
+ "eye": {
+  "armor_peak": 3,
+  "armor_start": 0,
+  "fought": false,
+  "max_hp": 100,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "a5a810b1cba54deca4763eddf79ef69aa93e40c8bbc07bb3323a22dbeb0c61ac",
+  "image_digest": "terrariabench-harbor-game",
+  "python": "3.11.18",
+  "seed_data_sha256": "c3529f17c34fdb5e5149f999a4928ba182a6e216d6b17ae01706fd5bffe80845",
+  "source_commit": "unknown",
+  "source_hash": "d980165f6117a07ca80d1c996b1cd6b64df4f4e34e693df41cfc2ed68593b564"
+ },
+ "milestones": [
+  "CAVERN",
+  "CRAFT:furnace",
+  "CRAFT:wood_armor",
+  "CRAFT:wooden_sword",
+  "CRAFT:workbench",
+  "FURNACE",
+  "SHELTER",
+  "T1",
+  "WORKBENCH"
+ ],
+ "phi0": 0.48,
+ "phi_final": 119.145,
+ "seed": 7,
+ "sha256": "1097fcb5c52201237ced6ca57c509426f8865c65bb008bee97c0a4ff8dea6ca9",
+ "state_hash": "11293da21f63be47885da72b891156e1f613900f520676545f19d19f6fd6cf91",
+ "task": "first-night-hardcore",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 16,
+   "phi": 119.145,
+   "sheltered": true,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 119.145,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 119.145,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:1",
+     true
+    ]
+   ],
+   "w": 3
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 119.145,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 4
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

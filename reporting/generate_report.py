@@ -36,7 +36,6 @@ HEADLINE_MODELS = (("gemini", "Gemini 4 / 2.5"), ("nemotron", "Nemotron 3.5 VL")
 
 BC_EVAL = REPO / "artifacts" / "post_training" / "bc_eval.json"
 GRPO_EVAL = REPO / "artifacts" / "post_training" / "grpo_eval.json"
-REAL_SCORE = REPO / "artifacts" / "runs" / "real_terraria" / "latest_score.json"
 EVAL_STANDARD_JSON = REPO / "artifacts" / "runs" / "eval_standard.json"
 OUT = REPO / "EVAL_RESULTS.md"
 
@@ -91,6 +90,66 @@ def _headline_section() -> list[str]:
             f"| **{label}, {len(runs)} runs** | | **{sum(comps) / len(comps):.3f}** "
             f"({min(comps):.3f}-{max(comps):.3f}) | **{sum(eyes) / len(eyes):.0f}%** | | | | | | "
             f"**{sum(1 for r in runs if r.get('passed'))}/{len(runs)}** |")
+    lines.append("")
+    return lines
+
+
+def _real_game_section() -> list[str]:
+    """Same goal, same model family, two worlds: the simulator ledgers against the real-game recordings."""
+    from terraria_bench.real_eval import STAGES, score_all
+
+    rows = score_all(save=True)
+    if not rows:
+        return []
+    cal = _reference_calibration()
+    sim = [r for r in _load_saved_runs("gemini", cal) if r["cell"].startswith("eye-of-cthulhu:")]
+    lines = [
+        "## Simulator vs. real Terraria (same goal: kill the Eye of Cthulhu)",
+        "",
+        "Rescore the committed real-game recordings with `python -m terraria_bench.real_eval --all --save` "
+        "(no game, model or network needed; writes `artifacts/runs/real_terraria/`). The scorer reads kills "
+        "and deaths from the game's own referee block and marks a recording inconsistent if they disagree "
+        "with the claimed score.",
+        "",
+        "| World | Agent | Runs | Eye killed | Mean Eye progress | Deaths (total) |",
+        "|:---|:---|---:|---:|---:|---:|",
+    ]
+    if sim:
+        kills = sum(1 for r in sim if float(r.get("eye_progress") or 0.0) >= 1.0)
+        prog = sum(100.0 * float(r.get("eye_progress") or 0.0) for r in sim) / len(sim)
+        deaths = sum(int((r.get("meta") or {}).get("deaths", r.get("deaths", 0)) or 0) for r in sim)
+        lines.append(
+            f"| Simulator (symbolic state, MCP tools) | Gemini two-tier | {len(sim)} | {kills}/{len(sim)} "
+            f"| {prog:.0f}% | {deaths} |"
+        )
+    model_rows = [r for r in rows if r["player"] == "model"]
+    for label, group in (("Gemini three-tier", model_rows), ("Human reference", [r for r in rows if r["player"] != "model"])):
+        if not group:
+            continue
+        kills = sum(1 for r in group if r["eye_killed"])
+        prog = sum(r["eye_progress_pct"] for r in group) / len(group)
+        lines.append(
+            f"| Real game (pixels, keyboard and mouse) | {label} | {len(group)} | {kills}/{len(group)} "
+            f"| {prog:.0f}% | {sum(r['deaths'] for r in group)} |"
+        )
+    lines += ["", "Where each real-game recording stops on the road to the Eye:", "",
+              "| Stage | " + " | ".join(f"`{Path(r['recording']).stem}` ({r['player']})" for r in rows) + " |",
+              "|:---|" + ":---:|" * len(rows)]
+    for stage in STAGES:
+        lines.append(f"| {stage.replace('_', ' ')} | "
+                     + " | ".join("done" if r["task_checklist"].get(stage) else "-" for r in rows) + " |")
+    lines.append("")
+    for r in rows:
+        t = r["trajectory"]
+        lat = ", ".join(f"{k} {v:.1f}s" for k, v in t["median_latency_s"].items()) or "n/a"
+        gained = ", ".join(t["milestones_gained_in_recording"]) or "none"
+        lines.append(
+            f"- `{Path(r['recording']).name}`: house built: {'yes' if r['house_built'] else 'no'}; "
+            f"{r['stages_done']}/{r['stages_total']} stages; first unmet stage `{r['stalled_at']}`; "
+            f"new milestones across the {r['frames']} recorded frames (turns {t['first_turn']}-{t['last_turn']}): "
+            f"{gained}; deaths {r['deaths']}; median model latency: {lat}; "
+            f"referee check: {'consistent' if r['referee']['consistent'] else 'not available or inconsistent'}."
+        )
     lines.append("")
     return lines
 
@@ -228,24 +287,7 @@ def build_markdown(report: dict | None = None) -> str:
                 "",
             ]
 
-    if REAL_SCORE.exists():
-        rs = json.loads(REAL_SCORE.read_text(encoding="utf-8"))
-        ms = ", ".join(rs.get("milestones") or []) or "none"
-        lines += [
-            "## Real Terraria (tModLoader live session)",
-            "",
-            f"Reconciled from `{rs.get('recording', 'artifacts/recordings/real_terraria_live.json')}` "
-            f"via `python -m terraria_bench.real_eval --save` (`artifacts/runs/real_terraria/latest_score.json`):",
-            "",
-            "| Metric | Value |",
-            "|:---|---:|",
-            f"| Eye progress | {float(rs.get('eye_progress_pct', 0.0)):.1f}% |",
-            f"| Passed (Eye killed) | {'yes' if rs.get('passed') else 'no'} |",
-            f"| Recorded frames | {int(rs.get('frames', 0))} |",
-            f"| Deaths | {int(rs.get('deaths', 0))} |",
-            f"| Milestones | {ms} |",
-            "",
-        ]
+    lines += _real_game_section()
 
     return "\n".join(lines)
 

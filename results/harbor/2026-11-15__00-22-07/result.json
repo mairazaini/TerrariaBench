@@ -1,0 +1,40 @@
+{
+    "schema_version": 1,
+    "id": "0c2aab3b-a358-4fcb-b998-e2233098ec46",
+    "started_at": "2026-11-15T00:22:07.575702",
+    "updated_at": "2026-11-15T00:22:33.768304",
+    "finished_at": "2026-11-15T00:22:33.768304",
+    "n_total_trials": 1,
+    "stats": {
+        "n_completed_trials": 1,
+        "n_errored_trials": 0,
+        "n_running_trials": 0,
+        "n_pending_trials": 0,
+        "n_cancelled_trials": 0,
+        "n_retries": 0,
+        "evals": {
+            "oracle__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "mean": 0.1738
+                    }
+                ],
+                "pass_at_k": {},
+                "reward_stats": {
+                    "reward": {
+                        "0.1738": [
+                            "terraria-eye-of-cthulhu-hardcore__PRVPAe9"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        },
+        "n_input_tokens": null,
+        "n_cache_tokens": null,
+        "n_output_tokens": null,
+        "cost_usd": null
+    }
+}

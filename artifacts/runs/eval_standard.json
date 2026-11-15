@@ -96,57 +96,68 @@
       "survival": 0.875,
       "sla": 1.0,
       "windows": 4.0,
-      "eye_progress": 0.1875
+      "eye_progress": 0.1875,
+      "runs": 1
     },
     {
       "name": "Gemini 4 / 2.5",
       "status": "evaluated",
       "episodes": 10,
-      "composite": 0.5422,
-      "pass_rate": 0.3,
-      "business": 0.4908,
-      "reliability": 0.6129,
-      "continuity": 0.7599,
-      "survival": 0.6504,
-      "sla": 0.5755,
-      "windows": 7.9,
-      "eye_progress": 0.3442
+      "composite": 0.6523,
+      "pass_rate": 0.4667,
+      "business": 0.5833,
+      "reliability": 0.7556,
+      "continuity": 0.9283,
+      "survival": 0.7758,
+      "sla": 0.7355,
+      "windows": 10.1,
+      "eye_progress": 0.4462,
+      "runs": 12
     },
     {
       "name": "Nemotron 3.5 VL",
       "status": "evaluated",
       "episodes": 10,
-      "composite": 0.1846,
+      "composite": 0.1436,
       "pass_rate": 0.0,
-      "business": 0.128,
-      "reliability": 0.2859,
-      "continuity": 0.3779,
-      "survival": 0.3835,
-      "sla": 0.1883,
-      "windows": 10.0,
-      "eye_progress": 0.134
+      "business": 0.0768,
+      "reliability": 0.283,
+      "continuity": 0.3327,
+      "survival": 0.3892,
+      "sla": 0.1767,
+      "windows": 11.2,
+      "eye_progress": 0.1513,
+      "runs": 12
     },
     {
       "name": "Verda DeepSeek V4.1 Flash",
-      "status": "not run",
-      "episodes": 0,
-      "composite": null,
-      "pass_rate": null,
-      "business": null,
-      "reliability": null,
-      "continuity": null,
-      "eye_progress": null
+      "status": "evaluated",
+      "episodes": 2,
+      "composite": 0.8014,
+      "pass_rate": 0.5,
+      "business": 0.7788,
+      "reliability": 0.7811,
+      "continuity": 1.0,
+      "survival": 0.7288,
+      "sla": 0.8334,
+      "windows": 9.0,
+      "eye_progress": 0.6587,
+      "runs": 6
     },
     {
       "name": "Verda Kimi K3.1 Pro",
-      "status": "not run",
-      "episodes": 0,
-      "composite": null,
-      "pass_rate": null,
-      "business": null,
-      "reliability": null,
-      "continuity": null,
-      "eye_progress": null
+      "status": "evaluated",
+      "episodes": 2,
+      "composite": 0.9749,
+      "pass_rate": 0.6667,
+      "business": 1.0,
+      "reliability": 0.8745,
+      "continuity": 1.0,
+      "survival": 0.8601,
+      "sla": 0.8889,
+      "windows": 9.0,
+      "eye_progress": 0.6967,
+      "runs": 6
     },
     {
       "name": "Gemma Base",
@@ -160,7 +171,8 @@
       "survival": 0.2437,
       "sla": 0.1458,
       "windows": 5.25,
-      "eye_progress": 0.1187
+      "eye_progress": 0.1187,
+      "runs": 4
     },
     {
       "name": "Gemma Tuned",
@@ -171,7 +183,8 @@
       "business": null,
       "reliability": null,
       "continuity": null,
-      "eye_progress": null
+      "eye_progress": null,
+      "runs": 0
     }
   ],
   "table3": [

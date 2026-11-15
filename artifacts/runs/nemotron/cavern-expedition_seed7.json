@@ -13,11 +13,10 @@
   "image_digest": "unpinned-local-run",
   "python": "3.12.13",
   "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
-  "source_commit": "da969a7f1a10bb3fa2b7049f2db1a1a24238f57d",
+  "source_commit": "cdaee18568dc34a349636cf54f486fe88e8d5aea",
   "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
  },
  "milestones": [
-  "CAVERN",
   "CRAFT:furnace",
   "CRAFT:torch",
   "CRAFT:workbench",
@@ -26,10 +25,10 @@
   "WORKBENCH"
  ],
  "phi0": 0.48,
- "phi_final": 20.45,
+ "phi_final": 24.37,
  "seed": 7,
- "sha256": "6e98710604de544a2f7a5a2d19179696f6df626f6b12830c4939872c957d79c5",
- "state_hash": "75f5e95ddee8327fb8432ecfb10c705cde4c493036be2a7b3ea999345091dc20",
+ "sha256": "2cca12024974c49a0a7d9c0d2b6ee40c0bc3ea138107e5ed69e7a363d0367b7d",
+ "state_hash": "32d53dde03c82a09c455f95bcb91b0958ca22d96c080a4c461c90cb596ea22f7",
  "task": "cavern-expedition",
  "windows": [
   {
@@ -37,7 +36,7 @@
    "deaths": 0,
    "notes": [],
    "ops_used": 10,
-   "phi": 10.805,
+   "phi": 10.61,
    "sheltered": false,
    "sla": [],
    "w": 1
@@ -47,7 +46,7 @@
    "deaths": 0,
    "notes": [],
    "ops_used": 16,
-   "phi": 46.43,
+   "phi": 22.15,
    "sheltered": false,
    "sla": [
     [
@@ -59,27 +58,27 @@
   },
   {
    "attended": true,
-   "deaths": 1,
-   "notes": [
-    "You were slain (caught in the open)."
-   ],
-   "ops_used": 16,
-   "phi": 44.955,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 11,
+   "phi": 23.03,
    "sheltered": false,
    "sla": [],
    "w": 3
   },
   {
    "attended": true,
-   "deaths": 0,
-   "notes": [],
-   "ops_used": 3,
-   "phi": 44.955,
-   "sheltered": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 2,
+   "phi": 0.48,
+   "sheltered": false,
    "sla": [
     [
      "depth:50",
-     true
+     false
     ]
    ],
    "w": 4
@@ -88,9 +87,9 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 3,
-   "phi": 44.955,
-   "sheltered": true,
+   "ops_used": 10,
+   "phi": 3.795,
+   "sheltered": false,
    "sla": [],
    "w": 5
   },
@@ -100,8 +99,8 @@
    "notes": [
     "You were slain (caught in the open)."
    ],
-   "ops_used": 16,
-   "phi": 19.01,
+   "ops_used": 3,
+   "phi": 0.48,
    "sheltered": false,
    "sla": [],
    "w": 6
@@ -110,9 +109,9 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 3,
-   "phi": 19.01,
-   "sheltered": true,
+   "ops_used": 2,
+   "phi": 0.48,
+   "sheltered": false,
    "sla": [],
    "w": 7
   },
@@ -120,8 +119,8 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 2,
-   "phi": 19.01,
+   "ops_used": 8,
+   "phi": 24.37,
    "sheltered": true,
    "sla": [
     [
@@ -135,9 +134,9 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 8,
-   "phi": 20.45,
-   "sheltered": false,
+   "ops_used": 2,
+   "phi": 24.37,
+   "sheltered": true,
    "sla": [],
    "w": 9
   },
@@ -146,8 +145,8 @@
    "deaths": 0,
    "notes": [],
    "ops_used": 1,
-   "phi": 20.45,
-   "sheltered": false,
+   "phi": 24.37,
+   "sheltered": true,
    "sla": [
     [
      "crystal:1",

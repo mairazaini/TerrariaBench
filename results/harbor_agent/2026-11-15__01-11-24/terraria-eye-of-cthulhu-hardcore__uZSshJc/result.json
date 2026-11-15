@@ -1,0 +1,135 @@
+{
+    "schema_version": 1,
+    "id": "2b32abfc-10b0-4e13-a4e6-35e4120b4567",
+    "task_name": "terraria-eye-of-cthulhu-hardcore",
+    "trial_name": "terraria-eye-of-cthulhu-hardcore__uZSshJc",
+    "trial_uri": "file:///C:/Users/User/AppData/Local/Temp/harbor_agent/2026-11-15__01-11-24/terraria-eye-of-cthulhu-hardcore__uZSshJc",
+    "task_id": {
+        "path": "harbor\\tasks\\terraria-eye-of-cthulhu-hardcore"
+    },
+    "source": null,
+    "task_checksum": "78a03030f65cf96ebee9661c17658e543accd8601fbbca96e873870195ec8e3a",
+    "config": {
+        "schema_version": 1,
+        "task": {
+            "path": "harbor\\tasks\\terraria-eye-of-cthulhu-hardcore",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "terraria-eye-of-cthulhu-hardcore__uZSshJc",
+        "trials_dir": "C:\\Users\\User\\AppData\\Local\\Temp\\harbor_agent\\2026-11-15__01-11-24",
+        "install_only": false,
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "opencode",
+            "import_path": null,
+            "model_name": "verda/kimi-k3-1-pro",
+            "base_url": null,
+            "model_api_key_name": "VERDA_API_KEY",
+            "model_api_format": null,
+            "skip_model_parsing": false,
+            "n_concurrent": null,
+            "concurrency_group": null,
+            "skills": [],
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "resume_trajectory": false,
+            "load_trajectory": null,
+            "extra_allowed_hosts": [],
+            "kwargs": {
+                "opencode_config": {
+                    "provider": {
+                        "verda": {
+                            "npm": "@ai-sdk/openai-compatible",
+                            "options": {
+                                "baseURL": "https://inference.verda.com/v1",
+                                "apiKey": "{env:VERDA_API_KEY}"
+                            },
+                            "models": {
+                                "deepseek-4-1-flash-1017": {},
+                                "kimi-k3-1-pro": {}
+                            }
+                        }
+                    }
+                }
+            },
+            "mcp_servers": []
+        },
+        "user_agent": null,
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "stream": false,
+            "cpu_enforcement_policy": "auto",
+            "memory_enforcement_policy": "auto",
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "override_tpu": null,
+            "mounts": null,
+            "extra_docker_compose": [],
+            "kwargs": {},
+            "extra_allowed_hosts": []
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "override_error_policy": {},
+        "artifacts": [],
+        "extra_instruction_paths": [],
+        "extra_instructions": [],
+        "job_id": "34cddcd8-6b58-4edc-a99c-a570bd3e2563",
+        "source_trial": null
+    },
+    "agent_info": {
+        "name": "opencode",
+        "version": "unknown",
+        "model_info": {
+            "name": "verda/kimi-k3-1-pro",
+            "provider": null
+        }
+    },
+    "agent_result": null,
+    "verifier_result": null,
+    "verifier_environment_mode": "shared",
+    "exception_info": {
+        "exception_type": "AgentSetupTimeoutError",
+        "exception_message": "Agent setup timed out after 360.0 seconds",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\python\\cpython-3.14-windows-x86_64-none\\Lib\\asyncio\\tasks.py\", line 488, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\agents\\installed\\base.py\", line 1184, in setup\n    await self.install(environment)\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\agents\\installed\\opencode.py\", line 437, in install\n    await self.exec_as_agent(\n    ...<13 lines>...\n    )\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\agents\\installed\\base.py\", line 1114, in exec_as_agent\n    return await self._exec(\n           ^^^^^^^^^^^^^^^^^\n        environment, command, env=env, cwd=cwd, timeout_sec=timeout_sec\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\agents\\installed\\base.py\", line 1065, in _exec\n    result = await environment.exec(\n             ^^^^^^^^^^^^^^^^^^^^^^^\n    ...<5 lines>...\n    )\n    ^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\environments\\docker\\docker.py\", line 1407, in exec\n    return await self._compose_exec(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<6 lines>...\n    )\n    ^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\environments\\docker\\docker.py\", line 1484, in _compose_exec\n    return await self._run_docker_compose_command(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n    )\n    ^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\environments\\docker\\docker.py\", line 801, in _run_docker_compose_command\n    result = await self._collect_buffered_output(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<3 lines>...\n    )\n    ^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\environments\\docker\\docker.py\", line 831, in _collect_buffered_output\n    stdout_bytes, stderr_bytes = await process.communicate(input=stdin_data)\n                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\python\\cpython-3.14-windows-x86_64-none\\Lib\\asyncio\\subprocess.py\", line 201, in communicate\n    stdin, stdout, stderr = await tasks.gather(stdin, stdout, stderr)\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\python\\cpython-3.14-windows-x86_64-none\\Lib\\asyncio\\subprocess.py\", line 181, in _read_stream\n    output = await stream.read()\n             ^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\python\\cpython-3.14-windows-x86_64-none\\Lib\\asyncio\\streams.py\", line 723, in read\n    block = await self.read(self._limit)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\python\\cpython-3.14-windows-x86_64-none\\Lib\\asyncio\\streams.py\", line 730, in read\n    await self._wait_for_data('read')\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\python\\cpython-3.14-windows-x86_64-none\\Lib\\asyncio\\streams.py\", line 539, in _wait_for_data\n    await self._waiter\nasyncio.exceptions.CancelledError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\trial\\trial.py\", line 1911, in _setup_agent\n    await asyncio.wait_for(\n    ...<2 lines>...\n    )\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\python\\cpython-3.14-windows-x86_64-none\\Lib\\asyncio\\tasks.py\", line 487, in wait_for\n    async with timeouts.timeout(timeout):\n               ~~~~~~~~~~~~~~~~^^^^^^^^^\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\python\\cpython-3.14-windows-x86_64-none\\Lib\\asyncio\\timeouts.py\", line 114, in __aexit__\n    raise TimeoutError from exc_val\nTimeoutError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\trial\\trial.py\", line 613, in run\n    await self._prepare()\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\trial\\trial.py\", line 659, in _prepare\n    await self._setup_agent()\n  File \"C:\\Users\\User\\AppData\\Roaming\\uv\\tools\\harbor\\Lib\\site-packages\\harbor\\trial\\trial.py\", line 1916, in _setup_agent\n    raise AgentSetupTimeoutError(\n        f\"Agent setup timed out after {self._agent_setup_timeout_sec} seconds\"\n    ) from exc\nharbor.trial.errors.AgentSetupTimeoutError: Agent setup timed out after 360.0 seconds\n",
+        "occurred_at": "2026-11-14T23:17:51.244614Z",
+        "policy": {
+            "should_retry": true,
+            "should_grade": false,
+            "has_valid_reward": false
+        }
+    },
+    "started_at": "2026-11-14T23:11:33.871901Z",
+    "finished_at": "2026-11-14T23:18:10.110455Z",
+    "environment_setup": {
+        "started_at": "2026-11-14T23:11:34.165779Z",
+        "finished_at": "2026-11-14T23:11:50.904399Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-11-14T23:11:50.904492Z",
+        "finished_at": "2026-11-14T23:17:50.926993Z"
+    },
+    "agent_execution": null,
+    "verifier": null,
+    "step_results": null,
+    "reward_valid": false
+}

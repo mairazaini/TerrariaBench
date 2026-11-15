@@ -1,10 +1,10 @@
 {
- "deaths": 2,
+ "deaths": 1,
  "eye": {
-  "armor_peak": 13,
+  "armor_peak": 16,
   "armor_start": 0,
   "fought": false,
-  "max_hp": 140,
+  "max_hp": 100,
   "min_hp_ratio": 1.0,
   "start_max_hp": 100
  },
@@ -13,7 +13,7 @@
   "image_digest": "unpinned-local-run",
   "python": "3.12.13",
   "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
-  "source_commit": "da969a7f1a10bb3fa2b7049f2db1a1a24238f57d",
+  "source_commit": "cdaee18568dc34a349636cf54f486fe88e8d5aea",
   "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
  },
  "milestones": [
@@ -23,32 +23,32 @@
   "CRAFT:anvil",
   "CRAFT:campfire",
   "CRAFT:furnace",
+  "CRAFT:gold_armor",
   "CRAFT:gold_bar",
   "CRAFT:gold_bow",
+  "CRAFT:iron_armor",
   "CRAFT:iron_bar",
-  "CRAFT:iron_bow",
   "CRAFT:lesser_healing_potion",
-  "CRAFT:silver_armor",
   "CRAFT:silver_bar",
   "CRAFT:silver_bow",
   "CRAFT:wood_platform",
   "CRAFT:wooden_arrow",
   "CRAFT:workbench",
-  "CRYSTAL1",
-  "CRYSTAL2",
   "FURNACE",
   "SHELTER",
+  "SIEGE",
   "T1",
   "T2",
   "T3",
+  "T4",
   "UNDERWORLD",
   "WORKBENCH"
  ],
  "phi0": 108.145,
- "phi_final": 439.855,
+ "phi_final": 658.765,
  "seed": 7,
- "sha256": "e0c8a1e65e7c04a6acdc190738a7f6afdf80fd5ef4735100abf79bb80daa6812",
- "state_hash": "0cd37e1789a496593ffd2e7e46d44787685e99e807b664e8f95295733c0ba79d",
+ "sha256": "3a5d728cf47d6f7f7009095908eecbd03a20c18f6ba2d00855eb1a5b887008d6",
+ "state_hash": "148659f62a288a9ba0f51c633e9e3c7159a8dd4cfac0137edc0b87a72788339f",
  "task": "goblin-siege",
  "windows": [
   {
@@ -56,7 +56,7 @@
    "deaths": 0,
    "notes": [],
    "ops_used": 20,
-   "phi": 193.515,
+   "phi": 170.135,
    "sheltered": true,
    "sla": [],
    "w": 1
@@ -65,8 +65,8 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 20,
-   "phi": 209.14,
+   "ops_used": 14,
+   "phi": 194.595,
    "sheltered": true,
    "sla": [
     [
@@ -81,7 +81,7 @@
    "deaths": 0,
    "notes": [],
    "ops_used": 20,
-   "phi": 283.875,
+   "phi": 215.93,
    "sheltered": true,
    "sla": [],
    "w": 3
@@ -90,9 +90,9 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 20,
-   "phi": 334.98,
-   "sheltered": false,
+   "ops_used": 18,
+   "phi": 222.345,
+   "sheltered": true,
    "sla": [],
    "w": 4
   },
@@ -100,9 +100,9 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 20,
-   "phi": 448.415,
-   "sheltered": false,
+   "ops_used": 18,
+   "phi": 250.365,
+   "sheltered": true,
    "sla": [],
    "w": 5
   },
@@ -110,9 +110,9 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 19,
-   "phi": 496.19,
-   "sheltered": false,
+   "ops_used": 20,
+   "phi": 300.445,
+   "sheltered": true,
    "sla": [],
    "w": 6
   },
@@ -121,7 +121,7 @@
    "deaths": 0,
    "notes": [],
    "ops_used": 20,
-   "phi": 496.82,
+   "phi": 565.43,
    "sheltered": false,
    "sla": [],
    "w": 7
@@ -130,9 +130,9 @@
    "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 11,
-   "phi": 497.745,
-   "sheltered": false,
+   "ops_used": 18,
+   "phi": 564.77,
+   "sheltered": true,
    "sla": [
     [
      "def:9",
@@ -142,51 +142,49 @@
    "w": 8
   },
   {
-   "attended": false,
+   "attended": true,
    "deaths": 0,
    "notes": [],
-   "ops_used": 0,
-   "phi": 497.745,
-   "sheltered": false,
+   "ops_used": 7,
+   "phi": 686.11,
+   "sheltered": true,
    "sla": [],
    "w": 9
   },
   {
-   "attended": false,
-   "deaths": 1,
-   "notes": [
-    "You were slain (caught in the open)."
-   ],
-   "ops_used": 0,
-   "phi": 467.435,
-   "sheltered": false,
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 3,
+   "phi": 686.11,
+   "sheltered": true,
    "sla": [
     [
      "milestone:SIEGE",
-     false
+     true
     ]
    ],
    "w": 10
   },
   {
-   "attended": false,
-   "deaths": 0,
-   "notes": [],
-   "ops_used": 0,
-   "phi": 467.435,
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 20,
+   "phi": 658.095,
    "sheltered": false,
    "sla": [],
    "w": 11
   },
   {
-   "attended": false,
-   "deaths": 1,
-   "notes": [
-    "You were slain (caught in the open)."
-   ],
-   "ops_used": 0,
-   "phi": 439.855,
-   "sheltered": false,
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 6,
+   "phi": 658.765,
+   "sheltered": true,
    "sla": [],
    "w": 12
   }

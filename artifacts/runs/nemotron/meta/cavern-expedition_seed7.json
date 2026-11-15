@@ -1,0 +1,16 @@
+{
+  "task": "cavern-expedition",
+  "seed": 7,
+  "run": 1,
+  "turns": 72,
+  "max_turns": 600,
+  "ended_by": "episode_complete",
+  "agent": "nemotron",
+  "model": "nemotron-3.5-super-vl",
+  "agent_stats": {
+    "live_calls": 72,
+    "live_errors": 0,
+    "last_error": ""
+  },
+  "ledger_sha256": "2cca12024974c49a0a7d9c0d2b6ee40c0bc3ea138107e5ed69e7a363d0367b7d"
+}

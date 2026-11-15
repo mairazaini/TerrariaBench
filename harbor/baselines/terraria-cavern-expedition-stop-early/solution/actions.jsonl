@@ -1,0 +1,23 @@
+{"tool": "chop_trees", "args": {"radius": 60, "max_trees": 4}}
+{"tool": "build_blueprint", "args": {"preset": "shelter"}}
+{"tool": "craft_item", "args": {"item_id": "wooden_sword", "quantity": 1}}
+{"tool": "equip_item", "args": {"item_id": "wooden_sword"}}
+{"tool": "craft_item", "args": {"item_id": "wood_armor", "quantity": 1}}
+{"tool": "equip_item", "args": {"item_id": "wood_armor"}}
+{"tool": "explore_cavern", "args": {"target_depth": 56, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 56, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 56, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 58, "auto_torch": false}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "navigate_to", "args": {"x": 84, "y": 24}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 58, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "stone", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 58, "auto_torch": false}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "mine_vein", "args": {"tile_type": "iron_ore", "max_tiles": 12}}
+{"tool": "explore_cavern", "args": {"target_depth": 54, "auto_torch": false}}

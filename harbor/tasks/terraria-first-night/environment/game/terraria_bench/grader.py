@@ -60,7 +60,7 @@ EXPLOITS = (
 
 
 def sla_met(world, kind: str, sheltered: bool) -> bool:
-    """Evaluate one hidden checkpoint against the world right after settlement."""
+    """Evaluate one checkpoint against the world right after settlement."""
     head, _, rest = kind.partition(":")
     if head == "shelter":
         return bool(sheltered)

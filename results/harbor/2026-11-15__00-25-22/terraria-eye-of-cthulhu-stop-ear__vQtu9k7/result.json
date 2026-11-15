@@ -1,0 +1,124 @@
+{
+    "schema_version": 1,
+    "id": "ca33af44-9655-4731-8108-9b19c75cb630",
+    "task_name": "terraria-eye-of-cthulhu-stop-early",
+    "trial_name": "terraria-eye-of-cthulhu-stop-ear__vQtu9k7",
+    "trial_uri": "file:///C:/Users/User/Desktop/TestBench/results/harbor/2026-11-15__00-25-22/terraria-eye-of-cthulhu-stop-ear__vQtu9k7",
+    "task_id": {
+        "path": "harbor\\baselines\\terraria-eye-of-cthulhu-stop-early"
+    },
+    "source": null,
+    "task_checksum": "d32065081ff4c1beda02852a982babde610991911cb8747fbb9379dc3ea93ef2",
+    "config": {
+        "schema_version": 1,
+        "task": {
+            "path": "harbor\\baselines\\terraria-eye-of-cthulhu-stop-early",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "terraria-eye-of-cthulhu-stop-ear__vQtu9k7",
+        "trials_dir": "results\\harbor\\2026-11-15__00-25-22",
+        "install_only": false,
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "oracle",
+            "import_path": null,
+            "model_name": null,
+            "base_url": null,
+            "model_api_key_name": null,
+            "model_api_format": null,
+            "skip_model_parsing": false,
+            "n_concurrent": null,
+            "concurrency_group": null,
+            "skills": [],
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "resume_trajectory": false,
+            "load_trajectory": null,
+            "extra_allowed_hosts": [],
+            "kwargs": {},
+            "mcp_servers": []
+        },
+        "user_agent": null,
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "stream": false,
+            "cpu_enforcement_policy": "auto",
+            "memory_enforcement_policy": "auto",
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "override_tpu": null,
+            "mounts": null,
+            "extra_docker_compose": [],
+            "kwargs": {},
+            "extra_allowed_hosts": []
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "override_error_policy": {},
+        "artifacts": [],
+        "extra_instruction_paths": [],
+        "extra_instructions": [],
+        "job_id": "3417a774-9035-4810-bb8e-60f010a52c85",
+        "source_trial": null
+    },
+    "agent_info": {
+        "name": "oracle",
+        "version": "1.0.0",
+        "model_info": null
+    },
+    "agent_result": {
+        "n_input_tokens": null,
+        "n_cache_tokens": null,
+        "n_output_tokens": null,
+        "cost_usd": null,
+        "model_usage": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.1458
+        }
+    },
+    "verifier_environment_mode": "shared",
+    "exception_info": null,
+    "started_at": "2026-11-14T22:25:22.918905Z",
+    "finished_at": "2026-11-14T22:25:44.588562Z",
+    "environment_setup": {
+        "started_at": "2026-11-14T22:25:23.016005Z",
+        "finished_at": "2026-11-14T22:25:37.236303Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-11-14T22:25:37.236349Z",
+        "finished_at": "2026-11-14T22:25:37.236406Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-11-14T22:25:37.236478Z",
+        "finished_at": "2026-11-14T22:25:39.653867Z"
+    },
+    "verifier": {
+        "started_at": "2026-11-14T22:25:40.592117Z",
+        "finished_at": "2026-11-14T22:25:42.025833Z"
+    },
+    "step_results": null,
+    "reward_valid": true
+}

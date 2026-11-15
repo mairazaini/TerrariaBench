@@ -1,0 +1,1316 @@
+{
+ "summary": {
+  "model": "deepseek-4-1-flash-1017",
+  "label": "deepseek-4-1-flash-1017",
+  "task": "first-night",
+  "seed": 7,
+  "run": 2,
+  "composite": 0.5503,
+  "eye_progress_pct": 26.75,
+  "deaths": 1,
+  "sla": 0.6667,
+  "survival": 0.75,
+  "business": 0.4409,
+  "tool_calls": 76,
+  "bad_replies": 0,
+  "stopped": "episode finished",
+  "minutes": 7.5
+ },
+ "provenance": {
+  "model": "deepseek-4-1-flash-1017",
+  "endpoint_host": "inference.verda.com",
+  "started_utc": "2026-11-14T21:20:10+00:00",
+  "temperature": 0.6,
+  "usage": {
+   "prompt_tokens": 459615,
+   "completion_tokens": 3596,
+   "calls": 76,
+   "rate_limited": 0
+  },
+  "runner": "evaluation/run_model.py",
+  "calibration_sha256": "149405a88d0c40881568cd0f63583000833e693234900eb2920927e3f23dbcbd"
+ },
+ "grade": {
+  "composite": 0.5503,
+  "business": 0.4409,
+  "reliability": 0.7083,
+  "continuity": 1.0,
+  "attendance": 1.0,
+  "survival": 0.75,
+  "sla": 0.6667,
+  "windows": 4,
+  "delta_net": 123.575,
+  "deaths": 1,
+  "eye_progress": 0.2675,
+  "eye_progress_pct": 26.75,
+  "eye_breakdown": {
+   "eye_progress_score": 0.2675,
+   "eye_progress_pct": 26.75,
+   "health_score": 0.0,
+   "armor_score": 0.0375,
+   "tasks_score": 0.23,
+   "boss_fight_score": 0.0,
+   "eye_kill_score": 0.0,
+   "eye_fought": false,
+   "eye_min_hp_ratio": 1.0,
+   "eye_killed": false,
+   "max_hp": 100,
+   "defense": 3,
+   "task_checklist": {
+    "wood_gathered": true,
+    "workbench": true,
+    "shelter": true,
+    "weapons": true,
+    "ammunition_ready": false,
+    "stone_or_ore_mined": true,
+    "furnace_smelting": true,
+    "anvil_placed": true,
+    "metal_gear": true,
+    "lenses_collected": false,
+    "altar_found": false,
+    "arena_built": false,
+    "summon_ready": false
+   }
+  },
+  "valid": true,
+  "reason": "",
+  "passed": false
+ },
+ "turns": [
+  {
+   "n": 1,
+   "window": 1,
+   "ops_left": 20,
+   "reply": "{\"why\": \"Check current vitals, position, and alerts to plan shelter building before dusk.\", \"tool\": \"terraria_status\", \"args\": {}}",
+   "seconds": 1.4,
+   "tool": "terraria_status",
+   "args": {},
+   "why": "Check current vitals, position, and alerts to plan shelter building before dusk.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 20/20 | HP: 100/100 | Mana: 20/20 | Def: 0 | NetProg: 0.5 | TechTier: 0 (Copper) | Threat: CALM]\n{\"alerts\": [], \"defense\": 0, \"equipped\": {\"armor\": null, \"pickaxe\": \"copper_pickaxe\", \"weapon\": \"copper_shortsword\"}, \"hp\": 100, \"ironskin_ticks\": 0, \"light\": 1.0, \"mana\": 20, \"max_hp\": 100, \"ok\": true, \"ops_budget\": 20, \"ops_left\": 20, \"phase\": \"Day\", \"position\": [100, 25], \"potion_sickness_ticks\": 0, \"tech_tier\": 0, \"threat\": \"CALM\", \"tick\": 0, \"ticks_per_window\": 27000, \"total_windows\": 4, \"window\": 1, \"zone\": \"surface\"}"
+  },
+  {
+   "n": 2,
+   "window": 1,
+   "ops_left": 20,
+   "reply": "{\"why\": \"Survey the surrounding terrain and entities to decide where to place shelter and find trees.\", \"tool\": \"observe_viewport\", \"args\": {}}",
+   "seconds": 5.5,
+   "tool": "observe_viewport",
+   "args": {},
+   "why": "Survey the surrounding terrain and entities to decide where to place shelter and find trees.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 19/20 | HP: 100/100 | Mana: 20/20 | Def: 0 | NetProg: 0.5 | TechTier: 0 (Copper) | Threat: CALM]\n{\"ascii_grid\": [\".............................................................\", \".............................................................\", \".............................................................\", \".............................................................\", \".............................................................\", \".............................................................\", \".............................................................\", \".............................................................\", \".............................................................\", \"........................T....................................\", \"........................T............T..........T............\", \"..............T.........T............T..........T....T.......\", \"..........T...T...T.....T............T..........T....T.......\", \".....T....T...T...T.....T............T..........T....T.....T.\", \".....T....T...T...T.....T............T..........T....T.....T.\", \"..T..T....T...T...T.....T............T..........T....T.....T.\", \"..T..T....T...T...T.....T............T..........T....T.....T.\", \"..T..T....Td..ddddT.....T.....@......T.ddddd.d..T....T.....T.\", \"..T..T...ddddddddddddddddddddddddddddddddddd..ddddd..T.....T.\", \"..T..T..ddddddddddddddddddddddddddddddddddd...dddddddddddddT.\", \"dddddddddddddddddddddddddddddddddddddddddddd.dddddddddddddddd\", \"dddddddddddddddddddddddddddddddddddddddddddd..ddddddddddddddd\", \"ddddddddddddddddddddddddddddddddddddddddddddd..dddddddddddddd\", \"ddddddddddddddddddddddddddddddddddddddddddddd...ddddddddddddd\", \"dddddddddddsddssssdddddddddddddd..dddddsssss....ddddddddddddd\", \"dddddddddscssssssssssssssssssss....ssscsssss...ssssdddddddddd\", \"dddddddds.....ssssssssss...........sssccscss...ssssssssssssdd\", \"ssssss.........s................sssssccccsss...ssssssssssssss\", \"sssss......c.............cssss..sssssssscsss....sisssssssssss\", \"s..........sc.....s..sssccssssssssssssssssss....siisssssssss.\", \"......sssccccssssssss...ccsssssssssssssssssss...ssisisss.....\", \"..ssssssssssssssssss.....s...s..sssssssisssss....siis........\", \".ssssssssssssssss.....s.........s...ssiiiissss...........ssss\", \"sssssssssss..ss......sss...s.........sssiissss........sssssss\", \"sssssssssss.......sssssssssssss...s.......ss......iiisissssss\"], \"center\": [100, 25], \"entities\": [{\"dmg\": 6.0, \"family\": \"slime\", \"hp\": 24, \"id\": \"su1_0\"}, {\"dmg\": 6.0, \"family\": \"slime\", \"hp\": 23, \"id\": \"su1_1\"}], \"light_at_player\": 1.0, \"ok\": true, \"shape\": [61, 35], \"viewport_png_b64\": \"iVBORw0KGgoAAAANSUhEUgAAAD0AAAAjCAIAAACo3JVVAAABUElEQVR4nO3Xuw0CMQwG4MxAwQh0UCPEBGxCQ01BScUUNNS0TMQaEMnIshzHcXKvHIrkIjpyv7/LJSfhFsvVHMtNLmjuOVRzN3dz11e9uTe37T+7k9OMORluPXEgd2x+wk1vi42rcCu3VeKGKzN348/NPbX7dFjD2A+wLO79+xNj0SjIxy49uFn6cCW2K3SPjLZ3/LlH8+n03FtqcefSq3AX0Oty2+lp9/lyxQFWx4WkUb7o56IHt098HXesR1ZREF4MM8M5yaWJullXFqoTxaJuoOMDGFvQ53FZAotPf1pAI73ADcXdYWPfwEhkG0CniG6Y/3zcTe7kgoX0kMWWsMsx8G6dvhD/7+jvNNayizvcKuCmeoZ0uRtL2VSsvZIcLmdsyWO7wBWgsw6ruJZYSqx+xIXviaiMRYsv2tLb7hZVVrclS9+1Sk54nb4Q8Yx+AQmmXg2FpF+XAAAAAElFTkSuQmCC\", \"zone\": \"surface\"}"
+  },
+  {
+   "n": 3,
+   "window": 1,
+   "ops_left": 19,
+   "reply": "{\"why\": \"Chop nearby trees to get wood for a shelter and wood-tier gear.\", \"tool\": \"chop_trees\", \"args\": {\"radius\": 28, \"max_trees\": 3}}",
+   "seconds": 6.0,
+   "tool": "chop_trees",
+   "args": {
+    "radius": 28,
+    "max_trees": 3
+   },
+   "why": "Chop nearby trees to get wood for a shelter and wood-tier gear.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 18/20 | HP: 99/100 | Mana: 20/20 | Def: 0 | NetProg: 3.4 | TechTier: 0 (Copper) | Threat: CALM]\n{\"gel_gained\": 3, \"harass_damage\": 1, \"ok\": true, \"position\": [88, 25], \"trees_chopped\": 3, \"wood_gained\": 92}"
+  },
+  {
+   "n": 4,
+   "window": 1,
+   "ops_left": 18,
+   "reply": "{\"why\": \"Get more wood to have enough for shelter, workbench, and wood-tier weapon/armor.\", \"tool\": \"chop_trees\", \"args\": {\"radius\": 28, \"max_trees\": 3}}",
+   "seconds": 5.9,
+   "tool": "chop_trees",
+   "args": {
+    "radius": 28,
+    "max_trees": 3
+   },
+   "why": "Get more wood to have enough for shelter, workbench, and wood-tier weapon/armor.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 17/20 | HP: 98/100 | Mana: 20/20 | Def: 0 | NetProg: 5.8 | TechTier: 0 (Copper) | Threat: CALM]\n{\"gel_gained\": 3, \"harass_damage\": 1, \"ok\": true, \"position\": [75, 27], \"trees_chopped\": 3, \"wood_gained\": 76}"
+  },
+  {
+   "n": 5,
+   "window": 1,
+   "ops_left": 17,
+   "reply": "{\"why\": \"Build a workbench first so I can craft wood-tier gear and shelter components.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"work_bench\", \"quantity\": 1}}",
+   "seconds": 6.3,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "work_bench",
+    "quantity": 1
+   },
+   "why": "Build a workbench first so I can craft wood-tier gear and shelter components.",
+   "ok": false,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 16/20 | HP: 98/100 | Mana: 20/20 | Def: 0 | NetProg: 5.8 | TechTier: 0 (Copper) | Threat: CALM]\n{\"error\": \"unknown recipe 'work_bench'\", \"ok\": false}"
+  },
+  {
+   "n": 6,
+   "window": 1,
+   "ops_left": 16,
+   "reply": "{\"why\": \"Check available recipes to learn correct item IDs for workbench and wood gear.\", \"tool\": \"list_craftable_recipes\", \"args\": {}}",
+   "seconds": 5.2,
+   "tool": "list_craftable_recipes",
+   "args": {},
+   "why": "Check available recipes to learn correct item IDs for workbench and wood gear.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 15/20 | HP: 98/100 | Mana: 20/20 | Def: 0 | NetProg: 5.8 | TechTier: 0 (Copper) | Threat: CALM]\n{\"craftable\": [{\"item_id\": \"campfire\", \"max_batches\": 6, \"output_per_batch\": 1, \"station\": null}, {\"item_id\": \"torch\", \"max_batches\": 6, \"output_per_batch\": 3, \"station\": null}, {\"item_id\": \"wood_platform\", \"max_batches\": 168, \"output_per_batch\": 2, \"station\": null}, {\"item_id\": \"workbench\", \"max_batches\": 16, \"output_per_batch\": 1, \"station\": null}], \"missing\": {\"anvil\": {\"missing_ingredients\": {\"iron_bar\": 3}, \"missing_station\": \"workbench\"}, \"copper_bar\": {\"missing_ingredients\": {\"copper_ore\": 2}, \"missing_station\": \"furnace\"}, \"door\": {\"missing_ingredients\": {}, \"missing_station\": \"workbench\"}, \"furnace\": {\"missing_ingredients\": {\"stone\": 20}, \"missing_station\": \"workbench\"}, \"gold_armor\": {\"missing_ingredients\": {\"gold_bar\": 6}, \"missing_station\": \"anvil\"}, \"gold_bar\": {\"missing_ingredients\": {\"gold_ore\": 2}, \"missing_station\": \"furnace\"}, \"gold_bow\": {\"missing_ingredients\": {\"gold_bar\": 4}, \"missing_station\": \"anvil\"}, \"gold_broadsword\": {\"missing_ingredients\": {\"gold_bar\": 4}, \"missing_station\": \"anvil\"}, \"gold_pickaxe\": {\"missing_ingredients\": {\"gold_bar\": 5}, \"missing_station\": \"anvil\"}, \"iron_armor\": {\"missing_ingredients\": {\"iron_bar\": 6}, \"missing_station\": \"anvil\"}, \"iron_bar\": {\"missing_ingredients\": {\"iron_ore\": 2}, \"missing_station\": \"furnace\"}, \"iron_bow\": {\"missing_ingredients\": {\"iron_bar\": 4}, \"missing_station\": \"anvil\"}, \"iron_broadsword\": {\"missing_ingredients\": {\"iron_bar\": 4}, \"missing_station\": \"anvil\"}, \"iron_pickaxe\": {\"missing_ingredients\": {\"iron_bar\": 5}, \"missing_station\": \"anvil\"}, \"lesser_healing_potion\": {\"missing_ingredients\": {\"mushroom\": 1}, \"missing_station\": \"workbench\"}, \"silver_armor\": {\"missing_ingredients\": {\"silver_bar\": 6}, \"missing_station\": \"anvil\"}, \"silver_bar\": {\"missing_ingredients\": {\"silver_ore\": 2}, \"missing_station\": \"furnace\"}, \"silver_bow\": {\"missing_ingredients\": {\"silver_bar\": 4}, \"missing_station\": \"anvil\"}, \"silver_broadsword\": {\"missing_ingredients\": {\"silver_bar\": 4}, \"missing_station\": \"anvil\"}, \"silver_pickaxe\": {\"missing_ingredients\": {\"silver_bar\": 5}, \"missing_station\": \"anvil\"}, \"suspicious_looking_eye\": {\"missing_ingredients\": {\"lens\": 6}, \"missing_station\": \"workbench\"}, \"wood_armor\": {\"missing_ingredients\": {}, \"missing_station\": \"workbench\"}, \"wooden_arrow\": {\"missing_ingredients\": {\"stone\": 1}, \"missing_station\": \"workbench\"}, \"wooden_bow\": {\"missing_ingredients\": {}, \"missing_station\": \"workbench\"}, \"wooden_sword\": {\"missing_ingredients\": {}, \"missing_station\": \"workbench\"}}, \"ok\": true}"
+  },
+  {
+   "n": 7,
+   "window": 1,
+   "ops_left": 15,
+   "reply": "{\"why\": \"Craft the workbench so I can then craft wood gear and shelter parts.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"workbench\", \"quantity\": 1}}",
+   "seconds": 6.1,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "workbench",
+    "quantity": 1
+   },
+   "why": "Craft the workbench so I can then craft wood gear and shelter parts.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 14/20 | HP: 98/100 | Mana: 20/20 | Def: 0 | NetProg: 6.8 | TechTier: 0 (Copper) | Threat: CALM]\n{\"crafted\": 1, \"item_id\": \"workbench\", \"ok\": true, \"station\": null}"
+  },
+  {
+   "n": 8,
+   "window": 1,
+   "ops_left": 14,
+   "reply": "{\"why\": \"Place the workbench nearby so I can craft wood-tier gear and a door.\", \"tool\": \"place_station_or_furniture\", \"args\": {\"item_id\": \"workbench\", \"dx\": 1, \"dy\": 0}}",
+   "seconds": 6.9,
+   "tool": "place_station_or_furniture",
+   "args": {
+    "item_id": "workbench",
+    "dx": 1,
+    "dy": 0
+   },
+   "why": "Place the workbench nearby so I can craft wood-tier gear and a door.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 13/20 | HP: 98/100 | Mana: 20/20 | Def: 0 | NetProg: 10.5 | TechTier: 0 (Copper) | Threat: CALM]\n{\"at\": [76, 27], \"ok\": true, \"placed\": \"workbench\"}"
+  },
+  {
+   "n": 9,
+   "window": 1,
+   "ops_left": 13,
+   "reply": "{\"why\": \"Craft a wooden sword for a better weapon than the copper shortsword.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"wooden_sword\", \"quantity\": 1}}",
+   "seconds": 5.6,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "wooden_sword",
+    "quantity": 1
+   },
+   "why": "Craft a wooden sword for a better weapon than the copper shortsword.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 12/20 | HP: 98/100 | Mana: 20/20 | Def: 0 | NetProg: 13.5 | TechTier: 0 (Copper) | Threat: CALM]\n{\"crafted\": 1, \"item_id\": \"wooden_sword\", \"ok\": true, \"station\": \"workbench\"}"
+  },
+  {
+   "n": 10,
+   "window": 1,
+   "ops_left": 12,
+   "reply": "{\"why\": \"Craft wood armor to reach tech tier 1 for the window 3 checkpoint.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"wood_armor\", \"quantity\": 1}}",
+   "seconds": 6.8,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "wood_armor",
+    "quantity": 1
+   },
+   "why": "Craft wood armor to reach tech tier 1 for the window 3 checkpoint.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 11/20 | HP: 98/100 | Mana: 20/20 | Def: 0 | NetProg: 16.5 | TechTier: 0 (Copper) | Threat: CALM]\n{\"crafted\": 1, \"item_id\": \"wood_armor\", \"ok\": true, \"station\": \"workbench\"}"
+  },
+  {
+   "n": 11,
+   "window": 1,
+   "ops_left": 11,
+   "reply": "{\"why\": \"Equip the wooden sword to raise weapon tier.\", \"tool\": \"equip_item\", \"args\": {\"item_id\": \"wooden_sword\"}}",
+   "seconds": 5.1,
+   "tool": "equip_item",
+   "args": {
+    "item_id": "wooden_sword"
+   },
+   "why": "Equip the wooden sword to raise weapon tier.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 10/20 | HP: 98/100 | Mana: 20/20 | Def: 0 | NetProg: 22.5 | TechTier: 0 (Copper) | Threat: CALM]\n{\"defense\": 0, \"equipped\": {\"armor\": null, \"pickaxe\": \"copper_pickaxe\", \"weapon\": \"wooden_sword\"}, \"ok\": true, \"tech_tier\": 0}"
+  },
+  {
+   "n": 12,
+   "window": 1,
+   "ops_left": 10,
+   "reply": "{\"why\": \"Equip wood armor to raise armor tier and defense.\", \"tool\": \"equip_item\", \"args\": {\"item_id\": \"wood_armor\"}}",
+   "seconds": 5.9,
+   "tool": "equip_item",
+   "args": {
+    "item_id": "wood_armor"
+   },
+   "why": "Equip wood armor to raise armor tier and defense.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 9/20 | HP: 98/100 | Mana: 20/20 | Def: 3 | NetProg: 58.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"defense\": 3, \"equipped\": {\"armor\": \"wood_armor\", \"pickaxe\": \"copper_pickaxe\", \"weapon\": \"wooden_sword\"}, \"ok\": true, \"tech_tier\": 1}"
+  },
+  {
+   "n": 13,
+   "window": 1,
+   "ops_left": 9,
+   "reply": "{\"why\": \"Build a shelter blueprint so I have valid housing before dusk.\", \"tool\": \"build_blueprint\", \"args\": {\"preset\": \"shelter\", \"origin_dx\": -4, \"origin_dy\": -4}}",
+   "seconds": 6.4,
+   "tool": "build_blueprint",
+   "args": {
+    "preset": "shelter",
+    "origin_dx": -4,
+    "origin_dy": -4
+   },
+   "why": "Build a shelter blueprint so I have valid housing before dusk.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 8/20 | HP: 98/100 | Mana: 20/20 | Def: 3 | NetProg: 82.7 | TechTier: 1 (Wood) | Threat: CALM]\n{\"housing\": {\"enclosed\": true, \"interior_tiles\": 28, \"reasons\": [], \"valid\": true}, \"ok\": true, \"position\": [75, 27], \"preset\": \"shelter\"}"
+  },
+  {
+   "n": 14,
+   "window": 1,
+   "ops_left": 8,
+   "reply": "{\"why\": \"Verify housing validity and arena status after building the shelter.\", \"tool\": \"inspect_housing_and_arena\", \"args\": {}}",
+   "seconds": 5.2,
+   "tool": "inspect_housing_and_arena",
+   "args": {},
+   "why": "Verify housing validity and arena status after building the shelter.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 7/20 | HP: 98/100 | Mana: 20/20 | Def: 3 | NetProg: 82.7 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arena\": {\"reasons\": [\"need 3 platform rows, each 24+ wide and overlapping\"], \"rows\": 0, \"valid\": false}, \"hellbridge_len\": 0, \"home\": [75, 27], \"housing\": {\"enclosed\": true, \"interior_tiles\": 28, \"reasons\": [], \"valid\": true}, \"milestones\": [\"CRAFT:wood_armor\", \"CRAFT:wooden_sword\", \"CRAFT:workbench\", \"SHELTER\", \"T1\", \"WORKBENCH\"], \"ok\": true, \"on_arena\": false, \"on_hellbridge\": false}"
+  },
+  {
+   "n": 15,
+   "window": 1,
+   "ops_left": 7,
+   "reply": "{\"why\": \"Mine stone/ore to build a furnace and progress toward iron gear.\", \"tool\": \"mine_vein\", \"args\": {\"tile_type\": \"stone\", \"max_tiles\": 8}}",
+   "seconds": 6.0,
+   "tool": "mine_vein",
+   "args": {
+    "tile_type": "stone",
+    "max_tiles": 8
+   },
+   "why": "Mine stone/ore to build a furnace and progress toward iron gear.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 6/20 | HP: 96/100 | Mana: 20/20 | Def: 3 | NetProg: 82.8 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {\"stone\": 8}, \"harass_damage\": 2, \"mined_tiles\": 8, \"nav\": {\"arrived\": false, \"dug\": 7, \"position\": [69, 34], \"steps\": 13, \"ticks\": 240}, \"ok\": true, \"position\": [69, 34]}"
+  },
+  {
+   "n": 16,
+   "window": 1,
+   "ops_left": 6,
+   "reply": "{\"why\": \"Mine more stone to reach 20 needed for a furnace.\", \"tool\": \"mine_vein\", \"args\": {\"tile_type\": \"stone\", \"max_tiles\": 12}}",
+   "seconds": 6.5,
+   "tool": "mine_vein",
+   "args": {
+    "tile_type": "stone",
+    "max_tiles": 12
+   },
+   "why": "Mine more stone to reach 20 needed for a furnace.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 5/20 | HP: 94/100 | Mana: 20/20 | Def: 3 | NetProg: 83.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {\"stone\": 12}, \"harass_damage\": 2, \"mined_tiles\": 12, \"nav\": {\"arrived\": true, \"dug\": 1, \"position\": [69, 35], \"steps\": 1, \"ticks\": 30}, \"ok\": true, \"position\": [69, 35]}"
+  },
+  {
+   "n": 17,
+   "window": 1,
+   "ops_left": 5,
+   "reply": "{\"why\": \"Craft a furnace to smelt ore into bars for iron gear.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"furnace\", \"quantity\": 1}}",
+   "seconds": 6.2,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "furnace",
+    "quantity": 1
+   },
+   "why": "Craft a furnace to smelt ore into bars for iron gear.",
+   "ok": false,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 4/20 | HP: 94/100 | Mana: 20/20 | Def: 3 | NetProg: 83.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"must be within 4 tiles of placed 'workbench'\", \"ok\": false}"
+  },
+  {
+   "n": 18,
+   "window": 1,
+   "ops_left": 4,
+   "reply": "{\"why\": \"Return to the workbench to craft the furnace.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 76, \"y\": 27, \"budget\": 200}}",
+   "seconds": 5.4,
+   "tool": "navigate_to",
+   "args": {
+    "x": 76,
+    "y": 27,
+    "budget": 200
+   },
+   "why": "Return to the workbench to craft the furnace.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 3/20 | HP: 94/100 | Mana: 20/20 | Def: 3 | NetProg: 83.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": true, \"dug\": 0, \"harass_damage\": 0, \"ok\": true, \"position\": [76, 27], \"steps\": 15, \"ticks\": 115}"
+  },
+  {
+   "n": 19,
+   "window": 1,
+   "ops_left": 3,
+   "reply": "{\"why\": \"Craft the furnace now that I'm at the workbench.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"furnace\", \"quantity\": 1}}",
+   "seconds": 6.0,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "furnace",
+    "quantity": 1
+   },
+   "why": "Craft the furnace now that I'm at the workbench.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 2/20 | HP: 94/100 | Mana: 20/20 | Def: 3 | NetProg: 83.9 | TechTier: 1 (Wood) | Threat: CALM]\n{\"crafted\": 1, \"item_id\": \"furnace\", \"ok\": true, \"station\": \"workbench\"}"
+  },
+  {
+   "n": 20,
+   "window": 1,
+   "ops_left": 2,
+   "reply": "{\"why\": \"Place the furnace near the workbench so I can smelt ore next window.\", \"tool\": \"place_station_or_furniture\", \"args\": {\"item_id\": \"furnace\", \"dx\": 2, \"dy\": 0}}",
+   "seconds": 9.0,
+   "tool": "place_station_or_furniture",
+   "args": {
+    "item_id": "furnace",
+    "dx": 2,
+    "dy": 0
+   },
+   "why": "Place the furnace near the workbench so I can smelt ore next window.",
+   "ok": true,
+   "result": "[World: locked | Win: 1/4 (Day) | Ops: 1/20 | HP: 94/100 | Mana: 20/20 | Def: 3 | NetProg: 93.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"at\": [78, 27], \"ok\": true, \"placed\": \"furnace\"}"
+  },
+  {
+   "n": 21,
+   "window": 1,
+   "ops_left": 1,
+   "reply": "{\"why\": \"End the window safely inside my shelter with valid housing established.\", \"tool\": \"end_window\", \"args\": {}}",
+   "seconds": 3.8,
+   "tool": "end_window",
+   "args": {},
+   "why": "End the window safely inside my shelter with valid housing established.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 20/20 | HP: 100/100 | Mana: 20/20 | Def: 3 | NetProg: 93.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"done\": false, \"ok\": true, \"window_settled\": {\"attended\": true, \"deaths\": 0, \"notes\": [], \"ops_used\": 20, \"phi\": 93.485, \"sheltered\": true, \"sla\": [], \"w\": 1}}"
+  },
+  {
+   "n": 22,
+   "window": 2,
+   "ops_left": 20,
+   "reply": "{\"why\": \"Confirm I'm safely housed and check current state to plan the night window.\", \"tool\": \"terraria_status\", \"args\": {}}",
+   "seconds": 5.2,
+   "tool": "terraria_status",
+   "args": {},
+   "why": "Confirm I'm safely housed and check current state to plan the night window.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 20/20 | HP: 100/100 | Mana: 20/20 | Def: 3 | NetProg: 93.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"alerts\": [], \"defense\": 3, \"equipped\": {\"armor\": \"wood_armor\", \"pickaxe\": \"copper_pickaxe\", \"weapon\": \"wooden_sword\"}, \"hp\": 100, \"ironskin_ticks\": 0, \"light\": 0.67, \"mana\": 20, \"max_hp\": 100, \"ok\": true, \"ops_budget\": 20, \"ops_left\": 20, \"phase\": \"Night\", \"position\": [76, 27], \"potion_sickness_ticks\": 0, \"tech_tier\": 1, \"threat\": \"CALM\", \"tick\": 0, \"ticks_per_window\": 27000, \"total_windows\": 4, \"window\": 2, \"zone\": \"surface\"}"
+  },
+  {
+   "n": 23,
+   "window": 2,
+   "ops_left": 20,
+   "reply": "{\"why\": \"Scan for exposed ores to target iron for gear upgrades.\", \"tool\": \"scan_biome_and_ores\", \"args\": {\"radius\": 28}}",
+   "seconds": 6.6,
+   "tool": "scan_biome_and_ores",
+   "args": {
+    "radius": 28
+   },
+   "why": "Scan for exposed ores to target iron for gear upgrades.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 19/20 | HP: 100/100 | Mana: 20/20 | Def: 3 | NetProg: 93.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"counts\": {\"chest\": 2, \"copper_ore\": 33, \"iron_ore\": 27}, \"depth\": 27, \"known_traps\": [[97, 39]], \"living_trees_nearby\": 6, \"max_depth\": 35, \"nearest\": {\"chest\": {\"dist\": 24, \"dx\": 7, \"dy\": 17, \"x\": 83, \"y\": 44}, \"copper_ore\": {\"dist\": 10, \"dx\": 4, \"dy\": 6, \"x\": 80, \"y\": 33}, \"iron_ore\": {\"dist\": 24, \"dx\": 0, \"dy\": 24, \"x\": 76, \"y\": 51}}, \"ok\": true, \"surface_y\": 28, \"zone\": \"surface\"}"
+  },
+  {
+   "n": 24,
+   "window": 2,
+   "ops_left": 19,
+   "reply": "{\"why\": \"Mine the nearby iron ore to smelt into bars for iron-tier gear.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 76, \"y\": 51, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 5.9,
+   "tool": "mine_vein",
+   "args": {
+    "x": 76,
+    "y": 51,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Mine the nearby iron ore to smelt into bars for iron-tier gear.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 18/20 | HP: 98/100 | Mana: 20/20 | Def: 3 | NetProg: 93.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {}, \"harass_damage\": 2, \"mined_tiles\": 0, \"nav\": {\"arrived\": false, \"dug\": 3, \"position\": [65, 44], \"steps\": 28, \"ticks\": 215}, \"ok\": true, \"position\": [65, 44]}"
+  },
+  {
+   "n": 25,
+   "window": 2,
+   "ops_left": 18,
+   "reply": "{\"why\": \"Continue toward the iron vein to actually mine the ore.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 76, \"y\": 51, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 5.9,
+   "tool": "mine_vein",
+   "args": {
+    "x": 76,
+    "y": 51,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Continue toward the iron vein to actually mine the ore.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 17/20 | HP: 91/100 | Mana: 20/20 | Def: 3 | NetProg: 119.9 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {\"iron_ore\": 8}, \"harass_damage\": 7, \"mined_tiles\": 8, \"nav\": {\"arrived\": true, \"dug\": 2, \"position\": [76, 51], \"steps\": 18, \"ticks\": 140}, \"ok\": true, \"position\": [76, 51]}"
+  },
+  {
+   "n": 26,
+   "window": 2,
+   "ops_left": 17,
+   "reply": "{\"why\": \"Mine more iron ore to have enough for iron armor and weapon.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 76, \"y\": 51, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 6.3,
+   "tool": "mine_vein",
+   "args": {
+    "x": 76,
+    "y": 51,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Mine more iron ore to have enough for iron armor and weapon.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 16/20 | HP: 84/100 | Mana: 20/20 | Def: 3 | NetProg: 120.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {\"iron_ore\": 1}, \"harass_damage\": 7, \"mined_tiles\": 1, \"nav\": {\"arrived\": true, \"dug\": 0, \"position\": [76, 51], \"steps\": 0, \"ticks\": 0}, \"ok\": true, \"position\": [76, 51]}"
+  },
+  {
+   "n": 27,
+   "window": 2,
+   "ops_left": 16,
+   "reply": "{\"why\": \"Return to the furnace to smelt iron bars.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 78, \"y\": 27, \"budget\": 200}}",
+   "seconds": 5.9,
+   "tool": "navigate_to",
+   "args": {
+    "x": 78,
+    "y": 27,
+    "budget": 200
+   },
+   "why": "Return to the furnace to smelt iron bars.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 15/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 120.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": false, \"dug\": 0, \"harass_damage\": 2, \"ok\": true, \"position\": [69, 39], \"steps\": 27, \"ticks\": 195}"
+  },
+  {
+   "n": 28,
+   "window": 2,
+   "ops_left": 15,
+   "reply": "{\"why\": \"Continue navigating back to the furnace at the surface base.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 78, \"y\": 27, \"budget\": 200}}",
+   "seconds": 5.4,
+   "tool": "navigate_to",
+   "args": {
+    "x": 78,
+    "y": 27,
+    "budget": 200
+   },
+   "why": "Continue navigating back to the furnace at the surface base.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 14/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 120.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": true, \"dug\": 0, \"harass_damage\": 0, \"ok\": true, \"position\": [78, 27], \"steps\": 21, \"ticks\": 165}"
+  },
+  {
+   "n": 29,
+   "window": 2,
+   "ops_left": 14,
+   "reply": "{\"why\": \"Smelt iron ore into bars at the furnace.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_bar\", \"quantity\": 9}}",
+   "seconds": 6.6,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_bar",
+    "quantity": 9
+   },
+   "why": "Smelt iron ore into bars at the furnace.",
+   "ok": false,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 13/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 120.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"insufficient 'iron_ore': need 18, have 10\", \"ok\": false}"
+  },
+  {
+   "n": 30,
+   "window": 2,
+   "ops_left": 13,
+   "reply": "{\"why\": \"Smelt the 9 iron ore I actually have into bars.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_bar\", \"quantity\": 5}}",
+   "seconds": 6.6,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_bar",
+    "quantity": 5
+   },
+   "why": "Smelt the 9 iron ore I actually have into bars.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 12/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 121.4 | TechTier: 1 (Wood) | Threat: CALM]\n{\"crafted\": 5, \"item_id\": \"iron_bar\", \"ok\": true, \"station\": \"furnace\"}"
+  },
+  {
+   "n": 31,
+   "window": 2,
+   "ops_left": 12,
+   "reply": "{\"why\": \"Check what iron gear I can craft with 5 bars.\", \"tool\": \"list_craftable_recipes\", \"args\": {}}",
+   "seconds": 6.3,
+   "tool": "list_craftable_recipes",
+   "args": {},
+   "why": "Check what iron gear I can craft with 5 bars.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 11/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 121.4 | TechTier: 1 (Wood) | Threat: CALM]\n{\"craftable\": [{\"item_id\": \"campfire\", \"max_batches\": 2, \"output_per_batch\": 1, \"station\": null}, {\"item_id\": \"torch\", \"max_batches\": 6, \"output_per_batch\": 3, \"station\": null}, {\"item_id\": \"wood_platform\", \"max_batches\": 91, \"output_per_batch\": 2, \"station\": null}, {\"item_id\": \"workbench\", \"max_batches\": 9, \"output_per_batch\": 1, \"station\": null}], \"missing\": {\"anvil\": {\"missing_ingredients\": {}, \"missing_station\": \"workbench\"}, \"copper_bar\": {\"missing_ingredients\": {\"copper_ore\": 2}, \"missing_station\": null}, \"door\": {\"missing_ingredients\": {}, \"missing_station\": \"workbench\"}, \"furnace\": {\"missing_ingredients\": {\"stone\": 15, \"torch\": 1}, \"missing_station\": \"workbench\"}, \"gold_armor\": {\"missing_ingredients\": {\"gold_bar\": 6}, \"missing_station\": \"anvil\"}, \"gold_bar\": {\"missing_ingredients\": {\"gold_ore\": 2}, \"missing_station\": null}, \"gold_bow\": {\"missing_ingredients\": {\"gold_bar\": 4}, \"missing_station\": \"anvil\"}, \"gold_broadsword\": {\"missing_ingredients\": {\"gold_bar\": 4}, \"missing_station\": \"anvil\"}, \"gold_pickaxe\": {\"missing_ingredients\": {\"gold_bar\": 5}, \"missing_station\": \"anvil\"}, \"iron_armor\": {\"missing_ingredients\": {\"iron_bar\": 1}, \"missing_station\": \"anvil\"}, \"iron_bar\": {\"missing_ingredients\": {\"iron_ore\": 2}, \"missing_station\": null}, \"iron_bow\": {\"missing_ingredients\": {}, \"missing_station\": \"anvil\"}, \"iron_broadsword\": {\"missing_ingredients\": {}, \"missing_station\": \"anvil\"}, \"iron_pickaxe\": {\"missing_ingredients\": {}, \"missing_station\": \"anvil\"}, \"lesser_healing_potion\": {\"missing_ingredients\": {\"mushroom\": 1}, \"missing_station\": \"workbench\"}, \"silver_armor\": {\"missing_ingredients\": {\"silver_bar\": 6}, \"missing_station\": \"anvil\"}, \"silver_bar\": {\"missing_ingredients\": {\"silver_ore\": 2}, \"missing_station\": null}, \"silver_bow\": {\"missing_ingredients\": {\"silver_bar\": 4}, \"missing_station\": \"anvil\"}, \"silver_broadsword\": {\"missing_ingredients\": {\"silver_bar\": 4}, \"missing_station\": \"anvil\"}, \"silver_pickaxe\": {\"missing_ingredients\": {\"silver_bar\": 5}, \"missing_station\": \"anvil\"}, \"suspicious_looking_eye\": {\"missing_ingredients\": {\"lens\": 6}, \"missing_station\": \"workbench\"}, \"wood_armor\": {\"missing_ingredients\": {}, \"missing_station\": \"workbench\"}, \"wooden_arrow\": {\"missing_ingredients\": {}, \"missing_station\": \"workbench\"}, \"wooden_bow\": {\"missing_ingredients\": {}, \"missing_station\": \"workbench\"}, \"wooden_sword\": {\"missing_ingredients\": {}, \"missing_station\": \"workbench\"}}, \"ok\": true}"
+  },
+  {
+   "n": 32,
+   "window": 2,
+   "ops_left": 11,
+   "reply": "{\"why\": \"Craft an anvil at the workbench to unlock iron gear crafting.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"anvil\", \"quantity\": 1}}",
+   "seconds": 4.6,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "anvil",
+    "quantity": 1
+   },
+   "why": "Craft an anvil at the workbench to unlock iron gear crafting.",
+   "ok": false,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 10/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 121.4 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"must be within 4 tiles of placed 'workbench'\", \"ok\": false}"
+  },
+  {
+   "n": 33,
+   "window": 2,
+   "ops_left": 10,
+   "reply": "{\"why\": \"Move next to the workbench to craft the anvil.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 76, \"y\": 27, \"budget\": 100}}",
+   "seconds": 6.3,
+   "tool": "navigate_to",
+   "args": {
+    "x": 76,
+    "y": 27,
+    "budget": 100
+   },
+   "why": "Move next to the workbench to craft the anvil.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 9/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 121.4 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": true, \"dug\": 0, \"harass_damage\": 0, \"ok\": true, \"position\": [76, 27], \"steps\": 2, \"ticks\": 10}"
+  },
+  {
+   "n": 34,
+   "window": 2,
+   "ops_left": 9,
+   "reply": "{\"why\": \"Craft the anvil now that I'm at the workbench.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"anvil\", \"quantity\": 1}}",
+   "seconds": 6.1,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "anvil",
+    "quantity": 1
+   },
+   "why": "Craft the anvil now that I'm at the workbench.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 8/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 122.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"crafted\": 1, \"item_id\": \"anvil\", \"ok\": true, \"station\": \"workbench\"}"
+  },
+  {
+   "n": 35,
+   "window": 2,
+   "ops_left": 8,
+   "reply": "{\"why\": \"Place the anvil to enable iron gear crafting.\", \"tool\": \"place_station_or_furniture\", \"args\": {\"item_id\": \"anvil\", \"dx\": -2, \"dy\": 0}}",
+   "seconds": 6.2,
+   "tool": "place_station_or_furniture",
+   "args": {
+    "item_id": "anvil",
+    "dx": -2,
+    "dy": 0
+   },
+   "why": "Place the anvil to enable iron gear crafting.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 7/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 133.3 | TechTier: 1 (Wood) | Threat: CALM]\n{\"at\": [74, 27], \"ok\": true, \"placed\": \"anvil\"}"
+  },
+  {
+   "n": 36,
+   "window": 2,
+   "ops_left": 7,
+   "reply": "{\"why\": \"Craft iron armor to upgrade gear tier.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_armor\", \"quantity\": 1}}",
+   "seconds": 5.4,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_armor",
+    "quantity": 1
+   },
+   "why": "Craft iron armor to upgrade gear tier.",
+   "ok": false,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 6/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 133.3 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"insufficient 'iron_bar': need 6, have 2\", \"ok\": false}"
+  },
+  {
+   "n": 37,
+   "window": 2,
+   "ops_left": 6,
+   "reply": "{\"why\": \"Craft the iron broadsword which needs no bars, upgrading my weapon tier.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_broadsword\", \"quantity\": 1}}",
+   "seconds": 5.9,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_broadsword",
+    "quantity": 1
+   },
+   "why": "Craft the iron broadsword which needs no bars, upgrading my weapon tier.",
+   "ok": false,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 5/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 133.3 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"insufficient 'iron_bar': need 4, have 2\", \"ok\": false}"
+  },
+  {
+   "n": 38,
+   "window": 2,
+   "ops_left": 5,
+   "reply": "{\"why\": \"Smelt remaining iron ore into bars to reach enough for a sword.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_bar\", \"quantity\": 1}}",
+   "seconds": 6.6,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_bar",
+    "quantity": 1
+   },
+   "why": "Smelt remaining iron ore into bars to reach enough for a sword.",
+   "ok": false,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 4/20 | HP: 82/100 | Mana: 20/20 | Def: 3 | NetProg: 133.3 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"insufficient 'iron_ore': need 2, have 0\", \"ok\": false}"
+  },
+  {
+   "n": 39,
+   "window": 2,
+   "ops_left": 4,
+   "reply": "{\"why\": \"Go mine more iron ore to get bars for an iron sword and armor.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 76, \"y\": 51, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 6.3,
+   "tool": "mine_vein",
+   "args": {
+    "x": 76,
+    "y": 51,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Go mine more iron ore to get bars for an iron sword and armor.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 3/20 | HP: 75/100 | Mana: 20/20 | Def: 3 | NetProg: 133.3 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {}, \"harass_damage\": 7, \"mined_tiles\": 0, \"nav\": {\"arrived\": true, \"dug\": 0, \"position\": [76, 51], \"steps\": 46, \"ticks\": 230}, \"ok\": true, \"position\": [76, 51]}"
+  },
+  {
+   "n": 40,
+   "window": 2,
+   "ops_left": 3,
+   "reply": "{\"why\": \"Scan for nearby iron ore veins to mine efficiently.\", \"tool\": \"scan_biome_and_ores\", \"args\": {\"radius\": 28}}",
+   "seconds": 6.2,
+   "tool": "scan_biome_and_ores",
+   "args": {
+    "radius": 28
+   },
+   "why": "Scan for nearby iron ore veins to mine efficiently.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 2/20 | HP: 75/100 | Mana: 20/20 | Def: 3 | NetProg: 133.3 | TechTier: 1 (Wood) | Threat: CALM]\n{\"counts\": {\"chest\": 2, \"copper_ore\": 33, \"iron_ore\": 21, \"silver_ore\": 11}, \"depth\": 51, \"known_traps\": [[65, 62], [72, 62], [97, 39]], \"living_trees_nearby\": 6, \"max_depth\": 51, \"nearest\": {\"chest\": {\"dist\": 14, \"dx\": 7, \"dy\": -7, \"x\": 83, \"y\": 44}, \"copper_ore\": {\"dist\": 16, \"dx\": 3, \"dy\": -13, \"x\": 79, \"y\": 38}, \"iron_ore\": {\"dist\": 11, \"dx\": 8, \"dy\": -3, \"x\": 84, \"y\": 48}, \"silver_ore\": {\"dist\": 36, \"dx\": -11, \"dy\": 25, \"x\": 65, \"y\": 76}}, \"ok\": true, \"surface_y\": 28, \"zone\": \"cavern\"}"
+  },
+  {
+   "n": 41,
+   "window": 2,
+   "ops_left": 2,
+   "reply": "{\"why\": \"Mine the nearest iron ore vein to get bars for iron gear.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 84, \"y\": 48, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 5.8,
+   "tool": "mine_vein",
+   "args": {
+    "x": 84,
+    "y": 48,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Mine the nearest iron ore vein to get bars for iron gear.",
+   "ok": true,
+   "result": "[World: locked | Win: 2/4 (Night) | Ops: 1/20 | HP: 73/100 | Mana: 20/20 | Def: 3 | NetProg: 134.3 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {\"iron_ore\": 6}, \"harass_damage\": 2, \"mined_tiles\": 6, \"nav\": {\"arrived\": false, \"dug\": 7, \"position\": [84, 49], \"steps\": 10, \"ticks\": 235}, \"ok\": true, \"position\": [84, 49]}"
+  },
+  {
+   "n": 42,
+   "window": 2,
+   "ops_left": 1,
+   "reply": "{\"why\": \"I'm out of operations; end the window to settle and recover.\", \"tool\": \"end_window\", \"args\": {}}",
+   "seconds": 6.1,
+   "tool": "end_window",
+   "args": {},
+   "why": "I'm out of operations; end the window to settle and recover.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 20/20 | HP: 49/100 | Mana: 20/20 | Def: 3 | NetProg: 134.3 | TechTier: 1 (Wood) | Threat: CALM]\n{\"done\": false, \"ok\": true, \"window_settled\": {\"attended\": true, \"deaths\": 0, \"notes\": [], \"ops_used\": 20, \"phi\": 134.3, \"sheltered\": false, \"sla\": [[\"shelter\", false]], \"w\": 2}}"
+  },
+  {
+   "n": 43,
+   "window": 3,
+   "ops_left": 20,
+   "reply": "{\"why\": \"Return to the workbench/anvil to smelt iron and craft iron gear.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 76, \"y\": 27, \"budget\": 200}}",
+   "seconds": 6.2,
+   "tool": "navigate_to",
+   "args": {
+    "x": 76,
+    "y": 27,
+    "budget": 200
+   },
+   "why": "Return to the workbench/anvil to smelt iron and craft iron gear.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 19/20 | HP: 47/100 | Mana: 20/20 | Def: 3 | NetProg: 134.3 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": false, \"dug\": 0, \"harass_damage\": 2, \"ok\": true, \"position\": [68, 40], \"steps\": 31, \"ticks\": 200}"
+  },
+  {
+   "n": 44,
+   "window": 3,
+   "ops_left": 19,
+   "reply": "{\"why\": \"Continue navigating back to the workbench.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 76, \"y\": 27, \"budget\": 200}}",
+   "seconds": 5.3,
+   "tool": "navigate_to",
+   "args": {
+    "x": 76,
+    "y": 27,
+    "budget": 200
+   },
+   "why": "Continue navigating back to the workbench.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 18/20 | HP: 47/100 | Mana: 20/20 | Def: 3 | NetProg: 134.3 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": true, \"dug\": 0, \"harass_damage\": 0, \"ok\": true, \"position\": [76, 27], \"steps\": 21, \"ticks\": 170}"
+  },
+  {
+   "n": 45,
+   "window": 3,
+   "ops_left": 18,
+   "reply": "{\"why\": \"Smelt iron ore into bars for iron gear.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_bar\", \"quantity\": 3}}",
+   "seconds": 5.3,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_bar",
+    "quantity": 3
+   },
+   "why": "Smelt iron ore into bars for iron gear.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 17/20 | HP: 47/100 | Mana: 20/20 | Def: 3 | NetProg: 134.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"crafted\": 3, \"item_id\": \"iron_bar\", \"ok\": true, \"station\": \"furnace\"}"
+  },
+  {
+   "n": 46,
+   "window": 3,
+   "ops_left": 17,
+   "reply": "{\"why\": \"Now I have 5 iron bars; craft the iron broadsword to upgrade weapon tier.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_broadsword\", \"quantity\": 1}}",
+   "seconds": 6.4,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_broadsword",
+    "quantity": 1
+   },
+   "why": "Now I have 5 iron bars; craft the iron broadsword to upgrade weapon tier.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 16/20 | HP: 47/100 | Mana: 20/20 | Def: 3 | NetProg: 139.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"crafted\": 1, \"item_id\": \"iron_broadsword\", \"ok\": true, \"station\": \"anvil\"}"
+  },
+  {
+   "n": 47,
+   "window": 3,
+   "ops_left": 16,
+   "reply": "{\"why\": \"Equip the iron broadsword to raise my weapon tier.\", \"tool\": \"equip_item\", \"args\": {\"item_id\": \"iron_broadsword\"}}",
+   "seconds": 6.9,
+   "tool": "equip_item",
+   "args": {
+    "item_id": "iron_broadsword"
+   },
+   "why": "Equip the iron broadsword to raise my weapon tier.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 15/20 | HP: 47/100 | Mana: 20/20 | Def: 3 | NetProg: 147.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"defense\": 3, \"equipped\": {\"armor\": \"wood_armor\", \"pickaxe\": \"copper_pickaxe\", \"weapon\": \"iron_broadsword\"}, \"ok\": true, \"tech_tier\": 1}"
+  },
+  {
+   "n": 48,
+   "window": 3,
+   "ops_left": 15,
+   "reply": "{\"why\": \"Mine more iron ore to craft iron armor, completing the iron tier.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 84, \"y\": 48, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 5.7,
+   "tool": "mine_vein",
+   "args": {
+    "x": 84,
+    "y": 48,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Mine more iron ore to craft iron armor, completing the iron tier.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 14/20 | HP: 45/100 | Mana: 20/20 | Def: 3 | NetProg: 147.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {}, \"harass_damage\": 2, \"mined_tiles\": 0, \"nav\": {\"arrived\": false, \"dug\": 0, \"position\": [80, 49], \"steps\": 48, \"ticks\": 240}, \"ok\": true, \"position\": [80, 49]}"
+  },
+  {
+   "n": 49,
+   "window": 3,
+   "ops_left": 14,
+   "reply": "{\"why\": \"Scan for fresh iron ore veins since the previous one is depleted.\", \"tool\": \"scan_biome_and_ores\", \"args\": {\"radius\": 28}}",
+   "seconds": 5.3,
+   "tool": "scan_biome_and_ores",
+   "args": {
+    "radius": 28
+   },
+   "why": "Scan for fresh iron ore veins since the previous one is depleted.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 13/20 | HP: 45/100 | Mana: 20/20 | Def: 3 | NetProg: 147.5 | TechTier: 1 (Wood) | Threat: CALM]\n{\"counts\": {\"chest\": 2, \"copper_ore\": 24, \"gold_ore\": 10, \"iron_ore\": 18, \"silver_ore\": 9}, \"depth\": 49, \"known_traps\": [[65, 62], [72, 62], [97, 39]], \"living_trees_nearby\": 4, \"max_depth\": 51, \"nearest\": {\"chest\": {\"dist\": 8, \"dx\": 3, \"dy\": -5, \"x\": 83, \"y\": 44}, \"copper_ore\": {\"dist\": 11, \"dx\": 0, \"dy\": -11, \"x\": 80, \"y\": 38}, \"gold_ore\": {\"dist\": 43, \"dx\": 28, \"dy\": 15, \"x\": 108, \"y\": 64}, \"iron_ore\": {\"dist\": 21, \"dx\": 20, \"dy\": -1, \"x\": 100, \"y\": 48}, \"silver_ore\": {\"dist\": 42, \"dx\": -15, \"dy\": 27, \"x\": 65, \"y\": 76}}, \"ok\": true, \"surface_y\": 26, \"zone\": \"underground\"}"
+  },
+  {
+   "n": 50,
+   "window": 3,
+   "ops_left": 13,
+   "reply": "{\"why\": \"Mine the nearest iron ore vein at (100,48) for armor bars.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 100, \"y\": 48, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 5.9,
+   "tool": "mine_vein",
+   "args": {
+    "x": 100,
+    "y": 48,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Mine the nearest iron ore vein at (100,48) for armor bars.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 12/20 | HP: 43/100 | Mana: 20/20 | Def: 3 | NetProg: 147.6 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {}, \"harass_damage\": 2, \"mined_tiles\": 0, \"nav\": {\"arrived\": false, \"dug\": 6, \"position\": [92, 48], \"steps\": 13, \"ticks\": 220}, \"ok\": true, \"position\": [92, 48]}"
+  },
+  {
+   "n": 51,
+   "window": 3,
+   "ops_left": 12,
+   "reply": "{\"why\": \"Continue mining the iron vein now that I'm closer.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 100, \"y\": 48, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 5.9,
+   "tool": "mine_vein",
+   "args": {
+    "x": 100,
+    "y": 48,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Continue mining the iron vein now that I'm closer.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 11/20 | HP: 41/100 | Mana: 20/20 | Def: 3 | NetProg: 149.1 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {\"iron_ore\": 8}, \"harass_damage\": 2, \"mined_tiles\": 8, \"nav\": {\"arrived\": true, \"dug\": 8, \"position\": [100, 48], \"steps\": 8, \"ticks\": 240}, \"ok\": true, \"position\": [100, 48]}"
+  },
+  {
+   "n": 52,
+   "window": 3,
+   "ops_left": 11,
+   "reply": "{\"why\": \"Mine more iron from the same vein to reach enough for armor.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 100, \"y\": 48, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 6.7,
+   "tool": "mine_vein",
+   "args": {
+    "x": 100,
+    "y": 48,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Mine more iron from the same vein to reach enough for armor.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 10/20 | HP: 39/100 | Mana: 20/20 | Def: 3 | NetProg: 149.1 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {}, \"harass_damage\": 2, \"mined_tiles\": 0, \"nav\": {\"arrived\": true, \"dug\": 0, \"position\": [100, 48], \"steps\": 0, \"ticks\": 0}, \"ok\": true, \"position\": [100, 48]}"
+  },
+  {
+   "n": 53,
+   "window": 3,
+   "ops_left": 10,
+   "reply": "{\"why\": \"Return to the furnace/anvil to smelt bars and craft iron armor.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 76, \"y\": 27, \"budget\": 200}}",
+   "seconds": 5.4,
+   "tool": "navigate_to",
+   "args": {
+    "x": 76,
+    "y": 27,
+    "budget": 200
+   },
+   "why": "Return to the furnace/anvil to smelt bars and craft iron armor.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 9/20 | HP: 37/100 | Mana: 20/20 | Def: 3 | NetProg: 149.1 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": false, \"dug\": 0, \"harass_damage\": 2, \"ok\": true, \"position\": [65, 47], \"steps\": 38, \"ticks\": 200}"
+  },
+  {
+   "n": 54,
+   "window": 3,
+   "ops_left": 9,
+   "reply": "{\"why\": \"Continue navigating back to the workbench.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 76, \"y\": 27, \"budget\": 200}}",
+   "seconds": 5.8,
+   "tool": "navigate_to",
+   "args": {
+    "x": 76,
+    "y": 27,
+    "budget": 200
+   },
+   "why": "Continue navigating back to the workbench.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 8/20 | HP: 36/100 | Mana: 20/20 | Def: 3 | NetProg: 149.1 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": false, \"dug\": 0, \"harass_damage\": 1, \"ok\": true, \"position\": [69, 29], \"steps\": 22, \"ticks\": 200}"
+  },
+  {
+   "n": 55,
+   "window": 3,
+   "ops_left": 8,
+   "reply": "{\"why\": \"Continue to the workbench.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 76, \"y\": 27, \"budget\": 100}}",
+   "seconds": 6.7,
+   "tool": "navigate_to",
+   "args": {
+    "x": 76,
+    "y": 27,
+    "budget": 100
+   },
+   "why": "Continue to the workbench.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 7/20 | HP: 36/100 | Mana: 20/20 | Def: 3 | NetProg: 149.1 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": true, \"dug\": 0, \"harass_damage\": 0, \"ok\": true, \"position\": [76, 27], \"steps\": 9, \"ticks\": 55}"
+  },
+  {
+   "n": 56,
+   "window": 3,
+   "ops_left": 7,
+   "reply": "{\"why\": \"Smelt iron ore into bars for armor.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_bar\", \"quantity\": 4}}",
+   "seconds": 6.4,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_bar",
+    "quantity": 4
+   },
+   "why": "Smelt iron ore into bars for armor.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 6/20 | HP: 36/100 | Mana: 20/20 | Def: 3 | NetProg: 149.4 | TechTier: 1 (Wood) | Threat: CALM]\n{\"crafted\": 4, \"item_id\": \"iron_bar\", \"ok\": true, \"station\": \"furnace\"}"
+  },
+  {
+   "n": 57,
+   "window": 3,
+   "ops_left": 6,
+   "reply": "{\"why\": \"Craft iron armor with the 4 bars to complete the iron tier.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_armor\", \"quantity\": 1}}",
+   "seconds": 5.1,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_armor",
+    "quantity": 1
+   },
+   "why": "Craft iron armor with the 4 bars to complete the iron tier.",
+   "ok": false,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 5/20 | HP: 36/100 | Mana: 20/20 | Def: 3 | NetProg: 149.4 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"insufficient 'iron_bar': need 6, have 5\", \"ok\": false}"
+  },
+  {
+   "n": 58,
+   "window": 3,
+   "ops_left": 5,
+   "reply": "{\"why\": \"Mine more iron ore nearby to finish the armor set.\", \"tool\": \"scan_biome_and_ores\", \"args\": {\"radius\": 28}}",
+   "seconds": 5.8,
+   "tool": "scan_biome_and_ores",
+   "args": {
+    "radius": 28
+   },
+   "why": "Mine more iron ore nearby to finish the armor set.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 4/20 | HP: 36/100 | Mana: 20/20 | Def: 3 | NetProg: 149.4 | TechTier: 1 (Wood) | Threat: CALM]\n{\"counts\": {\"chest\": 2, \"copper_ore\": 33, \"iron_ore\": 2}, \"depth\": 27, \"known_traps\": [[97, 39]], \"living_trees_nearby\": 5, \"max_depth\": 51, \"nearest\": {\"chest\": {\"dist\": 24, \"dx\": 7, \"dy\": 17, \"x\": 83, \"y\": 44}, \"copper_ore\": {\"dist\": 10, \"dx\": 4, \"dy\": 6, \"x\": 80, \"y\": 33}, \"iron_ore\": {\"dist\": 40, \"dx\": -14, \"dy\": 26, \"x\": 62, \"y\": 53}}, \"ok\": true, \"surface_y\": 28, \"zone\": \"surface\"}"
+  },
+  {
+   "n": 59,
+   "window": 3,
+   "ops_left": 4,
+   "reply": "{\"why\": \"Mine the nearby iron vein at (62,53) to get the last bar for armor.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 62, \"y\": 53, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 6.2,
+   "tool": "mine_vein",
+   "args": {
+    "x": 62,
+    "y": 53,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Mine the nearby iron vein at (62,53) to get the last bar for armor.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 3/20 | HP: 34/100 | Mana: 20/20 | Def: 3 | NetProg: 149.4 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {}, \"harass_damage\": 2, \"mined_tiles\": 0, \"nav\": {\"arrived\": false, \"dug\": 2, \"position\": [62, 48], \"steps\": 35, \"ticks\": 225}, \"ok\": true, \"position\": [62, 48]}"
+  },
+  {
+   "n": 60,
+   "window": 3,
+   "ops_left": 3,
+   "reply": "{\"why\": \"Continue mining the iron vein now that I'm adjacent.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 62, \"y\": 53, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 7.4,
+   "tool": "mine_vein",
+   "args": {
+    "x": 62,
+    "y": 53,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Continue mining the iron vein now that I'm adjacent.",
+   "ok": true,
+   "result": "[World: locked | Win: 3/4 (Day) | Ops: 2/20 | HP: 27/100 | Mana: 20/20 | Def: 3 | NetProg: 149.8 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {\"iron_ore\": 1}, \"harass_damage\": 7, \"mined_tiles\": 1, \"nav\": {\"arrived\": true, \"dug\": 5, \"position\": [62, 53], \"steps\": 5, \"ticks\": 150}, \"ok\": true, \"position\": [62, 53]}"
+  },
+  {
+   "n": 61,
+   "window": 3,
+   "ops_left": 2,
+   "reply": "{\"why\": \"I have 1 op left and low HP; I'm underground and unsafe. I'll end the window now since I can't reach shelter in one op, but first check status is free\u2014actually just end to settle.\", \"tool\": \"end_window\", \"args\": {}}",
+   "seconds": 5.0,
+   "tool": "end_window",
+   "args": {},
+   "why": "I have 1 op left and low HP; I'm underground and unsafe. I'll end the window now since I can't reach shelter in one op, but first check status is free\u2014actually just end to settle.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 14/14 | HP: 50/100 | Mana: 20/20 | Def: 3 | NetProg: 121.6 | TechTier: 1 (Wood) | Threat: CALM]\n{\"done\": false, \"ok\": true, \"window_settled\": {\"attended\": true, \"deaths\": 1, \"notes\": [\"You were slain (caught in the open).\"], \"ops_used\": 19, \"phi\": 121.58, \"sheltered\": false, \"sla\": [[\"tier:1\", true]], \"w\": 3}}"
+  },
+  {
+   "n": 62,
+   "window": 4,
+   "ops_left": 14,
+   "reply": "{\"why\": \"Check current status and position after the death to plan the final window safely.\", \"tool\": \"terraria_status\", \"args\": {}}",
+   "seconds": 5.5,
+   "tool": "terraria_status",
+   "args": {},
+   "why": "Check current status and position after the death to plan the final window safely.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 14/14 | HP: 50/100 | Mana: 20/20 | Def: 3 | NetProg: 121.6 | TechTier: 1 (Wood) | Threat: CALM]\n{\"alerts\": [], \"defense\": 3, \"equipped\": {\"armor\": \"wood_armor\", \"pickaxe\": \"copper_pickaxe\", \"weapon\": \"iron_broadsword\"}, \"hp\": 50, \"ironskin_ticks\": 0, \"light\": 0.67, \"mana\": 20, \"max_hp\": 100, \"ok\": true, \"ops_budget\": 14, \"ops_left\": 14, \"phase\": \"Night\", \"position\": [76, 27], \"potion_sickness_ticks\": 0, \"tech_tier\": 1, \"threat\": \"CALM\", \"tick\": 0, \"ticks_per_window\": 27000, \"total_windows\": 4, \"window\": 4, \"zone\": \"surface\"}"
+  },
+  {
+   "n": 63,
+   "window": 4,
+   "ops_left": 14,
+   "reply": "{\"why\": \"I'm at the workbench with a smelted bar available; craft iron armor to finish the set.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_armor\", \"quantity\": 1}}",
+   "seconds": 6.7,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_armor",
+    "quantity": 1
+   },
+   "why": "I'm at the workbench with a smelted bar available; craft iron armor to finish the set.",
+   "ok": false,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 13/14 | HP: 50/100 | Mana: 20/20 | Def: 3 | NetProg: 121.6 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"insufficient 'iron_bar': need 6, have 2\", \"ok\": false}"
+  },
+  {
+   "n": 64,
+   "window": 4,
+   "ops_left": 13,
+   "reply": "{\"why\": \"Check inventory to see what materials I have to work with.\", \"tool\": \"inspect_inventory\", \"args\": {}}",
+   "seconds": 6.1,
+   "tool": "inspect_inventory",
+   "args": {},
+   "why": "Check inventory to see what materials I have to work with.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 12/14 | HP: 50/100 | Mana: 20/20 | Def: 3 | NetProg: 121.6 | TechTier: 1 (Wood) | Threat: CALM]\n{\"equipped\": {\"armor\": \"wood_armor\", \"pickaxe\": \"copper_pickaxe\", \"weapon\": \"iron_broadsword\"}, \"items\": {\"copper_pickaxe\": {\"count\": 1, \"kind\": \"pickaxe\", \"salvage_value\": 0.15, \"tier\": 0}, \"copper_shortsword\": {\"count\": 1, \"kind\": \"weapon\", \"salvage_value\": 0.15, \"tier\": 0}, \"gel\": {\"count\": 3, \"kind\": \"raw\", \"salvage_value\": 0.135, \"tier\": 0}, \"iron_bar\": {\"count\": 2, \"kind\": \"raw\", \"salvage_value\": 0.75, \"tier\": 0}, \"iron_broadsword\": {\"count\": 1, \"kind\": \"weapon\", \"salvage_value\": 1.5, \"tier\": 2}, \"iron_ore\": {\"count\": 1, \"kind\": \"raw\", \"salvage_value\": 0.15, \"tier\": 0}, \"stone\": {\"count\": 15, \"kind\": \"raw\", \"salvage_value\": 0.225, \"tier\": 0}, \"torch\": {\"count\": 2, \"kind\": \"supply\", \"salvage_value\": 0.06, \"tier\": 0}, \"wood\": {\"count\": 45, \"kind\": \"raw\", \"salvage_value\": 1.35, \"tier\": 0}, \"wood_armor\": {\"count\": 1, \"kind\": \"armor\", \"salvage_value\": 0.9, \"tier\": 1}, \"wooden_sword\": {\"count\": 1, \"kind\": \"weapon\", \"salvage_value\": 0.21, \"tier\": 1}}, \"ok\": true, \"slots_max\": 50, \"slots_used\": 11, \"tech_tier\": 1, \"total_salvage_value\": 5.58}"
+  },
+  {
+   "n": 65,
+   "window": 4,
+   "ops_left": 12,
+   "reply": "{\"why\": \"I need 4 more iron bars for armor; smelt the 1 ore I have and mine more. First smelt the ore.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_bar\", \"quantity\": 1}}",
+   "seconds": 6.5,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_bar",
+    "quantity": 1
+   },
+   "why": "I need 4 more iron bars for armor; smelt the 1 ore I have and mine more. First smelt the ore.",
+   "ok": false,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 11/14 | HP: 50/100 | Mana: 20/20 | Def: 3 | NetProg: 121.6 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"insufficient 'iron_ore': need 2, have 1\", \"ok\": false}"
+  },
+  {
+   "n": 66,
+   "window": 4,
+   "ops_left": 11,
+   "reply": "{\"why\": \"Mine nearby iron ore to get enough bars for armor.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 62, \"y\": 53, \"tile_type\": \"iron_ore\", \"max_tiles\": 8}}",
+   "seconds": 4.9,
+   "tool": "mine_vein",
+   "args": {
+    "x": 62,
+    "y": 53,
+    "tile_type": "iron_ore",
+    "max_tiles": 8
+   },
+   "why": "Mine nearby iron ore to get enough bars for armor.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 10/14 | HP: 43/100 | Mana: 20/20 | Def: 3 | NetProg: 121.6 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {}, \"harass_damage\": 7, \"mined_tiles\": 0, \"nav\": {\"arrived\": true, \"dug\": 0, \"position\": [62, 53], \"steps\": 40, \"ticks\": 200}, \"ok\": true, \"position\": [62, 53]}"
+  },
+  {
+   "n": 67,
+   "window": 4,
+   "ops_left": 10,
+   "reply": "{\"why\": \"The vein is depleted here; scan for remaining iron ore nearby.\", \"tool\": \"scan_biome_and_ores\", \"args\": {\"radius\": 28}}",
+   "seconds": 5.9,
+   "tool": "scan_biome_and_ores",
+   "args": {
+    "radius": 28
+   },
+   "why": "The vein is depleted here; scan for remaining iron ore nearby.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 9/14 | HP: 43/100 | Mana: 20/20 | Def: 3 | NetProg: 121.6 | TechTier: 1 (Wood) | Threat: CALM]\n{\"counts\": {\"chest\": 2, \"copper_ore\": 47, \"gold_ore\": 10, \"iron_ore\": 1, \"silver_ore\": 9}, \"depth\": 53, \"known_traps\": [[51, 49], [65, 62], [72, 62]], \"living_trees_nearby\": 8, \"max_depth\": 53, \"nearest\": {\"chest\": {\"dist\": 5, \"dx\": -4, \"dy\": 1, \"x\": 58, \"y\": 54}, \"copper_ore\": {\"dist\": 9, \"dx\": -9, \"dy\": 0, \"x\": 53, \"y\": 53}, \"gold_ore\": {\"dist\": 44, \"dx\": -27, \"dy\": 17, \"x\": 35, \"y\": 70}, \"iron_ore\": {\"dist\": 8, \"dx\": -5, \"dy\": 3, \"x\": 57, \"y\": 56}, \"silver_ore\": {\"dist\": 26, \"dx\": 3, \"dy\": 23, \"x\": 65, \"y\": 76}}, \"ok\": true, \"surface_y\": 26, \"zone\": \"cavern\"}"
+  },
+  {
+   "n": 68,
+   "window": 4,
+   "ops_left": 9,
+   "reply": "{\"why\": \"There's a chest 5 tiles away; loot it for gear/materials, then grab the last iron ore.\", \"tool\": \"loot_container_or_crystal\", \"args\": {\"x\": 58, \"y\": 54, \"kind\": \"chest\"}}",
+   "seconds": 6.6,
+   "tool": "loot_container_or_crystal",
+   "args": {
+    "x": 58,
+    "y": 54,
+    "kind": "chest"
+   },
+   "why": "There's a chest 5 tiles away; loot it for gear/materials, then grab the last iron ore.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 8/14 | HP: 36/100 | Mana: 20/20 | Def: 3 | NetProg: 123.8 | TechTier: 1 (Wood) | Threat: CALM]\n{\"crystals\": 0, \"harass_damage\": 7, \"loot\": {\"lesser_healing_potion\": 2, \"silver_bar\": 2, \"torch\": 6, \"wooden_arrow\": 40}, \"looted\": \"chest\", \"max_hp\": 100, \"ok\": true, \"target\": [58, 54]}"
+  },
+  {
+   "n": 69,
+   "window": 4,
+   "ops_left": 8,
+   "reply": "{\"why\": \"Grab the last iron ore to smelt into a bar.\", \"tool\": \"mine_vein\", \"args\": {\"x\": 57, \"y\": 56, \"tile_type\": \"iron_ore\", \"max_tiles\": 4}}",
+   "seconds": 6.2,
+   "tool": "mine_vein",
+   "args": {
+    "x": 57,
+    "y": 56,
+    "tile_type": "iron_ore",
+    "max_tiles": 4
+   },
+   "why": "Grab the last iron ore to smelt into a bar.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 7/14 | HP: 29/100 | Mana: 20/20 | Def: 3 | NetProg: 124.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"gained\": {}, \"harass_damage\": 7, \"mined_tiles\": 0, \"nav\": {\"arrived\": true, \"dug\": 1, \"position\": [57, 56], \"steps\": 3, \"ticks\": 40}, \"ok\": true, \"position\": [57, 56]}"
+  },
+  {
+   "n": 70,
+   "window": 4,
+   "ops_left": 7,
+   "reply": "{\"why\": \"The iron vein seems exhausted; I have 2 iron bars + 2 silver bars. Return to the furnace to smelt what I can and craft what's possible before window ends.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 76, \"y\": 27, \"budget\": 300}}",
+   "seconds": 6.9,
+   "tool": "navigate_to",
+   "args": {
+    "x": 76,
+    "y": 27,
+    "budget": 300
+   },
+   "why": "The iron vein seems exhausted; I have 2 iron bars + 2 silver bars. Return to the furnace to smelt what I can and craft what's possible before window ends.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 6/14 | HP: 27/100 | Mana: 20/20 | Def: 3 | NetProg: 124.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": false, \"dug\": 0, \"harass_damage\": 2, \"ok\": true, \"position\": [69, 32], \"steps\": 36, \"ticks\": 300}"
+  },
+  {
+   "n": 71,
+   "window": 4,
+   "ops_left": 6,
+   "reply": "{\"why\": \"Continue navigating back to the workbench/furnace.\", \"tool\": \"navigate_to\", \"args\": {\"x\": 76, \"y\": 27, \"budget\": 200}}",
+   "seconds": 4.2,
+   "tool": "navigate_to",
+   "args": {
+    "x": 76,
+    "y": 27,
+    "budget": 200
+   },
+   "why": "Continue navigating back to the workbench/furnace.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 5/14 | HP: 27/100 | Mana: 20/20 | Def: 3 | NetProg: 124.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"arrived\": true, \"dug\": 0, \"harass_damage\": 0, \"ok\": true, \"position\": [76, 27], \"steps\": 12, \"ticks\": 85}"
+  },
+  {
+   "n": 72,
+   "window": 4,
+   "ops_left": 5,
+   "reply": "{\"why\": \"Smelt the silver bars into silver armor if possible; check craftable recipes first.\", \"tool\": \"list_craftable_recipes\", \"args\": {}}",
+   "seconds": 7.3,
+   "tool": "list_craftable_recipes",
+   "args": {},
+   "why": "Smelt the silver bars into silver armor if possible; check craftable recipes first.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 4/14 | HP: 27/100 | Mana: 20/20 | Def: 3 | NetProg: 124.0 | TechTier: 1 (Wood) | Threat: CALM]\n{\"craftable\": [{\"item_id\": \"campfire\", \"max_batches\": 4, \"output_per_batch\": 1, \"station\": null}, {\"item_id\": \"door\", \"max_batches\": 7, \"output_per_batch\": 1, \"station\": \"workbench\"}, {\"item_id\": \"iron_bar\", \"max_batches\": 1, \"output_per_batch\": 1, \"station\": \"furnace\"}, {\"item_id\": \"torch\", \"max_batches\": 3, \"output_per_batch\": 3, \"station\": null}, {\"item_id\": \"wood_armor\", \"max_batches\": 1, \"output_per_batch\": 1, \"station\": \"workbench\"}, {\"item_id\": \"wood_platform\", \"max_batches\": 45, \"output_per_batch\": 2, \"station\": null}, {\"item_id\": \"wooden_arrow\", \"max_batches\": 15, \"output_per_batch\": 25, \"station\": \"workbench\"}, {\"item_id\": \"wooden_bow\", \"max_batches\": 4, \"output_per_batch\": 1, \"station\": \"workbench\"}, {\"item_id\": \"wooden_sword\", \"max_batches\": 6, \"output_per_batch\": 1, \"station\": \"workbench\"}, {\"item_id\": \"workbench\", \"max_batches\": 4, \"output_per_batch\": 1, \"station\": null}], \"missing\": {\"anvil\": {\"missing_ingredients\": {\"iron_bar\": 1}, \"missing_station\": null}, \"copper_bar\": {\"missing_ingredients\": {\"copper_ore\": 2}, \"missing_station\": null}, \"furnace\": {\"missing_ingredients\": {\"stone\": 5}, \"missing_station\": null}, \"gold_armor\": {\"missing_ingredients\": {\"gold_bar\": 6}, \"missing_station\": null}, \"gold_bar\": {\"missing_ingredients\": {\"gold_ore\": 2}, \"missing_station\": null}, \"gold_bow\": {\"missing_ingredients\": {\"gold_bar\": 4}, \"missing_station\": null}, \"gold_broadsword\": {\"missing_ingredients\": {\"gold_bar\": 4}, \"missing_station\": null}, \"gold_pickaxe\": {\"missing_ingredients\": {\"gold_bar\": 5}, \"missing_station\": null}, \"iron_armor\": {\"missing_ingredients\": {\"iron_bar\": 4}, \"missing_station\": null}, \"iron_bow\": {\"missing_ingredients\": {\"iron_bar\": 2}, \"missing_station\": null}, \"iron_broadsword\": {\"missing_ingredients\": {\"iron_bar\": 2}, \"missing_station\": null}, \"iron_pickaxe\": {\"missing_ingredients\": {\"iron_bar\": 3}, \"missing_station\": null}, \"lesser_healing_potion\": {\"missing_ingredients\": {\"mushroom\": 1}, \"missing_station\": null}, \"silver_armor\": {\"missing_ingredients\": {\"silver_bar\": 4}, \"missing_station\": null}, \"silver_bar\": {\"missing_ingredients\": {\"silver_ore\": 2}, \"missing_station\": null}, \"silver_bow\": {\"missing_ingredients\": {\"silver_bar\": 2}, \"missing_station\": null}, \"silver_broadsword\": {\"missing_ingredients\": {\"silver_bar\": 2}, \"missing_station\": null}, \"silver_pickaxe\": {\"missing_ingredients\": {\"silver_bar\": 3}, \"missing_station\": null}, \"suspicious_looking_eye\": {\"missing_ingredients\": {\"lens\": 6}, \"missing_station\": null}}, \"ok\": true}"
+  },
+  {
+   "n": 73,
+   "window": 4,
+   "ops_left": 4,
+   "reply": "{\"why\": \"Smelt the last iron ore into a bar to reach 3 bars, then I can craft iron pickaxe or bow.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_bar\", \"quantity\": 1}}",
+   "seconds": 7.1,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_bar",
+    "quantity": 1
+   },
+   "why": "Smelt the last iron ore into a bar to reach 3 bars, then I can craft iron pickaxe or bow.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 3/14 | HP: 27/100 | Mana: 20/20 | Def: 3 | NetProg: 124.1 | TechTier: 1 (Wood) | Threat: CALM]\n{\"crafted\": 1, \"item_id\": \"iron_bar\", \"ok\": true, \"station\": \"furnace\"}"
+  },
+  {
+   "n": 74,
+   "window": 4,
+   "ops_left": 3,
+   "reply": "{\"why\": \"With 3 iron bars I can upgrade to an iron pickaxe for better mining tier, improving gear progress.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"iron_pickaxe\", \"quantity\": 1}}",
+   "seconds": 5.3,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "iron_pickaxe",
+    "quantity": 1
+   },
+   "why": "With 3 iron bars I can upgrade to an iron pickaxe for better mining tier, improving gear progress.",
+   "ok": false,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 2/14 | HP: 27/100 | Mana: 20/20 | Def: 3 | NetProg: 124.1 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"insufficient 'iron_bar': need 5, have 3\", \"ok\": false}"
+  },
+  {
+   "n": 75,
+   "window": 4,
+   "ops_left": 2,
+   "reply": "{\"why\": \"I have 3 iron bars and 2 silver bars; craft silver broadsword needs 2 silver bars for a better weapon tier.\", \"tool\": \"craft_item\", \"args\": {\"item_id\": \"silver_broadsword\", \"quantity\": 1}}",
+   "seconds": 5.3,
+   "tool": "craft_item",
+   "args": {
+    "item_id": "silver_broadsword",
+    "quantity": 1
+   },
+   "why": "I have 3 iron bars and 2 silver bars; craft silver broadsword needs 2 silver bars for a better weapon tier.",
+   "ok": false,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 1/14 | HP: 27/100 | Mana: 20/20 | Def: 3 | NetProg: 124.1 | TechTier: 1 (Wood) | Threat: CALM]\n{\"error\": \"insufficient 'silver_bar': need 4, have 2\", \"ok\": false}"
+  },
+  {
+   "n": 76,
+   "window": 4,
+   "ops_left": 1,
+   "reply": "{\"why\": \"I'm inside valid housing at the workbench; end the window safely to settle before running out of ops.\", \"tool\": \"end_window\", \"args\": {}}",
+   "seconds": 6.4,
+   "tool": "end_window",
+   "args": {},
+   "why": "I'm inside valid housing at the workbench; end the window safely to settle before running out of ops.",
+   "ok": true,
+   "result": "[World: locked | Win: 4/4 (Night) | Ops: 0/14 | HP: 67/100 | Mana: 20/20 | Def: 3 | NetProg: 124.1 | TechTier: 1 (Wood) | Threat: CALM]\n{\"done\": true, \"ok\": true, \"window_settled\": {\"attended\": true, \"deaths\": 0, \"notes\": [], \"ops_used\": 14, \"phi\": 124.055, \"sheltered\": true, \"sla\": [[\"shelter\", true]], \"w\": 4}}"
+  }
+ ],
+ "ledger": {
+  "task": "first-night",
+  "seed": 7,
+  "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e",
+  "state_hash": "fb9800b91df7502c5829703996df9bfaf80c2e311d269f7fea8b90e4bf9664a2",
+  "phi0": 0.48,
+  "phi_final": 124.055,
+  "windows": [
+   {
+    "w": 1,
+    "attended": true,
+    "ops_used": 20,
+    "phi": 93.485,
+    "deaths": 0,
+    "sheltered": true,
+    "sla": [],
+    "notes": []
+   },
+   {
+    "w": 2,
+    "attended": true,
+    "ops_used": 20,
+    "phi": 134.3,
+    "deaths": 0,
+    "sheltered": false,
+    "sla": [
+     [
+      "shelter",
+      false
+     ]
+    ],
+    "notes": []
+   },
+   {
+    "w": 3,
+    "attended": true,
+    "ops_used": 19,
+    "phi": 121.58,
+    "deaths": 1,
+    "sheltered": false,
+    "sla": [
+     [
+      "tier:1",
+      true
+     ]
+    ],
+    "notes": [
+     "You were slain (caught in the open)."
+    ]
+   },
+   {
+    "w": 4,
+    "attended": true,
+    "ops_used": 14,
+    "phi": 124.055,
+    "deaths": 0,
+    "sheltered": true,
+    "sla": [
+     [
+      "shelter",
+      true
+     ]
+    ],
+    "notes": []
+   }
+  ],
+  "milestones": [
+   "ANVIL",
+   "CAVERN",
+   "CRAFT:anvil",
+   "CRAFT:furnace",
+   "CRAFT:iron_bar",
+   "CRAFT:iron_broadsword",
+   "CRAFT:wood_armor",
+   "CRAFT:wooden_sword",
+   "CRAFT:workbench",
+   "FURNACE",
+   "SHELTER",
+   "T1",
+   "WORKBENCH"
+  ],
+  "deaths": 1,
+  "eye": {
+   "start_max_hp": 100,
+   "max_hp": 100,
+   "armor_start": 0,
+   "armor_peak": 3,
+   "fought": false,
+   "min_hp_ratio": 1.0
+  },
+  "manifest": {
+   "source_commit": "da969a7f1a10bb3fa2b7049f2db1a1a24238f57d",
+   "source_hash": "2a29794d820e52425cc1ca35093b730ddd8582dc6ff61c5c5e5eb188f6e01641",
+   "image_digest": "unpinned-local-run",
+   "calibration_sha256": "none",
+   "seed_data_sha256": "00651c2d1999aad0a2ca12d8cde80046b71f8288a300fe1f60a1713b2959c18c",
+   "python": "3.12.13"
+  },
+  "sha256": "232d843c278fadff7389e2fbea2c6d638e220ea4964028b2412901c87d4abc54"
+ }
+}

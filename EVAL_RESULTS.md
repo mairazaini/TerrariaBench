@@ -8,24 +8,49 @@ model rows come only from sealed ledgers of live runs saved under `artifacts/run
 Composite is the calibrated reward (0 = no better than an absent player, 1 = the best scripted
 policy). Eye progress is the 0-100% progress-toward-killing-the-Eye score.
 
-| Policy / model | Status | Episodes | Composite | Pass rate | Eye progress |
-|:---|:---|---:|---:|---:|---:|
-| smart-triage | anchor | 24 | 0.982 | 100% | 57% |
-| rule-based | anchor | 24 | 0.505 | 0% | 32% |
-| blast-list | anchor | 24 | 0.116 | 0% | 4% |
-| absentee | anchor | 24 | 0.000 | 0% | 0% |
-| do-nothing | anchor | 24 | 0.000 | 0% | 0% |
-| exploiter | anchor | 24 | 0.000 | 0% | 0% |
-| Human experts | evaluated | 1 | 0.489 | 0% | 19% |
-| Gemini 4 / 2.5 | evaluated | 10 | 0.542 | 30% | 34% |
-| Nemotron 3.5 VL | evaluated | 10 | 0.185 | 0% | 13% |
-| Verda DeepSeek V4.1 Flash | not run | 0 | - | - | - |
-| Verda Kimi K3.1 Pro | not run | 0 | - | - | - |
-| Gemma Base | evaluated | 4 | 0.046 | 0% | 12% |
-| Gemma Tuned | not run | 0 | - | - | - |
+| Policy / model | Status | Cells | Runs | Composite | Pass rate | Eye progress |
+|:---|:---|---:|---:|---:|---:|---:|
+| smart-triage | anchor | 24 | 24 | 0.982 | 100% | 57% |
+| rule-based | anchor | 24 | 24 | 0.505 | 0% | 32% |
+| blast-list | anchor | 24 | 24 | 0.116 | 0% | 4% |
+| absentee | anchor | 24 | 24 | 0.000 | 0% | 0% |
+| do-nothing | anchor | 24 | 24 | 0.000 | 0% | 0% |
+| exploiter | anchor | 24 | 24 | 0.000 | 0% | 0% |
+| Human experts | evaluated | 1 | 1 | 0.489 | 0% | 19% |
+| Gemini 4 / 2.5 | evaluated | 10 | 12 | 0.652 | 47% | 45% |
+| Nemotron 3.5 VL | evaluated | 10 | 12 | 0.144 | 0% | 15% |
+| Verda DeepSeek V4.1 Flash | evaluated | 2 | 6 | 0.801 | 50% | 66% |
+| Verda Kimi K3.1 Pro | evaluated | 2 | 6 | 0.975 | 67% | 70% |
+| Gemma Base | evaluated | 4 | 4 | 0.046 | 0% | 12% |
+| Gemma Tuned | not run | 0 | 0 | - | - | - |
 
-Rows with few episodes cover only the cells that were actually played; they are not comparable
-to the 24-episode anchor rows until the full grid is run.
+Cells are distinct task:seed pairs; runs are sealed episodes. Repeat runs of one cell are averaged
+into that cell first, so repeating the headline task does not re-weight a model's row. Model rows
+cover only the cells that were actually played and are not comparable to the 24-cell anchor rows
+until the full grid is run.
+
+## Headline cell: eye-of-cthulhu, seed 7
+
+Pass threshold 0.696. Scripted rows are deterministic, so one run is exact. Model
+rows are separate live episodes of the same cell; `ended by` is recorded by the harness
+(`episode_complete` = every window was played; `agent_stopped` = the model stopped calling tools;
+`harness_turn_cap` = the runner cut the episode). `Stand-in turns` counts turns where the model's
+API call failed and the harness's scripted fallback acted instead; a clean model run shows 0.
+
+| Agent | Run | Composite | Eye progress | Deaths | Windows | Turns | Stand-in turns | Ended by | Passed |
+|:---|---:|---:|---:|---:|---:|---:|---:|:---|:---:|
+| reference (smart-triage) | - | 0.950 | 100% | 0 | 14 | - | - | scripted | yes |
+| rule-based | - | 0.442 | 33% | 1 | 14 | - | - | scripted | no |
+| stop-early (absentee) | - | 0.000 | 0% | 7 | 14 | - | - | scripted | no |
+| do-nothing | - | 0.000 | 0% | 7 | 0 | - | - | scripted | no |
+| Gemini 4 / 2.5 | 1 | 0.971 | 100% | 0 | 14 | 166 | - | episode_complete | yes |
+| Gemini 4 / 2.5 | 2 | 0.682 | 61% | 4 | 14 | 225 | - | episode_complete | no |
+| Gemini 4 / 2.5 | 3 | 1.000 | 100% | 0 | 14 | 179 | - | episode_complete | yes |
+| **Gemini 4 / 2.5, 3 runs** | | **0.884** (0.682-1.000) | **87%** | | | | | | **2/3** |
+| Nemotron 3.5 VL | 1 | 0.039 | 25% | 7 | 14 | 129 | 0 | episode_complete | no |
+| Nemotron 3.5 VL | 2 | 0.164 | 39% | 6 | 14 | 136 | 0 | episode_complete | no |
+| Nemotron 3.5 VL | 3 | 0.122 | 33% | 3 | 14 | 143 | 0 | episode_complete | no |
+| **Nemotron 3.5 VL, 3 runs** | | **0.108** (0.039-0.164) | **32%** | | | | | | **0/3** |
 
 ## Smaller model trained on environment experience
 
@@ -52,9 +77,9 @@ first-night and cavern-expedition are eval tasks the model never trained on.
 
 | Failure area | Tasks | smart-triage | rule-based | Gemini 4 / 2.5 | Nemotron 3.5 VL |
 |:---|:---|---:|---:|---:|---:|
-| Long-range strategy planning | goblin-siege, eye-of-cthulhu, wall-of-flesh, full-progression | 0.964 | 0.429 | 0.593 | 0.228 |
+| Long-range strategy planning | goblin-siege, eye-of-cthulhu, wall-of-flesh, full-progression | 0.964 | 0.429 | 0.813 | 0.146 |
 | Short-range strategy & execution | first-night, blood-moon-survival | 1.000 | 0.668 | 0.384 | 0.163 |
-| Multimodal & 2D spatial modification | arena-architect, cavern-expedition | 0.998 | 0.495 | 0.653 | 0.110 |
+| Multimodal & 2D spatial modification | arena-architect, cavern-expedition | 0.998 | 0.495 | 0.653 | 0.108 |
 
 ## GRPO post-training (BC-initialised, KL-regularised)
 
@@ -74,14 +99,32 @@ GRPO on `google/gemma-4-E4B-it`, starting from the behaviour-cloned LoRA and rew
 
 Tuned cells passing the calibrated threshold: **0/8**. The small model improves sharply on reward and stops dying, yet still clears no pass gate: the benchmark keeps headroom after training.
 
-## Real Terraria (tModLoader live session)
+## Simulator vs. real Terraria (same goal: kill the Eye of Cthulhu)
 
-Reconciled from `artifacts/recordings/real_terraria_live.json` via `python -m terraria_bench.real_eval --save` (`artifacts/runs/real_terraria/latest_score.json`):
+Rescore the committed real-game recordings with `python -m terraria_bench.real_eval --all --save` (no game, model or network needed; writes `artifacts/runs/real_terraria/`). The scorer reads kills and deaths from the game's own referee block and marks a recording inconsistent if they disagree with the claimed score.
 
-| Metric | Value |
-|:---|---:|
-| Eye progress | 20.0% |
-| Passed (Eye killed) | no |
-| Recorded frames | 300 |
-| Deaths | 2 |
-| Milestones | WOOD_GATHERED, WORKBENCH, SHELTER, WEAPONS, ARMOR_EQUIPPED |
+| World | Agent | Runs | Eye killed | Mean Eye progress | Deaths (total) |
+|:---|:---|---:|---:|---:|---:|
+| Simulator (symbolic state, MCP tools) | Gemini two-tier | 4 | 3/4 | 90% | 4 |
+| Real game (pixels, keyboard and mouse) | Gemini three-tier | 2 | 0/2 | 21% | 2 |
+
+Where each real-game recording stops on the road to the Eye:
+
+| Stage | `real_terraria_run1` (model) | `real_terraria_run2` (model) |
+|:---|:---:|:---:|
+| wood gathered | done | done |
+| workbench | done | done |
+| shelter | done | done |
+| weapons | done | done |
+| ammunition ready | - | - |
+| stone or ore mined | - | done |
+| furnace smelting | - | done |
+| anvil placed | - | - |
+| metal gear | - | - |
+| lenses collected | - | - |
+| altar found | - | - |
+| arena built | - | - |
+| summon ready | - | - |
+
+- `real_terraria_run1.json`: house built: yes; 4/13 stages; first unmet stage `ammunition_ready`; new milestones across the 300 recorded frames (turns 1981-2280): none; deaths 2; median model latency: supervisor 32.8s, short_term 3.4s, vision 5.4s, decision 0.6s; referee check: consistent.
+- `real_terraria_run2.json`: house built: yes; 6/13 stages; first unmet stage `ammunition_ready`; new milestones across the 300 recorded frames (turns 1441-1740): FURNACE_SMELTING, ARMOR_EQUIPPED; deaths 0; median model latency: supervisor 46.2s, short_term 5.8s, vision 6.2s, decision 0.8s; referee check: consistent.

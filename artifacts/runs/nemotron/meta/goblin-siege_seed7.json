@@ -1,0 +1,16 @@
+{
+  "task": "goblin-siege",
+  "seed": 7,
+  "run": 1,
+  "turns": 122,
+  "max_turns": 600,
+  "ended_by": "episode_complete",
+  "agent": "nemotron",
+  "model": "nemotron-3.5-super-vl",
+  "agent_stats": {
+    "live_calls": 122,
+    "live_errors": 0,
+    "last_error": ""
+  },
+  "ledger_sha256": "071bfe2e5fe22c7c39289944e8b8f2e569913bcf3e4e40ca15963268db0c32df"
+}
