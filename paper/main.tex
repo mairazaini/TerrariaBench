@@ -292,7 +292,22 @@ Replaying all 42 transcripts reveals \textbf{23 runs with at least one death} ac
 (2) \emph{Unwinnable boss clock} (\textbf{7/23} deaths): summoning the 2,800-HP Eye late in a window when observable per-burst damage makes finishing before window close impossible.
 (3) \emph{Zero cave return margin} (\textbf{7/23} deaths): exhausting operations underground instead of tracking \texttt{navigate\_to} return distance. Across \textbf{14 of the 23 fatal runs}, the model's stated reason for its final action explicitly claimed it was safe immediately before dying.
 
-\textbf{Sim-to-Real 60\,Hz Terraria gap.} In symbolic MCP simulation, the Gemini two-tier agent averages \textbf{90\%} Eye progress (killing the Eye in 3 of 4 runs). Projecting into live 60\,Hz \texttt{tModLoader} Terraria via pixels, keyboard, and mouse (\texttt{real\_eval.py}), two 300-frame live sessions reach \textbf{20\%} Eye progress (\texttt{real\_terraria\_run1.json}: 4/13 stages, 2 deaths) and \textbf{22\%} Eye progress (\texttt{real\_terraria\_run2.json}: 6/13 stages adding furnace smelting and armor equipping, 0 deaths), both stalling at \texttt{ammunition\_ready} with consistent offline referee telemetry.
+\textbf{Sim-to-Real 60\,Hz Terraria gap.} In symbolic MCP simulation, the Gemini two-tier agent averages \textbf{90\%} Eye progress (killing the Eye in 3 of 4 runs). Projecting into live 60\,Hz \texttt{tModLoader} Terraria via pixels, keyboard, and mouse (\texttt{real\_eval.py}, Table~\ref{tab:live60hz}), two 300-frame live sessions with the four-role hierarchical stack (\texttt{gemini-4-carbon} supervisor, \texttt{gemini-4-hydrogen} short-term/vision, \texttt{gemini-decision-1} reflex) reach \textbf{20\%} Eye progress (\texttt{real\_terraria\_run1.json}: 4/13 stages, 2 deaths) and \textbf{22.3\%} Eye progress (\texttt{real\_terraria\_run2.json}: 6/13 stages adding furnace smelting and armor equipping, 0 deaths), both stalling at \texttt{ammunition\_ready} with consistent offline referee telemetry. Median latencies explain why a fast decision tier is essential: the frontier supervisor takes 32.8--46.2\,s per strategic update, whereas the decision/reflex tier responds in 0.57--0.78\,s.
+
+\begin{table}[t]
+\centering
+\caption{Live 60\,Hz \texttt{tModLoader} Terraria agent performance (\texttt{artifacts/runs/real\_terraria/summary.json}) vs.\ symbolic MCP simulation. Both live sessions run 300 frames with \texttt{gemini-4-carbon} (supervisor), \texttt{gemini-4-hydrogen} (short-term \& vision), and \texttt{gemini-decision-1} (reflex).}
+\label{tab:live60hz}
+\begin{tabular}{lccccc}
+\toprule
+Session & Stages & Eye Prog. & Deaths & Stall Stage & Med.\ Latency (Sup.\ / Dec.) \\
+\midrule
+Symbolic MCP (Gemini, 4 runs) & --- & \textbf{90\%} (3/4 kills) & --- & --- & --- \\
+Live 60\,Hz Run 1 (\texttt{real\_terraria\_run1}) & 4/13 & 20.0\% & 2 & \texttt{ammunition\_ready} & 32.81\,s / 0.57\,s \\
+Live 60\,Hz Run 2 (\texttt{real\_terraria\_run2}) & 6/13 & 22.3\% & 0 & \texttt{ammunition\_ready} & 46.24\,s / 0.78\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Three Failure Areas}
 Table~\ref{tab:areas} groups the 8-task standard evaluation suite into three capability axes (\texttt{EVAL\_RESULTS.md}):
