@@ -1,5 +1,7 @@
 # Teammate 4 — Game Bridge Server, Human Telemetry Recorder, Operator Console, Leaderboard Dashboard & Packaging
 
+> Build-phase design notes. Example numbers inside code blocks are illustrative; the current, regenerated numbers are in [`EVAL_RESULTS.md`](../EVAL_RESULTS.md).
+
 **Status:** **COMPLETED & VERIFIED**
 
 ## 1. Mission & Scope
@@ -11,7 +13,7 @@
 > - **Task Runner:** Provide `python -m` entrypoints for every workflow so nothing depends on `make` or bash.
 
 You own **Track 4 (Game Bridge, Human Reference Tooling, Live Dashboard & Reproducible Packaging)** of **TerrariaBench**.
-The headless world engine ([engine.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/engine.py)), task lenses ([tasks.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tasks.py)), composite grader ([grader.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/grader.py)), cryptographic provenance ([provenance.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/provenance.py)), and the 24-tool `Episode` surface ([tools.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tools.py)) are already implemented and frozen.
+The headless world engine ([engine.py](../terraria_bench/engine.py)), task lenses ([tasks.py](../terraria_bench/tasks.py)), composite grader ([grader.py](../terraria_bench/grader.py)), cryptographic provenance ([provenance.py](../terraria_bench/provenance.py)), and the 24-tool `Episode` surface ([tools.py](../terraria_bench/tools.py)) are already implemented and frozen.
 
 Your responsibility is to build:
 1. The **Python Game Bridge & Human Playthrough Recorder/Replayer (`terraria_bench/human_recorder.py`)** on port `8765` (plus the thin tModLoader forwarding stub in `mod/TerrariaRLBridge/`).
@@ -61,7 +63,7 @@ flowchart LR
 
 Put all executable bridge, tick-metering, and telemetry logic in **Python** inside `terraria_bench/human_recorder.py` so the project never requires a `.NET` / C# compiler to run, test, or grade:
 1. **Pure-Python Port `8765` Bridge Server (`serve_bridge`)**:
-   - Exposes a FastAPI / `asyncio` JSON-RPC & WebSocket server on `127.0.0.1:8765` backed directly by Python's `Episode(task_id, seed)` ([tools.py](file:///C:/Users/natha/dev/TerrariaBench/terraria_bench/tools.py)).
+   - Exposes a FastAPI / `asyncio` JSON-RPC & WebSocket server on `127.0.0.1:8765` backed directly by Python's `Episode(task_id, seed)` ([tools.py](../terraria_bench/tools.py)).
    - Accepts all 24 tool calls (`TOOL_NAMES`), advances simulated ticks deterministically in Python, and logs every action to `.jsonl`.
 2. **Recording Format (`.jsonl`)**:
    - Each line in a trajectory `.jsonl` file records one step:
@@ -103,7 +105,7 @@ Build `dashboard/app.py` in **pure Python** (`FastAPI` + Python helper functions
      - **StoreBench Table 1 Leaderboard** (Composite, Pass Rate, Business, Reliability, Continuity across the 6 scripted anchors, Frontier LLMs, and Human Reference).
      - **StoreBench Table 3 Post-Training Transfer** (Gemma Base vs. GRPO-Tuned).
      - **Per-Task × Seed Matrix** showing calibrated `(z, s, threshold)` and gate verification status from `artifacts/calibration.json`.
-     - **Episode Trajectory & Exploit Audit View** showing window-by-window $\Phi(s_t)$ progression, SLA checkpoint pass/fail status, and the 11 closed reward exploits (`grader.EXPLOITS`).
+     - **Episode Trajectory & Exploit Audit View** showing window-by-window $\Phi(s_t)$ progression, SLA checkpoint pass/fail status, and the 12 closed reward exploits (`grader.EXPLOITS`).
    - `GET /api/leaderboard`: Returns JSON leaderboard computed in Python from `artifacts/calibration.json` and `artifacts/runs/`.
    - `GET /api/calibration`: Returns the sealed `artifacts/calibration.json` payload and verification status (`verify_seal`).
    - `GET /api/exploits`: Returns the 11-entry `EXPLOITS` catalogue from `grader.py`.

@@ -1,0 +1,160 @@
+{
+ "deaths": 2,
+ "eye": {
+  "armor_peak": 0,
+  "armor_start": 0,
+  "fought": false,
+  "max_hp": 100,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "14996cbd7e22ce8b0aac92f7df4583758d88a158a87e9588f90adfa5f5bbc325",
+  "image_digest": "unpinned-local-run",
+  "python": "3.12.13",
+  "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
+  "source_commit": "cdaee18568dc34a349636cf54f486fe88e8d5aea",
+  "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
+ },
+ "milestones": [
+  "CRAFT:furnace",
+  "CRAFT:torch",
+  "CRAFT:workbench",
+  "FURNACE",
+  "SHELTER",
+  "WORKBENCH"
+ ],
+ "phi0": 0.48,
+ "phi_final": 24.37,
+ "seed": 7,
+ "sha256": "2cca12024974c49a0a7d9c0d2b6ee40c0bc3ea138107e5ed69e7a363d0367b7d",
+ "state_hash": "32d53dde03c82a09c455f95bcb91b0958ca22d96c080a4c461c90cb596ea22f7",
+ "task": "cavern-expedition",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 10,
+   "phi": 10.61,
+   "sheltered": false,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 16,
+   "phi": 22.15,
+   "sheltered": false,
+   "sla": [
+    [
+     "shelter",
+     false
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 11,
+   "phi": 23.03,
+   "sheltered": false,
+   "sla": [],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 2,
+   "phi": 0.48,
+   "sheltered": false,
+   "sla": [
+    [
+     "depth:50",
+     false
+    ]
+   ],
+   "w": 4
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 10,
+   "phi": 3.795,
+   "sheltered": false,
+   "sla": [],
+   "w": 5
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 3,
+   "phi": 0.48,
+   "sheltered": false,
+   "sla": [],
+   "w": 6
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 2,
+   "phi": 0.48,
+   "sheltered": false,
+   "sla": [],
+   "w": 7
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 8,
+   "phi": 24.37,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:2",
+     false
+    ]
+   ],
+   "w": 8
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 2,
+   "phi": 24.37,
+   "sheltered": true,
+   "sla": [],
+   "w": 9
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 1,
+   "phi": 24.37,
+   "sheltered": true,
+   "sla": [
+    [
+     "crystal:1",
+     false
+    ]
+   ],
+   "w": 10
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

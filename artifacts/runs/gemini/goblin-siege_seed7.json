@@ -1,0 +1,193 @@
+{
+ "deaths": 1,
+ "eye": {
+  "armor_peak": 16,
+  "armor_start": 0,
+  "fought": false,
+  "max_hp": 100,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "14996cbd7e22ce8b0aac92f7df4583758d88a158a87e9588f90adfa5f5bbc325",
+  "image_digest": "unpinned-local-run",
+  "python": "3.12.13",
+  "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
+  "source_commit": "cdaee18568dc34a349636cf54f486fe88e8d5aea",
+  "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
+ },
+ "milestones": [
+  "ANVIL",
+  "ARENA",
+  "CAVERN",
+  "CRAFT:anvil",
+  "CRAFT:campfire",
+  "CRAFT:furnace",
+  "CRAFT:gold_armor",
+  "CRAFT:gold_bar",
+  "CRAFT:gold_bow",
+  "CRAFT:iron_armor",
+  "CRAFT:iron_bar",
+  "CRAFT:lesser_healing_potion",
+  "CRAFT:silver_bar",
+  "CRAFT:silver_bow",
+  "CRAFT:wood_platform",
+  "CRAFT:wooden_arrow",
+  "CRAFT:workbench",
+  "FURNACE",
+  "SHELTER",
+  "SIEGE",
+  "T1",
+  "T2",
+  "T3",
+  "T4",
+  "UNDERWORLD",
+  "WORKBENCH"
+ ],
+ "phi0": 108.145,
+ "phi_final": 658.765,
+ "seed": 7,
+ "sha256": "3a5d728cf47d6f7f7009095908eecbd03a20c18f6ba2d00855eb1a5b887008d6",
+ "state_hash": "148659f62a288a9ba0f51c633e9e3c7159a8dd4cfac0137edc0b87a72788339f",
+ "task": "goblin-siege",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 170.135,
+   "sheltered": true,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 14,
+   "phi": 194.595,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 215.93,
+   "sheltered": true,
+   "sla": [],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 18,
+   "phi": 222.345,
+   "sheltered": true,
+   "sla": [],
+   "w": 4
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 18,
+   "phi": 250.365,
+   "sheltered": true,
+   "sla": [],
+   "w": 5
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 300.445,
+   "sheltered": true,
+   "sla": [],
+   "w": 6
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 565.43,
+   "sheltered": false,
+   "sla": [],
+   "w": 7
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 18,
+   "phi": 564.77,
+   "sheltered": true,
+   "sla": [
+    [
+     "def:9",
+     true
+    ]
+   ],
+   "w": 8
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 7,
+   "phi": 686.11,
+   "sheltered": true,
+   "sla": [],
+   "w": 9
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 3,
+   "phi": 686.11,
+   "sheltered": true,
+   "sla": [
+    [
+     "milestone:SIEGE",
+     true
+    ]
+   ],
+   "w": 10
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 20,
+   "phi": 658.095,
+   "sheltered": false,
+   "sla": [],
+   "w": 11
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 6,
+   "phi": 658.765,
+   "sheltered": true,
+   "sla": [],
+   "w": 12
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

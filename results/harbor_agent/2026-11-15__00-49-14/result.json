@@ -1,0 +1,40 @@
+{
+    "schema_version": 1,
+    "id": "57835980-ff2b-4468-951b-b9ac230e845f",
+    "started_at": "2026-11-15T00:49:19.962456",
+    "updated_at": "2026-11-15T00:54:15.850045",
+    "finished_at": "2026-11-15T00:54:15.850045",
+    "n_total_trials": 1,
+    "stats": {
+        "n_completed_trials": 1,
+        "n_errored_trials": 0,
+        "n_running_trials": 0,
+        "n_pending_trials": 0,
+        "n_cancelled_trials": 0,
+        "n_retries": 0,
+        "evals": {
+            "opencode__verda/deepseek-4-1-flash-1017__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "mean": 0.81
+                    }
+                ],
+                "pass_at_k": {},
+                "reward_stats": {
+                    "reward": {
+                        "0.81": [
+                            "terraria-first-night-hardcore__ehs3396"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        },
+        "n_input_tokens": 1964318,
+        "n_cache_tokens": 1925120,
+        "n_output_tokens": 10735,
+        "cost_usd": null
+    }
+}

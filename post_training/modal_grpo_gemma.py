@@ -27,31 +27,34 @@ REPO = Path(__file__).resolve().parent.parent
 
 app = modal.App(APP_NAME)
 volume = modal.Volume.from_name("terrariabench-weights-vol", create_if_missing=True)
-hf_secret = modal.Secret.from_name("huggingface")
-ENV = {"HF_HOME": "/data/hf", "GEMMA_MODEL_ID": BASE_MODEL_ID}   # weights cached on the volume
+SECRETS = [modal.Secret.from_name("huggingface")] if os.environ.get("USE_HF_SECRET") == "1" else []
+ENV = {"HF_HOME": "/data/hf", "GEMMA_MODEL_ID": BASE_MODEL_ID, "TERRARIA_WIKI_DIR": "/root/data/terraria_wiki"}
 
 training_image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install("torch>=2.4.0", "transformers>=4.48.0", "trl>=0.14.0", "peft>=0.14.0",
-                 "accelerate>=1.2.0", "datasets>=3.2.0", "torchvision", "pillow", "sentencepiece", "protobuf")
+                 "accelerate>=1.2.0", "datasets>=3.2.0", "torchvision", "pillow", "sentencepiece", "protobuf", "httpx")
     .env(ENV)
     .add_local_python_source("terraria_bench", "post_training")
     # calibration.json sits next to the package, where provenance.py looks for it
-    .add_local_dir(str(REPO / "artifacts"), "/root/artifacts")
+    .add_local_dir(str(REPO / "artifacts"), "/root/artifacts", ignore=["recordings/**", "checkpoints/**", "runs/**"])
 )
+if (REPO / "data" / "terraria_wiki").is_dir():
+    training_image = training_image.add_local_dir(str(REPO / "data" / "terraria_wiki"), "/root/data/terraria_wiki")
 serving_image = modal.Image.debian_slim(python_version="3.11").pip_install("vllm>=0.7.2").env(ENV)
 
 
-@app.function(image=training_image, gpu=GPU, timeout=4 * 3600, volumes={"/data": volume}, secrets=[hf_secret])
-def train_grpo(num_steps: int = 36):
+@app.function(image=training_image, gpu=GPU, timeout=4 * 3600, volumes={"/data": volume}, secrets=SECRETS)
+def train_grpo(num_steps: int = 36, from_bc: bool = True):
     from post_training.grpo_train import run_training
 
-    run_training(num_steps, LORA_OUTPUT_DIR)
+    init = BC_OUTPUT_DIR if (from_bc and os.path.exists(BC_OUTPUT_DIR)) else ""
+    run_training(num_steps, LORA_OUTPUT_DIR, init_adapter=init)
     volume.commit()
-    print(f"saved LoRA adapter to {LORA_OUTPUT_DIR}")
+    print(f"saved LoRA adapter to {LORA_OUTPUT_DIR} (init_adapter={init or 'fresh'})")
 
 
-@app.function(image=training_image, gpu=GPU, timeout=4 * 3600, volumes={"/data": volume}, secrets=[hf_secret])
+@app.function(image=training_image, gpu=GPU, timeout=4 * 3600, volumes={"/data": volume}, secrets=SECRETS)
 def train_bc(epochs: float = 3.0):
     from post_training.bc_train import run_bc
 
@@ -67,7 +70,7 @@ EVAL_CELLS = [  # seen worlds, unseen worlds of the train tasks, unseen eval tas
 ]
 
 
-@app.function(image=training_image, gpu=GPU, timeout=6 * 3600, volumes={"/data": volume}, secrets=[hf_secret])
+@app.function(image=training_image, gpu=GPU, timeout=6 * 3600, volumes={"/data": volume}, secrets=SECRETS)
 def eval_bc(cells: str = ""):
     import json
 
@@ -83,8 +86,24 @@ def eval_bc(cells: str = ""):
     evaluate(BASE_MODEL_ID, BC_OUTPUT_DIR, cells.split(",") if cells else EVAL_CELLS, on_row=save)
 
 
+@app.function(image=training_image, gpu=GPU, timeout=6 * 3600, volumes={"/data": volume}, secrets=SECRETS)
+def eval_grpo(cells: str = ""):
+    import json
+
+    from post_training.eval_hf import evaluate
+
+    os.makedirs("/data/eval", exist_ok=True)
+
+    def save(rows):
+        with open("/data/eval/grpo_eval.json", "w") as f:
+            json.dump(rows, f, indent=1)
+        volume.commit()
+
+    evaluate(BASE_MODEL_ID, LORA_OUTPUT_DIR, cells.split(",") if cells else EVAL_CELLS, on_row=save)
+
+
 @app.function(image=serving_image, gpu=GPU, timeout=3600, volumes={"/data": volume},
-              secrets=[hf_secret], scaledown_window=300)
+              secrets=SECRETS, scaledown_window=300)
 @modal.concurrent(max_inputs=32)
 @modal.web_server(8000, startup_timeout=900)
 def serve_vllm():

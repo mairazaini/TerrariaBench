@@ -1,0 +1,17 @@
+{
+  "task": "wall-of-flesh",
+  "seed": 7,
+  "run": 1,
+  "turns": 193,
+  "max_turns": 600,
+  "ended_by": "episode_complete",
+  "agent": "gemini",
+  "model": "gemini-4-hydrogen",
+  "agent_stats": {
+    "supervisor_calls": 35,
+    "decision_calls": 216,
+    "replans": 23,
+    "low_confidence": 13
+  },
+  "ledger_sha256": "1bab68f0c74f0221ac8e8771ea95b6d38666242fdb1d3f0b125297c1c04ca74c"
+}

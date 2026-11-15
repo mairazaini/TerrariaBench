@@ -12,11 +12,20 @@ calibrated (z, s). Eval tasks and held-out seeds are never touched.
 from __future__ import annotations
 
 import json
+import os
 
+from terraria_bench.context_crawler import DEFAULT_OUTPUT_DIR, retrieve_wiki_context
 from terraria_bench.grader import DENSE_CLIP, training_reward
 from terraria_bench.provenance import load_calibration
 from terraria_bench.tasks import EVAL_TASKS, REPORTED_SEEDS, TASKS, TRAIN_TASKS
 from terraria_bench.tools import TOOL_SCHEMAS, Episode
+
+_WIKI_QUERIES = {
+    "shelter-crunch": "House valid housing shelter workbench torch door walls",
+    "woodland-scramble": "Wood forest trees workbench shelter house crafting",
+    "ore-rush": "Mining cavern ore iron furnace anvil pickaxe",
+    "slime-rain": "Slime bow wooden arrow defense combat",
+}
 
 TRAIN_CELLS = tuple((t, s) for t in TRAIN_TASKS for s in REPORTED_SEEDS)
 assert not set(TRAIN_TASKS) & set(EVAL_TASKS), "train/eval task leakage"
@@ -39,9 +48,23 @@ SYSTEM_PROMPT = (
 )
 
 
+def _wiki_hint(task_id: str) -> str:
+    """Retrieve concise offline Terraria Wiki context for the training task."""
+    query = _WIKI_QUERIES.get(task_id, TASKS[task_id].title)
+    wiki_dir = os.environ.get("TERRARIA_WIKI_DIR") or str(DEFAULT_OUTPUT_DIR)
+    try:
+        ctx = retrieve_wiki_context(query, corpus_dir=wiki_dir, max_pages=2, max_chars=900)
+    except Exception:
+        ctx = ""
+    return f"\n\nWiki reference:\n{ctx}" if ctx else ""
+
+
 def build_prompt(task_id: str, seed: int) -> str:
     ep = Episode(task_id, seed, redact_seed=True)
-    return f"{SYSTEM_PROMPT}\n\n{TASKS[task_id].prompt}\n\nCurrent state: {ep.header()}\n\nPlan:\n"
+    return (
+        f"{SYSTEM_PROMPT}{_wiki_hint(task_id)}\n\n"
+        f"{TASKS[task_id].prompt}\n\nCurrent state: {ep.header()}\n\nPlan:\n"
+    )
 
 
 def training_rows(n: int) -> list[dict]:

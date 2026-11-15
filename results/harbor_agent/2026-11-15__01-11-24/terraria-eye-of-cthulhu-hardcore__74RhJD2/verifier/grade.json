@@ -1,0 +1,50 @@
+{
+ "reward": 1.0,
+ "grade": {
+  "composite": 1.0,
+  "business": 1.0,
+  "reliability": 1.0,
+  "continuity": 1.0,
+  "attendance": 1.0,
+  "survival": 1.0,
+  "sla": 1.0,
+  "windows": 14,
+  "delta_net": 1081.04,
+  "deaths": 0,
+  "eye_progress": 1.0,
+  "eye_progress_pct": 100.0,
+  "eye_breakdown": {
+   "eye_progress_score": 1.0,
+   "eye_progress_pct": 100.0,
+   "health_score": 0.1,
+   "armor_score": 0.1,
+   "tasks_score": 0.33,
+   "boss_fight_score": 0.25,
+   "eye_kill_score": 0.2,
+   "eye_fought": true,
+   "eye_min_hp_ratio": 0.0,
+   "eye_killed": true,
+   "max_hp": 220,
+   "defense": 16,
+   "task_checklist": {
+    "wood_gathered": true,
+    "workbench": true,
+    "shelter": true,
+    "weapons": true,
+    "ammunition_ready": true,
+    "stone_or_ore_mined": true,
+    "furnace_smelting": true,
+    "anvil_placed": true,
+    "metal_gear": true,
+    "lenses_collected": false,
+    "altar_found": true,
+    "arena_built": true,
+    "summon_ready": true
+   }
+  },
+  "valid": true,
+  "reason": "",
+  "passed": true
+ },
+ "tool_calls": 264
+}

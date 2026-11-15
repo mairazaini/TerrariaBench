@@ -1,0 +1,221 @@
+{
+ "deaths": 0,
+ "eye": {
+  "armor_peak": 9,
+  "armor_start": 0,
+  "fought": true,
+  "max_hp": 160,
+  "min_hp_ratio": 0.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "14996cbd7e22ce8b0aac92f7df4583758d88a158a87e9588f90adfa5f5bbc325",
+  "image_digest": "unpinned-local-run",
+  "python": "3.12.13",
+  "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
+  "source_commit": "88e6236f5a9a7f5e41b75a9e533dd5b086b7afbf",
+  "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
+ },
+ "milestones": [
+  "ANVIL",
+  "ARENA",
+  "CAVERN",
+  "CRAFT:anvil",
+  "CRAFT:campfire",
+  "CRAFT:copper_bar",
+  "CRAFT:furnace",
+  "CRAFT:iron_armor",
+  "CRAFT:iron_bar",
+  "CRAFT:lesser_healing_potion",
+  "CRAFT:silver_bow",
+  "CRAFT:torch",
+  "CRAFT:wood_armor",
+  "CRAFT:wood_platform",
+  "CRAFT:wooden_arrow",
+  "CRAFT:wooden_bow",
+  "CRAFT:workbench",
+  "CRYSTAL1",
+  "CRYSTAL2",
+  "CRYSTAL3",
+  "FURNACE",
+  "KILL:eye",
+  "SHELTER",
+  "T1",
+  "T2",
+  "WORKBENCH"
+ ],
+ "phi0": 1.08,
+ "phi_final": 638.205,
+ "seed": 11,
+ "sha256": "e25d1770b70037b08042ae472f15631f8680067a8d251ce1ad4cc2a070cffb9c",
+ "state_hash": "036c1dfc73efb27709d57c716a597d364fe454987e51ccbdf381800bac5b9d88",
+ "task": "eye-of-cthulhu",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 47.44,
+   "sheltered": true,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 86.335,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 127.48,
+   "sheltered": true,
+   "sla": [],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 141.515,
+   "sheltered": false,
+   "sla": [],
+   "w": 4
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 198.275,
+   "sheltered": false,
+   "sla": [],
+   "w": 5
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 16,
+   "phi": 280.78,
+   "sheltered": true,
+   "sla": [],
+   "w": 6
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 13,
+   "phi": 324.37,
+   "sheltered": true,
+   "sla": [],
+   "w": 7
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 626.355,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:2",
+     true
+    ]
+   ],
+   "w": 8
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 636.37,
+   "sheltered": false,
+   "sla": [],
+   "w": 9
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 11,
+   "phi": 635.26,
+   "sheltered": true,
+   "sla": [
+    [
+     "arena",
+     true
+    ]
+   ],
+   "w": 10
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 7,
+   "phi": 635.56,
+   "sheltered": true,
+   "sla": [],
+   "w": 11
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 636.155,
+   "sheltered": true,
+   "sla": [
+    [
+     "boss:eye:0.6",
+     true
+    ]
+   ],
+   "w": 12
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 17,
+   "phi": 638.205,
+   "sheltered": true,
+   "sla": [],
+   "w": 13
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 2,
+   "phi": 638.205,
+   "sheltered": true,
+   "sla": [
+    [
+     "kill:eye",
+     true
+    ]
+   ],
+   "w": 14
+  }
+ ],
+ "world_hash": "846c4d061deef5ae53220563c5a3a676f7cbe7af8775821fa1f2acc74341ebf8"
+}

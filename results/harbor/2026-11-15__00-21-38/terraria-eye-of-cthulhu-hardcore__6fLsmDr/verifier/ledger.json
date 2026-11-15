@@ -1,0 +1,209 @@
+{
+ "deaths": 1,
+ "eye": {
+  "armor_peak": 0,
+  "armor_start": 0,
+  "fought": false,
+  "max_hp": 100,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "a5a810b1cba54deca4763eddf79ef69aa93e40c8bbc07bb3323a22dbeb0c61ac",
+  "image_digest": "terrariabench-harbor-game",
+  "python": "3.11.18",
+  "seed_data_sha256": "c3529f17c34fdb5e5149f999a4928ba182a6e216d6b17ae01706fd5bffe80845",
+  "source_commit": "unknown",
+  "source_hash": "d980165f6117a07ca80d1c996b1cd6b64df4f4e34e693df41cfc2ed68593b564"
+ },
+ "milestones": [],
+ "phi0": 1.08,
+ "phi_final": 1.08,
+ "seed": 7,
+ "sha256": "5f2e04164b05ebf538cf2122cbe3e6fbd3b574bcfe39231c68a1a976c40801e9",
+ "state_hash": "92a5aaa36f5f57716c46453acccc6bde4a847650c38abc39527dfb80cbb120b1",
+ "task": "eye-of-cthulhu-hardcore",
+ "windows": [
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": false,
+   "deaths": 1,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [
+    [
+     "shelter",
+     false
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [],
+   "w": 3
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [],
+   "w": 4
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [],
+   "w": 5
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [],
+   "w": 6
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [],
+   "w": 7
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [
+    [
+     "tier:2",
+     false
+    ]
+   ],
+   "w": 8
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [],
+   "w": 9
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [
+    [
+     "arena",
+     false
+    ]
+   ],
+   "w": 10
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [],
+   "w": 11
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [
+    "The Eye of Cthulhu overwhelmed you and left.",
+    "You were slain (the Eye of Cthulhu)."
+   ],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [
+    [
+     "boss:eye:0.6",
+     false
+    ]
+   ],
+   "w": 12
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [],
+   "w": 13
+  },
+  {
+   "attended": false,
+   "deaths": 0,
+   "notes": [
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 0,
+   "phi": 1.08,
+   "sheltered": false,
+   "sla": [
+    [
+     "kill:eye",
+     false
+    ]
+   ],
+   "w": 14
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

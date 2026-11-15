@@ -1,0 +1,226 @@
+{
+ "deaths": 0,
+ "eye": {
+  "armor_peak": 16,
+  "armor_start": 0,
+  "fought": true,
+  "max_hp": 140,
+  "min_hp_ratio": 0.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "a5a810b1cba54deca4763eddf79ef69aa93e40c8bbc07bb3323a22dbeb0c61ac",
+  "image_digest": "terrariabench-harbor-game",
+  "python": "3.11.18",
+  "seed_data_sha256": "c3529f17c34fdb5e5149f999a4928ba182a6e216d6b17ae01706fd5bffe80845",
+  "source_commit": "unknown",
+  "source_hash": "d980165f6117a07ca80d1c996b1cd6b64df4f4e34e693df41cfc2ed68593b564"
+ },
+ "milestones": [
+  "ANVIL",
+  "ARENA",
+  "CAVERN",
+  "CRAFT:anvil",
+  "CRAFT:campfire",
+  "CRAFT:furnace",
+  "CRAFT:gold_armor",
+  "CRAFT:gold_bar",
+  "CRAFT:gold_broadsword",
+  "CRAFT:iron_armor",
+  "CRAFT:iron_bar",
+  "CRAFT:iron_broadsword",
+  "CRAFT:iron_pickaxe",
+  "CRAFT:silver_armor",
+  "CRAFT:silver_bar",
+  "CRAFT:silver_bow",
+  "CRAFT:wood_platform",
+  "CRAFT:wooden_arrow",
+  "CRAFT:workbench",
+  "CRYSTAL1",
+  "CRYSTAL2",
+  "FURNACE",
+  "HELLBRIDGE",
+  "KILL:eye",
+  "SHELTER",
+  "T1",
+  "T2",
+  "T3",
+  "T4",
+  "UNDERWORLD",
+  "WORKBENCH"
+ ],
+ "phi0": 1.08,
+ "phi_final": 964.405,
+ "seed": 7,
+ "sha256": "0b9268ced8f1170c9ed788395b13b8cc7c1a8bb24aacf942e7bba844fd77f955",
+ "state_hash": "945a5590097393724bbfc31545c5532f04d3d70f640e9752377734efeff0877a",
+ "task": "eye-of-cthulhu-hardcore",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 64.405,
+   "sheltered": true,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 108.795,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 112.755,
+   "sheltered": true,
+   "sla": [],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 270.515,
+   "sheltered": true,
+   "sla": [],
+   "w": 4
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 313.135,
+   "sheltered": true,
+   "sla": [],
+   "w": 5
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 618.75,
+   "sheltered": false,
+   "sla": [],
+   "w": 6
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 19,
+   "phi": 621.0,
+   "sheltered": true,
+   "sla": [],
+   "w": 7
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 637.245,
+   "sheltered": false,
+   "sla": [
+    [
+     "tier:2",
+     true
+    ]
+   ],
+   "w": 8
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 756.435,
+   "sheltered": true,
+   "sla": [],
+   "w": 9
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 15,
+   "phi": 876.39,
+   "sheltered": true,
+   "sla": [
+    [
+     "arena",
+     true
+    ]
+   ],
+   "w": 10
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 17,
+   "phi": 962.89,
+   "sheltered": true,
+   "sla": [],
+   "w": 11
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 9,
+   "phi": 964.405,
+   "sheltered": true,
+   "sla": [
+    [
+     "boss:eye:0.6",
+     true
+    ]
+   ],
+   "w": 12
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 1,
+   "phi": 964.405,
+   "sheltered": true,
+   "sla": [],
+   "w": 13
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 2,
+   "phi": 964.405,
+   "sheltered": true,
+   "sla": [
+    [
+     "kill:eye",
+     true
+    ]
+   ],
+   "w": 14
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

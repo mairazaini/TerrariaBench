@@ -1,0 +1,17 @@
+{
+  "task": "eye-of-cthulhu",
+  "seed": 7,
+  "run": 3,
+  "turns": 179,
+  "max_turns": 600,
+  "ended_by": "episode_complete",
+  "agent": "gemini",
+  "model": "gemini-4-hydrogen",
+  "agent_stats": {
+    "supervisor_calls": 26,
+    "decision_calls": 191,
+    "replans": 12,
+    "low_confidence": 6
+  },
+  "ledger_sha256": "67458ece9c6907d45774ccbe47ffc7b71bc130c0d19aff4eeef7b94c67b746e7"
+}

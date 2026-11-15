@@ -283,3 +283,51 @@ def test_nemotron_backoff_multimodal_and_eval_standard():
     assert rows["absentee"]["composite"] == 0.0
     assert rows["exploiter"]["composite"] < 0.05
     assert rows["smart-triage"]["composite"] > rows["rule-based"]["composite"] > rows["blast-list"]["composite"]
+
+
+def test_runner_records_how_a_run_ended_and_keeps_repeat_runs_apart(tmp_path: Path):
+    from terraria_bench.harness.runner import MAX_TURNS, _aggregate_graded, _cell_means
+
+    # The default turn cap must sit above every task's metered budget, or the harness (not the
+    # agent) would end long episodes.
+    assert MAX_TURNS > max(t.windows * t.budget for t in TASKS.values())
+
+    class QuitterAgent:
+        name = "quitter"
+
+        def next_action(self, observation, context, episode):
+            return None
+
+    class ProbeAgent:
+        name = "probe"
+
+        def next_action(self, observation, context, episode):
+            return {"tool": "terraria_status", "args": {}}
+
+    first = run_agent_episode(QuitterAgent(), "first-night", 7, save_dir=tmp_path)
+    second = run_agent_episode(QuitterAgent(), "first-night", 7, save_dir=tmp_path, run_index=2)
+    assert first["ended_by"] == second["ended_by"] == "agent_stopped"
+    assert run_agent_episode(ProbeAgent(), "first-night", 7, max_turns=5)["ended_by"] == "harness_turn_cap"
+
+    # Run 2 gets its own sealed ledger; metadata lives in meta/ so the ledger loader skips it.
+    assert (tmp_path / "first-night_seed7.json").exists()
+    assert (tmp_path / "first-night_seed7_run2.json").exists()
+    meta = json.loads((tmp_path / "meta" / "first-night_seed7_run2.json").read_text(encoding="utf-8"))
+    assert meta["run"] == 2 and meta["ended_by"] == "agent_stopped"
+    assert meta["ledger_sha256"] == second["ledger"]["sha256"]
+
+    # Three runs of one cell weigh the same as one run of another cell.
+    rows = [
+        {"cell": "a:7", "composite": 0.0, "business": 0.0, "reliability": 0.0, "continuity": 0.0,
+         "survival": 0.0, "sla": 0.0, "windows": 1, "passed": False},
+        {"cell": "a:7", "composite": 0.0, "business": 0.0, "reliability": 0.0, "continuity": 0.0,
+         "survival": 0.0, "sla": 0.0, "windows": 1, "passed": False},
+        {"cell": "a:7", "composite": 0.3, "business": 0.0, "reliability": 0.0, "continuity": 0.0,
+         "survival": 0.0, "sla": 0.0, "windows": 1, "passed": True},
+        {"cell": "b:7", "composite": 0.9, "business": 0.0, "reliability": 0.0, "continuity": 0.0,
+         "survival": 0.0, "sla": 0.0, "windows": 1, "passed": True},
+    ]
+    agg = _aggregate_graded(_cell_means(rows))
+    assert agg["episodes"] == 2
+    assert agg["composite"] == pytest.approx(0.5)
+    assert agg["pass_rate"] == pytest.approx((1 / 3 + 1) / 2, abs=1e-4)

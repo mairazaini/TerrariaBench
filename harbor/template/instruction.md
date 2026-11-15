@@ -18,15 +18,6 @@ Every reply starts with a header line showing the current window, the
 operations you have left in it, your HP and your position. Read it before each
 decision.
 
-## How you are scored
-
-One score between 0 and 1, with partial credit, computed from the server's
-record of the whole run. It rewards real progress on the situation above
-(shelter, gear, depth, events survived, bosses fought), doing things by the
-time they are needed rather than at the last moment, staying alive, and tool
-calls that actually work. Failed, wasted or rule-bending calls count against
-you. A run that does nothing scores 0.
-
 ## Rules of the run
 
 - There is exactly one world and one attempt. Nothing resets, and every call

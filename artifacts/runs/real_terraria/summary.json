@@ -1,0 +1,149 @@
+[
+  {
+    "source": "tmodloader_real_game",
+    "run_id": "real_terraria_live",
+    "player": "model",
+    "models": {
+      "supervisor": "gemini-4-carbon",
+      "short_term": "gemini-4-hydrogen",
+      "vision": "gemini-4-hydrogen",
+      "decision": "gemini-decision-1"
+    },
+    "recording": "artifacts/recordings/real_terraria_run1.json",
+    "frames": 300,
+    "house_built": true,
+    "stages_done": 4,
+    "stages_total": 13,
+    "stalled_at": "ammunition_ready",
+    "referee": {
+      "available": true,
+      "consistent": true,
+      "mismatches": []
+    },
+    "trajectory": {
+      "first_turn": 1981,
+      "last_turn": 2280,
+      "milestones_gained_in_recording": [],
+      "deaths_in_recording": 0,
+      "max_depth_below_surface": -80,
+      "median_latency_s": {
+        "supervisor": 32.81,
+        "short_term": 3.39,
+        "vision": 5.4,
+        "decision": 0.57
+      }
+    },
+    "eye_progress_pct": 20.0,
+    "eye_killed": false,
+    "passed": false,
+    "max_hp": 100,
+    "defense": 3,
+    "deaths": 2,
+    "survival_score": 0.5,
+    "milestones": [
+      "WOOD_GATHERED",
+      "WORKBENCH",
+      "SHELTER",
+      "WEAPONS",
+      "ARMOR_EQUIPPED"
+    ],
+    "task_checklist": {
+      "wood_gathered": true,
+      "workbench": true,
+      "shelter": true,
+      "weapons": true,
+      "ammunition_ready": false,
+      "stone_or_ore_mined": false,
+      "furnace_smelting": false,
+      "anvil_placed": false,
+      "metal_gear": false,
+      "lenses_collected": false,
+      "altar_found": false,
+      "arena_built": false,
+      "summon_ready": false
+    },
+    "breakdown": {
+      "health_score": 0.0,
+      "armor_score": 0.05,
+      "tasks_score": 0.15,
+      "boss_fight_score": 0.0,
+      "eye_kill_score": 0.0
+    }
+  },
+  {
+    "source": "tmodloader_real_game",
+    "run_id": "real_terraria_run2",
+    "player": "model",
+    "models": {
+      "supervisor": "gemini-4-carbon",
+      "short_term": "gemini-4-hydrogen",
+      "vision": "gemini-4-hydrogen",
+      "decision": "gemini-decision-1"
+    },
+    "recording": "artifacts/recordings/real_terraria_run2.json",
+    "frames": 300,
+    "house_built": true,
+    "stages_done": 6,
+    "stages_total": 13,
+    "stalled_at": "ammunition_ready",
+    "referee": {
+      "available": true,
+      "consistent": true,
+      "mismatches": []
+    },
+    "trajectory": {
+      "first_turn": 1441,
+      "last_turn": 1740,
+      "milestones_gained_in_recording": [
+        "FURNACE_SMELTING",
+        "ARMOR_EQUIPPED"
+      ],
+      "deaths_in_recording": 0,
+      "max_depth_below_surface": -18,
+      "median_latency_s": {
+        "supervisor": 46.24,
+        "short_term": 5.76,
+        "vision": 6.24,
+        "decision": 0.78
+      }
+    },
+    "eye_progress_pct": 22.33,
+    "eye_killed": false,
+    "passed": false,
+    "max_hp": 100,
+    "defense": 2,
+    "deaths": 0,
+    "survival_score": 1.0,
+    "milestones": [
+      "WOOD_GATHERED",
+      "WORKBENCH",
+      "SHELTER",
+      "WEAPONS",
+      "STONE_OR_ORE_MINED",
+      "FURNACE_SMELTING",
+      "ARMOR_EQUIPPED"
+    ],
+    "task_checklist": {
+      "wood_gathered": true,
+      "workbench": true,
+      "shelter": true,
+      "weapons": true,
+      "ammunition_ready": false,
+      "stone_or_ore_mined": true,
+      "furnace_smelting": true,
+      "anvil_placed": false,
+      "metal_gear": false,
+      "lenses_collected": false,
+      "altar_found": false,
+      "arena_built": false,
+      "summon_ready": false
+    },
+    "breakdown": {
+      "health_score": 0.0,
+      "armor_score": 0.0333,
+      "tasks_score": 0.19,
+      "boss_fight_score": 0.0,
+      "eye_kill_score": 0.0
+    }
+  }
+]

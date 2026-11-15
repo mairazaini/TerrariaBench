@@ -1,0 +1,107 @@
+{
+ "deaths": 0,
+ "eye": {
+  "armor_peak": 13,
+  "armor_start": 0,
+  "fought": false,
+  "max_hp": 140,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 100
+ },
+ "manifest": {
+  "calibration_sha256": "a5a810b1cba54deca4763eddf79ef69aa93e40c8bbc07bb3323a22dbeb0c61ac",
+  "image_digest": "terrariabench-harbor-game",
+  "python": "3.11.18",
+  "seed_data_sha256": "c3529f17c34fdb5e5149f999a4928ba182a6e216d6b17ae01706fd5bffe80845",
+  "source_commit": "unknown",
+  "source_hash": "d980165f6117a07ca80d1c996b1cd6b64df4f4e34e693df41cfc2ed68593b564"
+ },
+ "milestones": [
+  "ANVIL",
+  "CAVERN",
+  "CRAFT:anvil",
+  "CRAFT:furnace",
+  "CRAFT:iron_armor",
+  "CRAFT:iron_bar",
+  "CRAFT:iron_bow",
+  "CRAFT:iron_pickaxe",
+  "CRAFT:silver_armor",
+  "CRAFT:silver_bar",
+  "CRAFT:silver_bow",
+  "CRAFT:wood_armor",
+  "CRAFT:wooden_sword",
+  "CRAFT:workbench",
+  "CRYSTAL1",
+  "CRYSTAL2",
+  "FURNACE",
+  "SHELTER",
+  "T1",
+  "T2",
+  "T3",
+  "WORKBENCH"
+ ],
+ "phi0": 0.48,
+ "phi_final": 399.38,
+ "seed": 7,
+ "sha256": "dc93d3cb0059af3b5a7a80e6329839ccd95cd7bcbae5cac09c8c66321bf46661",
+ "state_hash": "c2c28d7c2ad917103f1d71e2ea85cef1acc2c03b72bd7e6191e9782e27b1e275",
+ "task": "first-night-hardcore",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 17,
+   "phi": 119.145,
+   "sheltered": true,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 17,
+   "phi": 177.415,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 15,
+   "phi": 281.235,
+   "sheltered": true,
+   "sla": [
+    [
+     "tier:1",
+     true
+    ]
+   ],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 17,
+   "phi": 399.38,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 4
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

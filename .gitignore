@@ -18,3 +18,7 @@ mod/**/obj/
 
 # Harbor run output (curated logs live in harbor/runs/)
 harbor/jobs/
+
+# Session notes and stray downloads
+HANDOFF.md
+*.pdf

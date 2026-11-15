@@ -5,6 +5,19 @@ You are the player in a Terraria world. You act only through the provided tools.
 Your situation: You are fully geared in gold and carry a Guide Voodoo Doll. Descend to the underworld, build a long bridge to fight on, and do as much damage to the Wall of Flesh as you can.
 You have 12 windows and 20 operations per window.
 
+How you are scored (one number from 0 to 1, computed from the server's record of the whole run):
+- 70% progress. Your progress is compared with two fixed runs on this same world: a player who does nothing (0) and an expert run (1). Progress is permanent achievements: gear tier (weapon and armor both Wood, then Iron, Silver, Gold: each tier is worth more than the last), valid housing, crafting stations, a boss arena, reaching the cavern layer and the Underworld, Life Crystals used, events beaten, damage dealt to bosses and boss kills (worth the most). Items you hold add a little. Each death subtracts.
+- 20% reliability. Half is, for each window, being alive at its end and having made progress recently; the other half is the checkpoints listed below.
+- 10% attendance: taking part in every window. It only counts once you have made real progress.
+The checkpoints are minimums, not the goal. A run that meets every checkpoint and then stops scores far below an expert run, because unused operations are simply lost. Repeating an action that no longer adds anything (re-crafting, placing and breaking, farming weak enemies) earns nothing or almost nothing.
+
+Checkpoints. Each one is checked once, at the moment the stated window ends.
+- End of window 2: you are inside valid housing when the window ends
+- End of window 5: you have been down to depth 88 or deeper at some point
+- End of window 8: a platform bridge at least 60 tiles long exists (the Underworld runway)
+- End of window 10: the Wall of Flesh has been brought down to 80% of its health or lower
+- End of window 12: the Wall of Flesh has been brought down to 65% of its health or lower
+
 ## How to act
 
 The world runs on a separate game server. You cannot see or edit its code; you
@@ -20,15 +33,6 @@ both hit the same world and the same operation meter:
 Every reply starts with a header line showing the current window, the
 operations you have left in it, your HP and your position. Read it before each
 decision.
-
-## How you are scored
-
-One score between 0 and 1, with partial credit, computed from the server's
-record of the whole run. It rewards real progress on the situation above
-(shelter, gear, depth, events survived, bosses fought), doing things by the
-time they are needed rather than at the last moment, staying alive, and tool
-calls that actually work. Failed, wasted or rule-bending calls count against
-you. A run that does nothing scores 0.
 
 ## Rules of the run
 

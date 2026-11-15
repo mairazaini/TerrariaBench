@@ -1,0 +1,192 @@
+{
+ "deaths": 1,
+ "eye": {
+  "armor_peak": 16,
+  "armor_start": 16,
+  "fought": false,
+  "max_hp": 400,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 300
+ },
+ "manifest": {
+  "calibration_sha256": "14996cbd7e22ce8b0aac92f7df4583758d88a158a87e9588f90adfa5f5bbc325",
+  "image_digest": "unpinned-local-run",
+  "python": "3.12.13",
+  "seed_data_sha256": "a458f9cf8976f38bd9d7200afcb9dbf52d2c175d3cbf4702e0885fab3054cb1a",
+  "source_commit": "cdaee18568dc34a349636cf54f486fe88e8d5aea",
+  "source_hash": "903d3fc8a932312aacb0dddcf3d2fce74a87b8d2ed1dedb5835b1e1565ac81ad"
+ },
+ "milestones": [
+  "CAVERN",
+  "CRAFT:campfire",
+  "CRAFT:workbench",
+  "CRYSTAL1",
+  "CRYSTAL2",
+  "CRYSTAL3",
+  "HELLBRIDGE",
+  "SHELTER",
+  "T1",
+  "T2",
+  "T3",
+  "T4",
+  "UNDERWORLD",
+  "WORKBENCH"
+ ],
+ "phi0": 373.575,
+ "phi_final": 868.834095,
+ "seed": 7,
+ "sha256": "1bab68f0c74f0221ac8e8771ea95b6d38666242fdb1d3f0b125297c1c04ca74c",
+ "state_hash": "70544f2b9a07b8ccc19dd2013408cb0387c4be89a145b1e1bb4e4c99e94b0c38",
+ "task": "wall-of-flesh",
+ "windows": [
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 8,
+   "phi": 472.675,
+   "sheltered": false,
+   "sla": [],
+   "w": 1
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 8,
+   "phi": 535.905,
+   "sheltered": true,
+   "sla": [
+    [
+     "shelter",
+     true
+    ]
+   ],
+   "w": 2
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 532.525,
+   "sheltered": false,
+   "sla": [],
+   "w": 3
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 15,
+   "phi": 532.305,
+   "sheltered": false,
+   "sla": [],
+   "w": 4
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 8,
+   "phi": 532.505,
+   "sheltered": false,
+   "sla": [
+    [
+     "depth:88",
+     true
+    ]
+   ],
+   "w": 5
+  },
+  {
+   "attended": true,
+   "deaths": 1,
+   "notes": [
+    "The Wall of Flesh overwhelmed you and left.",
+    "You were slain (caught in the open)."
+   ],
+   "ops_used": 20,
+   "phi": 823.464095,
+   "sheltered": false,
+   "sla": [],
+   "w": 6
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 14,
+   "phi": 822.774095,
+   "sheltered": false,
+   "sla": [],
+   "w": 7
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 822.024095,
+   "sheltered": false,
+   "sla": [
+    [
+     "milestone:HELLBRIDGE",
+     true
+    ]
+   ],
+   "w": 8
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 851.464095,
+   "sheltered": false,
+   "sla": [],
+   "w": 9
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 857.029095,
+   "sheltered": false,
+   "sla": [
+    [
+     "boss:wall_of_flesh:0.8",
+     true
+    ]
+   ],
+   "w": 10
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 868.639095,
+   "sheltered": false,
+   "sla": [],
+   "w": 11
+  },
+  {
+   "attended": true,
+   "deaths": 0,
+   "notes": [],
+   "ops_used": 20,
+   "phi": 868.834095,
+   "sheltered": false,
+   "sla": [
+    [
+     "boss:wall_of_flesh:0.65",
+     true
+    ]
+   ],
+   "w": 12
+  }
+ ],
+ "world_hash": "8bcefe235f8abe63f8fe009aeaebbe5ba9b472e281fd3c5c0c47c7f25613353e"
+}

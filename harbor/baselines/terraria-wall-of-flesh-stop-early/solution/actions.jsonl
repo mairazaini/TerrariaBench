@@ -1,0 +1,21 @@
+{"tool": "build_blueprint", "args": {"preset": "shelter"}}
+{"tool": "chop_trees", "args": {"radius": 60, "max_trees": 4}}
+{"tool": "chop_trees", "args": {"radius": 60, "max_trees": 4}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "end_window", "args": {}}
+{"tool": "chop_trees", "args": {"radius": 60, "max_trees": 4}}
+{"tool": "chop_trees", "args": {"radius": 60, "max_trees": 4}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "navigate_to", "args": {"x": 100, "y": 25}}
+{"tool": "end_window", "args": {}}
+{"tool": "end_window", "args": {}}
+{"tool": "end_window", "args": {}}
+{"tool": "end_window", "args": {}}
+{"tool": "explore_cavern", "args": {"target_depth": 90, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 90, "auto_torch": false}}
+{"tool": "explore_cavern", "args": {"target_depth": 90, "auto_torch": false}}
+{"tool": "build_blueprint", "args": {"preset": "hellbridge"}}
+{"tool": "end_window", "args": {}}
+{"tool": "engage_combat_burst", "args": {"target_id": "un7_0", "kite_distance": 18, "dodge_priority": 0.5}}
+{"tool": "engage_combat_burst", "args": {"target_id": "un7_1", "kite_distance": 18, "dodge_priority": 0.5}}
+{"tool": "consume_buff_or_heal", "args": {"item_id": "ironskin_potion"}}

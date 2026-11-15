@@ -13,7 +13,7 @@ from typing import Any, Protocol, runtime_checkable
 from .. import provenance
 from ..engine import AIR, CAMPFIRE, DOOR, WORKBENCH
 from ..grader import components, compute_eye_progress, grade
-from ..provenance import ARTIFACTS_DIR, CALIBRATION_PATH, ProvenanceError, load_sealed, verify_seal, write_sealed
+from ..provenance import ARTIFACTS_DIR, CALIBRATION_PATH, REPO_DIR, ProvenanceError, load_sealed, verify_seal, write_sealed
 from ..tasks import EVAL_TASKS, REPORTED_SEEDS, TASKS, Task
 from ..tools import Episode
 from .gemini_agent import GeminiAgent, GeminiLiveError
@@ -27,7 +27,9 @@ from .nemotron_agent import (
 
 load_dotenv_if_present()
 
-MAX_TURNS = 150
+# Safety stop for agents that loop on free calls. It must stay above the largest metered budget
+# (full-progression: 30 windows x 12 operations = 360) so the cap never ends a run the game would not.
+MAX_TURNS = 600
 COMPACT_TOKEN_THRESHOLD = 65_000
 KEEP_LAST_TURNS = 3
 ANCHORS = ("smart-triage", "rule-based", "blast-list", "absentee", "do-nothing", "exploiter")
@@ -99,13 +101,15 @@ def run_agent_episode(
     max_turns: int = MAX_TURNS,
     save_dir: Path | None = None,
     on_turn: Any = None,
+    run_index: int = 1,
 ) -> dict[str, Any]:
     """Run ``agent`` over ``Episode(task_id, seed, redact_seed=True)`` up to ``max_turns``.
 
     A tool call the episode cannot execute (unknown tool, wrong argument names
     or types) is returned to the agent as an ``ok: False`` observation instead
     of aborting the run. ``on_turn(turn, tool, args, result)`` is called after
-    every turn when given.
+    every turn when given. ``run_index`` above 1 saves a repeat of the same cell
+    beside the first run (``<task>_seed<seed>_run<k>.json``) instead of replacing it.
     """
     task = TASKS[task_id] if isinstance(task_id, str) else task_id
     task_id = task.id
@@ -144,10 +148,31 @@ def run_agent_episode(
         history.append({"turn": turn, "tool": tool_name, "args": tool_args, "result": compact_res}, ep)
         obs = res
 
+    # How the run ended, recorded before finalize() settles the unplayed windows.
+    if ep.done:
+        ended_by = "episode_complete"
+    elif turns_played >= max_turns:
+        ended_by = "harness_turn_cap"
+    else:
+        ended_by = "agent_stopped"
     ledger = ep.finalize(calibration)
+    agent_stats = dict(getattr(agent, "stats", None) or {})
+    if "last_error" in agent_stats:  # keep the exception type only: messages can carry endpoint URLs
+        agent_stats["last_error"] = str(agent_stats["last_error"]).split(":", 1)[0]
+    meta = {
+        "task": task_id, "seed": seed, "run": run_index, "turns": turns_played, "max_turns": max_turns,
+        "ended_by": ended_by, "agent": getattr(agent, "name", type(agent).__name__),
+        "model": getattr(agent, "model", None), "agent_stats": agent_stats,
+        "ledger_sha256": ledger.get("sha256"),
+    }
     if save_dir is not None:
         save_dir.mkdir(parents=True, exist_ok=True)
-        write_sealed(save_dir / f"{task_id}_seed{seed}.json", ledger)
+        suffix = f"_run{run_index}" if run_index > 1 else ""
+        write_sealed(save_dir / f"{task_id}_seed{seed}{suffix}.json", ledger)
+        # Run metadata sits in a subfolder so the ledger loader (which reads *.json here) ignores it.
+        (save_dir / "meta").mkdir(exist_ok=True)
+        (save_dir / "meta" / f"{task_id}_seed{seed}{suffix}.json").write_text(
+            json.dumps(meta, indent=2, default=str), encoding="utf-8")
 
     cell = (calibration or {}).get("cells", {}).get(f"{task_id}:{seed}")
     if task_id in TASKS:
@@ -159,6 +184,8 @@ def run_agent_episode(
         "task": task_id,
         "seed": seed,
         "turns": turns_played,
+        "ended_by": ended_by,
+        "meta": meta,
         "compactions": history.compactions,
         "ledger": ledger,
         "score": score,
@@ -384,7 +411,7 @@ def _aggregate_graded(rows: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "episodes": n,
         "composite": round(sum(r["composite"] for r in rows) / n, 4),
-        "pass_rate": round(sum(1 for p in passed if p) / len(passed), 4) if passed else None,
+        "pass_rate": round(sum(float(p) for p in passed) / len(passed), 4) if passed else None,
         "business": round(sum(r["business"] for r in rows) / n, 4),
         "reliability": round(sum(r["reliability"] for r in rows) / n, 4),
         "continuity": round(sum(r["continuity"] for r in rows) / n, 4),
@@ -395,8 +422,22 @@ def _aggregate_graded(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+_RESULTS_RUN_FALLBACKS = {
+    "verda_deepseek": "deepseek-4-1-flash-1017",
+    "verda_kimi": "kimi-k3-1-pro",
+}
+
+
 def _load_saved_runs(agent_name: str, cal: dict[str, Any]) -> list[dict[str, Any]]:
     folder = ARTIFACTS_DIR / "runs" / agent_name
+    using_fallback = False
+    if (not folder.exists() or not any(folder.glob("*.json"))) and ARTIFACTS_DIR == REPO_DIR / "artifacts":
+        fallback_name = _RESULTS_RUN_FALLBACKS.get(agent_name)
+        if fallback_name:
+            fallback = REPO_DIR / "results" / "runs" / fallback_name
+            if fallback.exists():
+                folder = fallback
+                using_fallback = True
     if not folder.exists():
         return []
     out = []
@@ -408,9 +449,45 @@ def _load_saved_runs(agent_name: str, cal: dict[str, Any]) -> list[dict[str, Any
         ledger = obj.get("ledger", obj) if isinstance(obj, dict) else None
         if not isinstance(ledger, dict) or not verify_seal(ledger):
             continue
-        cell = cal.get("cells", {}).get(f"{ledger.get('task')}:{ledger.get('seed')}")
+        if using_fallback and ledger.get("task") not in EVAL_TASKS:
+            continue
+        cell_key = f"{ledger.get('task')}:{ledger.get('seed')}"
+        cell = cal.get("cells", {}).get(cell_key)
         if cell and cell.get("s", 0) > 0:
-            out.append(grade(ledger, cell))
+            row = grade(ledger, cell)
+            row["cell"] = cell_key
+            row["file"] = path.name
+            meta_path = folder / "meta" / path.name
+            if meta_path.exists():
+                try:
+                    row["meta"] = json.loads(meta_path.read_text(encoding="utf-8"))
+                except (OSError, ValueError):
+                    pass
+            out.append(row)
+    return out
+
+
+def _cell_means(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Collapse repeat runs of one task:seed cell into a single averaged row.
+
+    A cell played three times must weigh the same in a model's aggregate as a cell played once;
+    otherwise repeating the headline task would drag the leaderboard row toward that task.
+    ``passed`` becomes the fraction of that cell's runs that passed.
+    """
+    by_cell: dict[str, list[dict[str, Any]]] = {}
+    for i, r in enumerate(rows):
+        by_cell.setdefault(r.get("cell") or f"_row{i}", []).append(r)
+    out = []
+    for cell_key, group in by_cell.items():
+        merged: dict[str, Any] = {"cell": cell_key, "runs": len(group)}
+        for key in ("composite", "business", "reliability", "continuity", "survival", "sla", "windows", "eye_progress"):
+            vals = [g[key] for g in group if g.get(key) is not None]
+            if vals:
+                merged[key] = sum(vals) / len(vals)
+        flags = [g["passed"] for g in group if "passed" in g]
+        if flags:
+            merged["passed"] = sum(1.0 for f in flags if f) / len(flags)
+        out.append(merged)
     return out
 
 
@@ -591,12 +668,13 @@ def run_eval_standard(live: bool = False) -> dict[str, Any]:
         ("gemma_tuned", "Gemma Tuned"),
     ):
         saved = _load_saved_runs(model_key, cal)
-        agg = _aggregate_graded(saved)
+        agg = _aggregate_graded(_cell_means(saved))
+        agg["runs"] = len(saved)
         table1.append({"name": label, "status": "evaluated" if saved else "not run", **agg})
 
     table3 = [
-        {"name": "Gemma Base", "status": "evaluated" if _load_saved_runs("gemma_base", cal) else "not run", **_aggregate_graded(_load_saved_runs("gemma_base", cal))},
-        {"name": "Gemma Tuned", "status": "evaluated" if _load_saved_runs("gemma_tuned", cal) else "not run", **_aggregate_graded(_load_saved_runs("gemma_tuned", cal))},
+        {"name": "Gemma Base", "status": "evaluated" if _load_saved_runs("gemma_base", cal) else "not run", **_aggregate_graded(_cell_means(_load_saved_runs("gemma_base", cal)))},
+        {"name": "Gemma Tuned", "status": "evaluated" if _load_saved_runs("gemma_tuned", cal) else "not run", **_aggregate_graded(_cell_means(_load_saved_runs("gemma_tuned", cal)))},
     ]
     _print_leaderboards(table1, table3)
     report = {"table1": table1, "table3": table3, "calibration_source": cal.get("source", "sealed")}
@@ -615,6 +693,7 @@ def play_episode(
     max_turns: int = MAX_TURNS,
     save: bool = False,
     verbose: bool = True,
+    run_index: int = 1,
 ) -> dict[str, Any]:
     """Play one episode with a named agent, printing each turn. Returns the run dict."""
     agent = _build_agent(agent_name, live=live)
@@ -638,9 +717,9 @@ def play_episode(
         print(f"provider={agent.provider} base_url={agent.base_url} model={agent.config.model_name_or_path}")
     save_dir = (ARTIFACTS_DIR / "runs" / agent_name) if (save and live) else None
     out = run_agent_episode(agent, task_id, seed, calibration=cal, max_turns=max_turns,
-                            save_dir=save_dir, on_turn=show if verbose else None)
+                            save_dir=save_dir, on_turn=show if verbose else None, run_index=run_index)
     score = out["score"]
-    print(f"turns={out['turns']} windows={len(out['ledger']['windows'])}/{TASKS[task_id].windows} "
+    print(f"turns={out['turns']} ended_by={out['ended_by']} windows={len(out['ledger']['windows'])}/{TASKS[task_id].windows} "
           f"milestones={sorted(out['ledger'].get('milestones', []))}")
     print("score: " + json.dumps({k: v for k, v in score.items() if isinstance(v, (int, float, bool))}, sort_keys=True))
     if getattr(agent, "stats", None):
@@ -658,12 +737,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-turns", type=int, default=MAX_TURNS)
     parser.add_argument("--save", action="store_true", help="With --play --live: write the sealed ledger to artifacts/runs/<agent>")
     parser.add_argument("--quiet", action="store_true", help="With --play: print only the summary")
+    parser.add_argument("--run", type=int, default=1, help="With --play --save: repeat number of this cell (2+ saves <task>_seed<seed>_run<k>.json)")
     args = parser.parse_args(argv)
 
     if args.play:
         try:
             play_episode(args.play, args.task, args.seed, live=args.live, max_turns=args.max_turns,
-                         save=args.save, verbose=not args.quiet)
+                         save=args.save, verbose=not args.quiet, run_index=args.run)
         except GeminiLiveError as exc:
             print(f"live Gemini run aborted: {exc}", file=sys.stderr)
             return 2

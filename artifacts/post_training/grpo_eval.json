@@ -1,0 +1,178 @@
+[
+ {
+  "cell": "woodland-scramble:7",
+  "model": "base",
+  "composite": 0.357,
+  "passed": false,
+  "threshold": 0.9748,
+  "deaths": 2,
+  "turns": 32,
+  "bad_replies": 0,
+  "seconds": 56
+ },
+ {
+  "cell": "woodland-scramble:7",
+  "model": "tuned",
+  "composite": 0.9496,
+  "passed": false,
+  "threshold": 0.9748,
+  "deaths": 0,
+  "turns": 40,
+  "bad_replies": 0,
+  "seconds": 122
+ },
+ {
+  "cell": "ore-rush:7",
+  "model": "base",
+  "composite": 0.0767,
+  "passed": false,
+  "threshold": 0.8207,
+  "deaths": 2,
+  "turns": 50,
+  "bad_replies": 0,
+  "seconds": 107
+ },
+ {
+  "cell": "ore-rush:7",
+  "model": "tuned",
+  "composite": 0.6436,
+  "passed": false,
+  "threshold": 0.8207,
+  "deaths": 0,
+  "turns": 87,
+  "bad_replies": 0,
+  "seconds": 271
+ },
+ {
+  "cell": "woodland-scramble:17",
+  "model": "base",
+  "composite": 0.1016,
+  "passed": false,
+  "threshold": 0.9681,
+  "deaths": 1,
+  "turns": 24,
+  "bad_replies": 8,
+  "seconds": 44
+ },
+ {
+  "cell": "woodland-scramble:17",
+  "model": "tuned",
+  "composite": 0.9108,
+  "passed": false,
+  "threshold": 0.9681,
+  "deaths": 0,
+  "turns": 44,
+  "bad_replies": 0,
+  "seconds": 137
+ },
+ {
+  "cell": "shelter-crunch:17",
+  "model": "base",
+  "composite": 0.1738,
+  "passed": false,
+  "threshold": 0.9689,
+  "deaths": 1,
+  "turns": 25,
+  "bad_replies": 0,
+  "seconds": 49
+ },
+ {
+  "cell": "shelter-crunch:17",
+  "model": "tuned",
+  "composite": 0.8432,
+  "passed": false,
+  "threshold": 0.9689,
+  "deaths": 0,
+  "turns": 42,
+  "bad_replies": 0,
+  "seconds": 125
+ },
+ {
+  "cell": "slime-rain:17",
+  "model": "base",
+  "composite": 0.3215,
+  "passed": false,
+  "threshold": 0.908,
+  "deaths": 1,
+  "turns": 47,
+  "bad_replies": 0,
+  "seconds": 93
+ },
+ {
+  "cell": "slime-rain:17",
+  "model": "tuned",
+  "composite": 0.5172,
+  "passed": false,
+  "threshold": 0.908,
+  "deaths": 0,
+  "turns": 61,
+  "bad_replies": 0,
+  "seconds": 186
+ },
+ {
+  "cell": "ore-rush:17",
+  "model": "base",
+  "composite": 0.0742,
+  "passed": false,
+  "threshold": 0.7914,
+  "deaths": 3,
+  "turns": 61,
+  "bad_replies": 0,
+  "seconds": 112
+ },
+ {
+  "cell": "ore-rush:17",
+  "model": "tuned",
+  "composite": 0.5804,
+  "passed": false,
+  "threshold": 0.7914,
+  "deaths": 0,
+  "turns": 76,
+  "bad_replies": 0,
+  "seconds": 234
+ },
+ {
+  "cell": "first-night:7",
+  "model": "base",
+  "composite": 0.3074,
+  "passed": false,
+  "threshold": 0.9496,
+  "deaths": 1,
+  "turns": 77,
+  "bad_replies": 0,
+  "seconds": 170
+ },
+ {
+  "cell": "first-night:7",
+  "model": "tuned",
+  "composite": 0.6373,
+  "passed": false,
+  "threshold": 0.9496,
+  "deaths": 0,
+  "turns": 80,
+  "bad_replies": 0,
+  "seconds": 253
+ },
+ {
+  "cell": "cavern-expedition:7",
+  "model": "base",
+  "composite": 0.082,
+  "passed": false,
+  "threshold": 0.9002,
+  "deaths": 3,
+  "turns": 85,
+  "bad_replies": 0,
+  "seconds": 182
+ },
+ {
+  "cell": "cavern-expedition:7",
+  "model": "tuned",
+  "composite": 0.6875,
+  "passed": false,
+  "threshold": 0.9002,
+  "deaths": 2,
+  "turns": 148,
+  "bad_replies": 0,
+  "seconds": 476
+ }
+]

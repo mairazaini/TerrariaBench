@@ -47,11 +47,11 @@ def test_artifact_is_fresh():
 
 
 def test_covers_every_cell(calibration):
-    assert len(TASKS) == 12
+    assert len(TASKS) == 14  # 8 evaluation, 4 training, 2 Hardcore
     assert calibration["seeds"] == list(REPORTED_SEEDS) == [7, 11, 13]
     assert calibration["held_out_seeds"] == list(HELD_OUT_SEEDS) == [17, 23]
     assert set(calibration["cells"]) == {cell_key(t, s) for t, s in CELLS}
-    assert len(calibration["cells"]) == 36 + 24
+    assert len(calibration["cells"]) == 42 + 28  # 14 tasks x (3 reported + 2 held-out seeds)
 
 
 @pytest.mark.parametrize("task_id,seed", CELLS, ids=[cell_key(t, s) for t, s in CELLS])

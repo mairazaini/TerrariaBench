@@ -92,7 +92,7 @@ def test_web_console_no_sla_leak_and_saves_on_completion(tmp_path: Path, monkeyp
     assert home.status_code == 200
     assert TASKS["first-night"].brief in home.text
     assert "World: locked" in home.text  # seed redacted
-    assert "tier:1" not in home.text      # hidden SLA must never leak
+    assert "- End of window 3:" in home.text  # humans read the same checkpoints as agents
 
     api_state = client.get("/api/state").json()
     assert api_state["task_id"] == "first-night"

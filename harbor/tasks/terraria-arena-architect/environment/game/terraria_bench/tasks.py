@@ -1,7 +1,7 @@
 """Task lenses over the shared seeded world (StoreBench §3.3 / Appendix A).
 
 Every lens is a small configuration: horizon (windows), operation budget, event
-script, starting kit and the hidden reliability checkpoints (SLA). The world
+script, starting kit and the reliability checkpoints (SLA), which the agent is told. The world
 itself is keyed only by the seed, so all lenses share one world per seed.
 
 Event channels (StoreBench §3.2):
@@ -12,7 +12,7 @@ Event channels (StoreBench §3.2):
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 REPORTED_SEEDS = (7, 11, 13)
 HELD_OUT_SEEDS = (17, 23)
@@ -29,6 +29,32 @@ RULES = (
 )
 
 
+HARDCORE_RULE = (
+    "HARDCORE: you have exactly one life. The first time you die, the run is over at that moment: you make no "
+    "more calls, every later window counts as not attended, and every checkpoint from then on counts as missed. "
+    "You keep credit for what you achieved before dying. You die when your HP reaches 0. The usual ways to die "
+    "are: a window ends while you are not inside valid housing; a window ends while a boss you summoned is still "
+    "alive; or you keep fighting or exploring at low HP. inspect_housing_and_arena tells you whether the place "
+    "you are standing in is valid housing right now. Building or digging next to a house can break it."
+)
+
+# The scoring rule, told to every agent in full. It restates grader.grade; nothing scored is left out.
+SCORING = (
+    "How you are scored (one number from 0 to 1, computed from the server's record of the whole run):\n"
+    "- 70% progress. Your progress is compared with two fixed runs on this same world: a player who does nothing "
+    "(0) and an expert run (1). Progress is permanent achievements: gear tier (weapon and armor both Wood, then "
+    "Iron, Silver, Gold: each tier is worth more than the last), valid housing, crafting stations, a boss arena, "
+    "reaching the cavern layer and the Underworld, Life Crystals used, events beaten, damage dealt to bosses and "
+    "boss kills (worth the most). Items you hold add a little. Each death subtracts.\n"
+    "- 20% reliability. Half is, for each window, being alive at its end and having made progress recently; the "
+    "other half is the checkpoints listed below.\n"
+    "- 10% attendance: taking part in every window. It only counts once you have made real progress.\n"
+    "The checkpoints are minimums, not the goal. A run that meets every checkpoint and then stops scores far "
+    "below an expert run, because unused operations are simply lost. Repeating an action that no longer adds "
+    "anything (re-crafting, placing and breaking, farming weak enemies) earns nothing or almost nothing."
+)
+
+
 @dataclass(frozen=True)
 class Task:
     id: str
@@ -39,17 +65,68 @@ class Task:
     brief: str
     objectives: tuple = ()
     events: tuple = ()
-    sla: tuple = ()  # (deadline_window, kind) - hidden from the agent
+    sla: tuple = ()  # (deadline_window, kind) - stated to the agent in the prompt, see checkpoint_text
     kit: dict = field(default_factory=dict)
     equip: tuple = ()
     start_max_hp: int = 100
     start_milestones: tuple = ()
     death_fee: float = 25.0
     corruption_rate: int = 2
+    hardcore: bool = False  # one life: the first death ends the run
 
     @property
     def prompt(self) -> str:
-        return f"{RULES}\n\nYour situation: {self.brief}\nYou have {self.windows} windows and {self.budget} operations per window."
+        text = f"{RULES}\n\nYour situation: {self.brief}\nYou have {self.windows} windows and {self.budget} operations per window."
+        if self.hardcore:
+            text = text.replace(" Dying drops half of your raw materials and costs you operations in the next window.",
+                                "") + "\n\n" + HARDCORE_RULE
+        if self.sla:
+            text += ("\n\n" + SCORING + "\n\nCheckpoints. Each one is checked once, at the moment the stated window "
+                     "ends.\n" + self.checkpoint_text)
+        return text
+
+    @property
+    def checkpoint_text(self) -> str:
+        """Every deadline the grader checks, in plain words. The agent is scored on nothing it was not told."""
+        return "\n".join(f"- End of window {w}: {describe_checkpoint(kind)}" for w, kind in self.sla)
+
+
+_TIERS = {1: "Wood", 2: "Iron", 3: "Silver", 4: "Gold"}
+_MILESTONES = {
+    "SIEGE": "the Goblin Army is completely defeated",
+    "BLOODMOON": "you have killed 8 Blood Zombies during the Blood Moon",
+    "SLIME_RAIN": "you have killed 10 slimes during the Slime Rain",
+    "HELLBRIDGE": "a platform bridge at least 60 tiles long exists (the Underworld runway)",
+    "FURNACE": "a Furnace has been placed",
+}
+
+
+def describe_checkpoint(kind: str) -> str:
+    """Plain-language form of one checkpoint; mirrors grader.sla_met exactly."""
+    head, _, rest = kind.partition(":")
+    if head == "shelter":
+        return "you are inside valid housing when the window ends"
+    if head == "arena":
+        return "a valid boss arena has been built"
+    if head == "tier":
+        n = int(rest)
+        return f"your equipped weapon AND equipped armor are both {_TIERS[n]} tier or better (tech tier {n})"
+    if head == "depth":
+        return f"you have been down to depth {rest} or deeper at some point"
+    if head == "crystal":
+        return f"you have used at least {rest} Life Crystal(s)"
+    if head == "def":
+        return f"the armor you are wearing gives at least {rest} defense (potions do not count)"
+    if head == "milestone":
+        return _MILESTONES[rest]
+    if head == "boss":
+        boss, _, thr = rest.rpartition(":")
+        name = {"eye": "the Eye of Cthulhu", "wall_of_flesh": "the Wall of Flesh"}.get(boss, boss)
+        return f"{name} has been brought down to {round(float(thr) * 100)}% of its health or lower"
+    if head == "kill":
+        name = {"eye": "the Eye of Cthulhu", "wall_of_flesh": "the Wall of Flesh"}.get(rest, rest)
+        return f"{name} has been killed"
+    raise ValueError(f"no description for checkpoint {kind!r}")
 
 
 def _ev(kind, w, **kw):
@@ -149,6 +226,13 @@ TASKS: dict[str, Task] = {t.id: t for t in [
          sla=((2, "shelter"), (4, "shelter"))),
 ]}
 
+# Hardcore variants of the two headline tasks: same world, same brief, same checkpoints, one life.
+for _base in ("first-night", "eye-of-cthulhu"):
+    _t = TASKS[_base]
+    TASKS[f"{_base}-hardcore"] = replace(_t, id=f"{_base}-hardcore", title=f"{_t.title} (Hardcore)",
+                                         split="hardcore", hardcore=True)
+
+HARDCORE_TASKS = tuple(t for t in TASKS if TASKS[t].split == "hardcore")
 EVAL_TASKS = tuple(t for t in TASKS if TASKS[t].split == "eval")
 TRAIN_TASKS = tuple(t for t in TASKS if TASKS[t].split == "train")
 assert len(EVAL_TASKS) == 8 and len(TRAIN_TASKS) == 4

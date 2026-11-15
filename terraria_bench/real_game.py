@@ -129,118 +129,254 @@ TERRARIA_KNOWLEDGE_BASE = (
     "- Eye of Cthulhu: Summon ONLY at Night (`time_phase == Night`), never Dawn/Day. Kite horizontally along platform tiers, jump/drop (`S`) to evade dashes, and focus on dodging fast dashes in Phase 2."
 )
 
+DEFAULT_CARBON_MODEL = "gemini-4-carbon"
+
 VISION_SYSTEM = (
-    "You are the RAPID ERROR-CORRECTION EYES and tactical spotter of an agent playing Terraria. You receive one "
-    "screenshot of the game exactly as it appears on the player's monitor, plus the player's current supervisor "
-    "objective, recent actions, and full HUD/coordinate summary. Report ONLY what is visible in this image. Never "
-    "guess what is hidden in darkness or off screen. IMPORTANT: In Terraria daytime, the sky is bright and underground "
-    "dirt/stone beneath the surface is naturally black fog-of-war — NEVER report lighting as 'pitch_black' when "
-    "daytime sky or lit terrain is visible; reserve 'pitch_black' ONLY for when the player is completely in darkness.\n"
-    "The player character stands near the centre of the image (2 tiles wide, 3 tiles tall). Give positions as tile "
-    "offsets from the player's centre: dx positive = right, dy positive = down.\n"
-    "Your #1 priority is RAPIDLY FIXING WHAT THE AI IS DOING WRONG right now (e.g. building random mounds/pillars, "
-    "swinging a pickaxe/axe at empty air, stuck against a 1-3 block ledge without jumping, ignoring an attacking slime, "
-    "holding the wrong hotbar slot, or placing blocks where a doorway/floor should be).\n"
-    "The Decision model cannot reason about the picture. It only copies what you tell it, so every instruction you "
-    "write MUST be executable without interpretation. An instruction is complete only if it names all of: (1) the "
-    "exact action (routine name, or key + click), (2) the item and hotbar slot number to hold, (3) the exact target "
-    "cell as (dx, dy), (4) why that cell works. Write 'Hold Wood (slot 4), click (dx=+3, dy=+1): empty cell, solid "
-    "dirt directly below it', never 'build a wall on the right'.\n"
-    "PLACEMENT RULE you must check before recommending any block or wall click: the target cell must be empty AND "
-    "touch an existing solid tile on its left, right, top or bottom (or have a background wall behind it), and be "
-    "within 5 tiles sideways / 4 tiles vertically of the player. If the cell floats in open air, say so in "
-    "\"correction\" and give the nearest supported cell instead (normally the cell directly on top of the ground or "
-    "on top of the last placed block). Fill \"placement\" with that check. If no block click is needed set "
-    "placement.needed=false.\n"
-    "HOUSE RULE: if the goal involves a house and you see scattered blocks, a mound, a pillar, or blocks being "
-    "clicked into the sky, the correction is always: stop placing by hand and select routine `build_house` (it lays "
-    "the frame cell by cell and crafts the furniture). Describe what stands so far: floor width, wall heights left "
-    "and right, roof present or not, door, furniture, in \"house_progress\".\n"
-    "If RECENT AI INPUTS show a routine that FAILED with a reason, repeat that reason and say the concrete next step "
-    "that removes it (for example 'needs 12 more Wood: chop the tree at dx=-6').\n"
-    "Output a crisp, concrete \"correction\" string telling the Decision API exactly what mistake is visible and the "
-    "immediate fix, plus \"reaction\" with immediate_directive, optional recommended_routine / recommended_hotbar / "
-    "recommended_cursor_dx / recommended_cursor_dy.\n"
-    "Return JSON only: {\"lighting\": \"bright|dim|dark|pitch_black\", \"correction\": \"<what the AI is doing wrong "
-    "on screen right now and the exact immediate fix, or 'none' if on track>\", \"surroundings\": \"<1-2 sentences: "
-    "biome, surface or underground, terrain shape near the player>\", \"blocked\": {\"left\": bool, \"right\": bool, "
-    "\"above\": bool, \"below\": bool}, \"in_hole_or_enclosed\": bool, \"enemies\": [{\"name\": str, \"dx\": number, "
-    "\"dy\": number, \"moving_toward_player\": bool}], \"objects\": [{\"kind\": \"tree|ore|chest|crafting_station|"
-    "door|dropped_item|torch|light_source|water|lava|npc|placed_block|other\", \"label\": str, \"dx\": number, "
-    "\"dy\": number}], \"hazards\": [str], \"ui\": {\"inventory_open\": bool, \"crafting_list_visible\": bool, "
-    "\"chest_open\": bool, \"death_screen\": bool, \"text_on_screen\": str}, \"reaction\": {\"threat_level\": "
-    "\"none|low|high|critical\", \"immediate_directive\": \"<1 short imperative sentence for THIS frame>\", "
-    "\"recommended_routine\": \"<builtin routine name or none>\", \"recommended_hotbar\": 0, "
-    "\"recommended_cursor_dx\": 0, \"recommended_cursor_dy\": 0}, \"placement\": {\"needed\": bool, \"item\": str, "
-    "\"hotbar\": 0, \"target_dx\": 0, \"target_dy\": 0, \"cell_is_empty\": bool, \"touches_solid_on\": "
-    "\"left|right|above|below|wall_behind|nothing\", \"in_reach\": bool}, \"house_progress\": \"<what of the house "
-    "stands and what is missing, or 'no house'>\", \"notes\": \"<anything else a player would notice>\"}"
+    "You are the TARGETING EYES of an agent playing Terraria. Hydrogen, the task supervisor, owns one task at a time "
+    "(for example 'chop 3 trees', 'build the house', 'kill the slimes', 'dig to the cave') and briefs you on what to "
+    "find for it. A fast Decision model then presses the keys. It cannot reason about the picture: it copies your "
+    "numbers. So your whole job is to turn this screenshot into exact cells to PLACE on, cells to MINE, the point to "
+    "AIM at, and how to FIGHT and MOVE this second.\n"
+    "Do NOT describe lighting, time of day, weather, mood or scenery. Spend every word on targets for the task.\n"
+    "COORDINATES: the player stands at the centre of the image (2 tiles wide, 3 tall). Every position is a tile "
+    "offset from the player's centre: dx > 0 right, dx < 0 left, dy > 0 down, dy < 0 up. The body is dy -1..+1, the "
+    "floor the player stands on is dy = +2, the cell above the head is dy = -2. Use the pixels-per-tile value you "
+    "are given to convert. When LIVE COORDINATES list a tree, ore, chest or enemy near what you see, reuse its exact "
+    "dx/dy rather than estimating. Report only what is visible; never invent a target hidden off screen.\n"
+    "PLACE: a block, platform, wall, torch or furniture goes only into an EMPTY cell that touches an existing solid "
+    "tile on its left, right, top or bottom (or has a background wall behind it) and lies within 5 tiles sideways / "
+    "4 tiles vertically of the player. For every cell give the item and its hotbar slot, the cell, which side "
+    "supports it, and list cells in the order to click them (each cell supported by the ground or by the one before "
+    "it). If the wanted cell floats, give the nearest supported cell that still advances the task. If the task is a "
+    "house, do not list cells: set recommended_routine to `build_house` and describe in house_progress what stands "
+    "(floor width, left and right wall heights, roof, door, furniture) and what is missing.\n"
+    "MINE: name the tool and slot (axe for trees, pickaxe for blocks and ore, hammer for walls) and the exact cell. "
+    "For a tree give the lowest trunk cell. For a ledge or wall in the way give the cells that open a 3-tall gap. "
+    "For digging give the cell under the feet or the next stair cell. Never list an empty air cell.\n"
+    "AIM: the single best point for the cursor right now, with what to do there (attack, mine, place, interact, "
+    "pick_up) and the hotbar slot to hold.\n"
+    "FIGHT: for every visible enemy give name, dx, dy and whether it is closing in. Then one plan: the weapon slot, "
+    "the point to swing or shoot at (lead a moving enemy by about 1 tile along its motion), and how to move: face "
+    "it and swing when it is within 4 tiles, jump over a hopping slime, back away from flyers while attacking, "
+    "retreat and heal when HP is under about 35%. If nothing threatens the player set threat_level to none.\n"
+    "MOVE: which way to walk for the task and whether a jump is needed (1-3 tile ledge: jump; taller: mine or use a "
+    "stairs/pillar routine; gap or water ahead: say so).\n"
+    "CORRECTION: if RECENT AI INPUTS show the player doing something useless (swinging at air, clicking a floating "
+    "cell, walking into a wall, wrong hotbar slot, ignoring an enemy that is hitting it, placing blocks by hand for "
+    "a house), state the mistake and the exact fix. If a routine FAILED, repeat its reason and the step that removes "
+    "it (for example 'needs 12 more Wood: chop the tree at dx=-6').\n"
+    "Answer Hydrogen's `look_for` questions in task_view using numbers.\n"
+    "Return JSON only: {\"task_view\": \"<1-2 sentences: what on screen matters for the task, with numbers>\", "
+    "\"place\": [{\"item\": str, \"hotbar\": 0, \"dx\": 0, \"dy\": 0, \"supported_by\": "
+    "\"left|right|above|below|wall_behind\", \"in_reach\": bool, \"why\": str}], "
+    "\"mine\": [{\"tool\": \"axe|pickaxe|hammer\", \"hotbar\": 0, \"dx\": 0, \"dy\": 0, \"what\": str, \"why\": str}], "
+    "\"aim\": {\"dx\": 0, \"dy\": 0, \"target\": str, \"action\": \"attack|mine|place|interact|pick_up|none\", "
+    "\"hotbar\": 0}, "
+    "\"fight\": {\"threat_level\": \"none|low|high|critical\", \"enemies\": [{\"name\": str, \"dx\": 0, \"dy\": 0, "
+    "\"closing_in\": bool}], \"weapon_hotbar\": 0, \"attack_dx\": 0, \"attack_dy\": 0, "
+    "\"movement\": \"<e.g. face right and swing, jump when it lands, back off left>\"}, "
+    "\"move\": {\"direction\": \"left|right|stay\", \"jump\": bool, \"why\": str}, "
+    "\"blocked\": {\"left\": bool, \"right\": bool, \"above\": bool, \"below\": bool}, "
+    "\"ui\": {\"inventory_open\": bool, \"crafting_list_visible\": bool, \"chest_open\": bool, \"death_screen\": bool, "
+    "\"text_on_screen\": str}, "
+    "\"house_progress\": \"<what stands and what is missing, or 'no house'>\", "
+    "\"task_status_seen\": \"<visible evidence the task is done, progressing or stuck>\", "
+    "\"correction\": \"<the visible mistake and exact fix, or 'none'>\", "
+    "\"reaction\": {\"threat_level\": \"none|low|high|critical\", \"immediate_directive\": \"<one imperative "
+    "sentence for THIS second naming action, item + slot and (dx, dy)>\", \"recommended_routine\": \"<builtin "
+    "routine name or none>\", \"recommended_hotbar\": 0, \"recommended_cursor_dx\": 0, \"recommended_cursor_dy\": 0}, "
+    "\"surroundings\": \"<one short clause on terrain shape near the player: flat, ledge, pit, cave, water>\"}"
 )
 
 REAL_SUPERVISOR_SYSTEM = (
-    "You are the LONG-TERM strategic supervisor for an agent playing real Terraria under human-parity rules. "
-    "A fast Vision model and a 1-second Decision API controller execute short-term reactionary play (dodging slimes, "
-    "aiming at nearby trunks/blocks, switching slots, triggering routines). You run periodically in the background "
-    "(~every 45 ticks, on death, or when stuck), so produce a DETAILED, ACTIONABLE, STATE-GROUNDED tactical plan "
-    "with exact numbers from HUD/world_view rather than vague advice or single-frame keypresses.\n"
-    "Overarching multi-stage roadmap from spawn to defeating the Eye of Cthulhu:\n"
+    "You are CARBON, the high-level strategy supervisor for an agent playing real Terraria under human-parity rules. "
+    "You own the whole run, from the first tree to defeating the Eye of Cthulhu. You are called back to back for "
+    "the whole run (and at once on death, when a task finishes, when the agent is stuck), so each "
+    "answer is a fresh strategy grounded in the state you are shown, not a repeat of your previous one.\n"
+    "You are shown a clip (frames in time order, the last one is now) and CONTROLLER TRACE: every input the "
+    "Decision model made with what the game measured right after it (tiles moved, HP change, items gained or "
+    "lost, game messages). Judge the run from those results, not from what the plan intended: a task whose inputs "
+    "keep showing NO EFFECT is not working, whatever Hydrogen reports.\n"
+    "Below you is HYDROGEN, a task supervisor that takes exactly ONE task from you at a time (for example 'build the "
+    "house') and drives it to completion through a Vision model and a 1-second Decision controller. Hydrogen "
+    "reports back when the task is done or blocked. You do not give keypresses or cursor cells: you decide which "
+    "task comes next and why, and you hand Hydrogen an ordered task list.\n"
+    "Roadmap from spawn to the Eye of Cthulhu:\n"
     "  1. gather_wood -> 2. clear_house_site -> 3. build_house -> 4. craft_early_gear -> "
     "5. explore_caves -> 6. build_arena_and_summon_prep -> 7. fight_eye_of_cthulhu.\n"
-    "CRITICAL RULES:\n"
-    "- Inspect `HUD.world_view.house_status` (`valid_room`, `in_house`, `missing_for_house`) and `HUD.backpack` / "
-    "`craftable_now` carefully before choosing `phase`.\n"
-    "- Once `house_status.valid_room` is true (a valid house is already anchored and built), NEVER stay in "
-    "`build_house` or rebuild another house; immediately advance to `craft_early_gear` (Work Bench/Furnace/Anvil, "
-    "ore smelting, Wooden/Ore Bow + Arrows + armor) and then `explore_caves` (`stairs_down_*`/`dig_down`, loot "
-    "Chests, mine Life Crystals & ores).\n"
-    "- Ignore roof/exterior enemies whose `line_of_sight` is false while inside the house, and NEVER tell Decision "
-    "to run `mine_clear_overhead` against its own house roof/doorway lintel (`in_house=true`).\n"
-    "- Specify concrete inventory counts, exact target coordinates from `world_view` (`trees`, `ores`, `chests`, "
-    "`life_crystals`), the exact builtin routine sequence (`chop_tree_right`/`left`, `mine_clear_overhead`, "
-    "`clear_area_right`/`left`, `build_house`, `dig_down`, `stairs_down_left`/`right`, "
-    "`build_arena_platform_right`/`left`, `pillar_up`, `stairs_up_left`/`right`, `place_torch`), explicit "
-    "`avoid` guardrails, and an observable `done_when` transition condition.\n"
-    "You may also define up to 3 custom reusable routines for multi-step sequences if helpful.\n"
+    "RULES:\n"
+    "- Read `house_status` (`valid_room`, `in_house`, `missing_for_house`, `last_build`) and the backpack / "
+    "`craftable_now` before choosing `phase`. Use real counts from the HUD.\n"
+    "- Once `house_status.valid_room` is true never return to `build_house`; advance to `craft_early_gear` (Work "
+    "Bench, Furnace, Anvil, bars, bow + arrows, armor) and then `explore_caves` (loot chests, Life Crystals, ore).\n"
+    "- Each task is one job Hydrogen can finish and verify: one outcome, the routine that does most of it "
+    "(`chop_tree_right`/`left`, `mine_clear_overhead`, `clear_area_right`/`left`, `build_house`, `dig_down`, "
+    "`stairs_down_left`/`right`, `build_arena_platform_right`/`left`, `pillar_up`, `stairs_up_left`/`right`, "
+    "`place_torch`, or 'none'), and a `done_when` that can be read off the HUD (item counts, house_status, depth, "
+    "boss state). Put the task to do NOW first; list 3-6 tasks reaching as far toward the Eye as you can see.\n"
+    "- Tasks are stable jobs, not corrections. While a task from YOUR PREVIOUS PLAN is unfinished and still right, "
+    "repeat it with the SAME `id` and wording so Hydrogen keeps its place; drop tasks Hydrogen reported DONE. "
+    "Never write a task that starts with 'stop', 'do not' or 'avoid': mistakes of the controller go in `avoid`.\n"
+    "- If Hydrogen reported a task blocked or a routine failed, the first task must remove exactly that cause.\n"
+    "- Every builtin routine listed above exists. If its last result says the game mod is outdated, the run is "
+    "paused until the mod is rebuilt; do not plan a manual replacement for it.\n"
+    "- Balance preparation against the fight: enough HP (Life Crystals), armor, a ranged weapon and an arena before "
+    "summoning, and summon only at night.\n"
+    "- Never tell the agent to mine its own house roof or door, and ignore enemies with no line of sight while it "
+    "is inside the house.\n"
+    "You may define up to 3 custom reusable routines for multi-step input sequences.\n"
     "Return JSON only: {\"phase\": \"<one of the 7 stage ids>\", \"roadmap\": [\"<remaining stages in order>\"], "
-    "\"strategy\": \"<3-5 detailed sentences diagnosing inventory, house_status, nearby world_view targets, and next stage>\", "
-    "\"objective\": \"<concrete stage milestone objective with numbers>\", \"steps\": [\"<4-7 detailed ordered "
-    "sub-goals referencing exact routines, crafts, and coordinates>\"], \"avoid\": [\"<specific mistakes/loops "
-    "to avoid right now>\"], \"done_when\": \"<exact observable HUD/world_view sign to advance stage>\", "
+    "\"strategy\": \"<3-5 sentences: where the run stands (inventory, house, gear, HP), the main risk, and the path "
+    "to the Eye from here>\", \"objective\": \"<the current stage milestone with numbers>\", "
+    "\"tasks\": [{\"id\": \"<short_snake_case>\", \"task\": \"<one job for Hydrogen, with numbers>\", "
+    "\"routine\": \"<builtin routine or none>\", \"done_when\": \"<observable HUD sign>\"}], "
+    "\"steps\": [\"<the same tasks as short ordered sentences>\"], \"avoid\": [\"<specific mistakes or loops to "
+    "avoid now>\"], \"done_when\": \"<observable sign that the stage is complete>\", "
     "\"routines\": [optional custom routines]}"
 )
 
 SHORT_TERM_SYSTEM = (
-    "You are the fast SHORT-TERM TACTICAL PLANNER for an agent playing real Terraria. "
-    "You sit between the slow Long-Term Supervisor (which plans the whole run up to the Eye of Cthulhu) and the "
-    "1-second Decision+Vision reactionary loop (which presses keys and aims the mouse). "
-    "Your job is to take the Long-Term Plan's current stage/steps, the latest Vision report, and the current HUD, "
-    "and break them down into ONE crystal-clear, immediate micro-goal and 2-4 concrete tactical steps for the "
-    "Decision model right now, adapting immediately to enemies, holes, walls, or missing items.\n"
-    "The Decision model executes literally. Every tactical step must name the routine or the exact keys, the item "
-    "with its hotbar slot, and the target as (dx, dy) taken from LIVE TILE & ENEMY COORDINATES. No step may say "
-    "'build', 'place a wall' or 'make a roof' without a cell.\n"
-    "A block only attaches to a cell touching an existing solid tile or background wall; never send a click into "
-    "open air. For anything about the house (frame, walls, door, furniture) the only correct step is: select routine "
-    "`build_house`. If `house_status.last_build` or the recent inputs show build_house FAILED, read its reason and "
-    "plan the step that fixes exactly that (usually chop more Wood), then build_house again.\n"
-    "Return JSON only: {\"current_subgoal\": \"<1 concrete immediate subgoal>\", "
+    "You are HYDROGEN, the task supervisor for an agent playing real Terraria. Carbon, the strategy supervisor, "
+    "owns the whole run up to the Eye of Cthulhu and hands you ONE task at a time (YOUR TASK). You own that task "
+    "until it is done: you judge its progress from the HUD, tell the Decision model exactly what to do next, and "
+    "brief the Vision model on what to find on screen for it. You are called back to back, without pause: each "
+    "answer replaces your last one and reaches the Decision model within a second or two.\n"
+    "0. WATCH. You get a clip of the last seconds (frames in time order, the last one is now) and CONTROLLER "
+    "TRACE: every input the Decision model made since you last looked, each with what the game measured right "
+    "after it (tiles moved, HP change, items gained or lost, game messages). Read them together. Say in "
+    "`feedback` what those inputs actually achieved and name the mistake with its fix: swinging with nothing "
+    "under the cursor, walking with NO EFFECT (blocked: jump or mine), walking away from the target, wrong "
+    "hotbar slot for the job, clicking a cell out of reach, ignoring your last `directive`, taking damage "
+    "without fighting back. If your own last directive produced NO EFFECT, change it; do not repeat it. Write "
+    "'on track' only when the trace shows real progress on the task.\n"
+    "1. STATUS. Compare YOUR TASK's `done_when` with the HUD, coordinates and recent inputs. Answer `done` only "
+    "when the sign is actually there (give the evidence), `blocked` when the task cannot progress as written (say "
+    "the exact cause in `report_to_carbon`: missing item and count, no trees in range, routine failed with its "
+    "reason), otherwise `in_progress`.\n"
+    "2. STEPS for the Decision model, which executes literally. Each step names the routine or the exact keys, the "
+    "item with its hotbar slot, and the target as (dx, dy) taken from LIVE TILE & ENEMY COORDINATES or VISION "
+    "TARGETS. No step may say 'build', 'place a wall' or 'fight' without a cell and a slot. A block only attaches "
+    "to a cell touching a solid tile or background wall; never send a click into open air. For anything about the "
+    "house the only correct step is: select routine `build_house`; if `house_status.last_build` or the recent "
+    "inputs show it FAILED, plan the step that fixes exactly that reason (usually chop more Wood), then "
+    "`build_house` again. If an enemy with line of sight is within 6 tiles, the first step deals with it (weapon "
+    "slot, attack cell, how to move) before the task continues.\n"
+    "3. VISION BRIEF. The Vision model measures exact cells from the screenshot. Tell it what this task needs located: which "
+    "of place / mine / aim / fight / move matters now, the exact things to find (for example 'lowest trunk cell of "
+    "the nearest tree on the right', 'empty supported cells for a 6-wide platform at dy=+2', 'the slime's position "
+    "and whether it is mid-jump', 'ore veins or a cave opening below'), and up to 3 concrete questions.\n"
+    "Return JSON only: {\"task\": \"<the task you are supervising>\", \"status\": \"in_progress|done|blocked\", "
+    "\"evidence\": \"<the HUD fact behind the status>\", "
+    "\"feedback\": \"<what the Decision model's last inputs achieved, the mistake and the fix, or 'on track'>\", "
+    "\"directive\": \"<ONE order for this second: the routine to select, or the keys, the item + hotbar slot and "
+    "the (dx, dy) cell>\", "
+    "\"current_subgoal\": \"<one concrete immediate subgoal>\", "
     "\"tactical_steps\": [\"<2-4 short imperative steps>\"], "
     "\"priority_target\": \"<exact target/item/enemy/tile to act on now, or 'none'>\", "
     "\"recommended_routine\": \"<builtin routine name or 'none'>\", "
-    "\"adaptation\": \"<how to adapt to nearby threats or terrain obstacles right now>\"}"
+    "\"adaptation\": \"<how to handle nearby threats or terrain right now>\", "
+    "\"vision_brief\": {\"focus\": \"place|mine|aim|fight|move\", \"find\": [\"<things to locate>\"], "
+    "\"look_for\": [\"<questions to answer from the screenshot>\"]}, "
+    "\"report_to_carbon\": \"<what Carbon must know if done or blocked, else ''>\"}"
 )
 
 
 def parse_short_term_plan(text: str) -> dict[str, Any]:
     data = _parse_json_object(text)
     steps = [str(s).strip() for s in (data.get("tactical_steps") or []) if str(s).strip()]
+    status = str(data.get("status") or "in_progress").strip().lower()
+    brief = data.get("vision_brief") if isinstance(data.get("vision_brief"), dict) else {}
     return {
+        "task": str(data.get("task") or "").strip()[:300],
+        "status": status if status in ("in_progress", "done", "blocked") else "in_progress",
+        "evidence": str(data.get("evidence") or "").strip()[:300],
+        "feedback": str(data.get("feedback") or "").strip()[:400],
+        "directive": str(data.get("directive") or "").strip()[:300],
         "current_subgoal": str(data.get("current_subgoal") or "").strip(),
         "tactical_steps": steps[:4],
         "priority_target": str(data.get("priority_target") or "none").strip(),
         "recommended_routine": str(data.get("recommended_routine") or "none").strip(),
         "adaptation": str(data.get("adaptation") or "").strip(),
+        "vision_brief": {
+            "focus": str(brief.get("focus") or "").strip()[:40],
+            "find": [str(x)[:200] for x in (brief.get("find") or []) if str(x).strip()][:5],
+            "look_for": [str(x)[:200] for x in (brief.get("look_for") or []) if str(x).strip()][:3],
+        },
+        "report_to_carbon": str(data.get("report_to_carbon") or "").strip()[:400],
     }
+
+
+def _num(value: Any, lo: float, hi: float) -> float:
+    try:
+        return max(lo, min(hi, float(value or 0)))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def vision_targets(report: dict[str, Any]) -> dict[str, Any]:
+    """Pull the place / mine / aim / fight / move targets out of a vision report, with bounded numbers."""
+    out: dict[str, Any] = {}
+    for key in ("place", "mine"):
+        cells = []
+        for raw in report.get(key) if isinstance(report.get(key), list) else []:
+            if isinstance(raw, dict):
+                cells.append({**{k: v for k, v in raw.items() if isinstance(v, (str, bool, int, float))},
+                              "dx": _num(raw.get("dx"), -20, 20), "dy": _num(raw.get("dy"), -12, 12)})
+        if cells:
+            out[key] = cells[:6]
+    aim = report.get("aim")
+    if isinstance(aim, dict) and str(aim.get("action") or "none").lower() != "none":
+        out["aim"] = {**aim, "dx": _num(aim.get("dx"), -20, 20), "dy": _num(aim.get("dy"), -12, 12)}
+    fight = report.get("fight")
+    if isinstance(fight, dict) and str(fight.get("threat_level") or "none").lower() != "none":
+        enemies = [
+            {**e, "dx": _num(e.get("dx"), -60, 60), "dy": _num(e.get("dy"), -40, 40)}
+            for e in (fight.get("enemies") if isinstance(fight.get("enemies"), list) else []) if isinstance(e, dict)
+        ]
+        out["fight"] = {**fight, "enemies": enemies[:6],
+                        "attack_dx": _num(fight.get("attack_dx"), -20, 20), "attack_dy": _num(fight.get("attack_dy"), -12, 12)}
+    move = report.get("move")
+    if isinstance(move, dict) and move.get("direction") in ("left", "right", "stay"):
+        out["move"] = move
+    return out
+
+
+TARGET_MAX_AGE_S = 15.0  # a frame older than this no longer describes what is around the player
+TARGET_MAX_MOVE = 12.0  # tiles: farther than this and the cells seen are off screen
+
+
+def shift_targets(targets: dict[str, Any], moved_x: float, moved_y: float) -> dict[str, Any]:
+    """Re-express targets seen earlier as offsets from where the player stands now (it moved by moved_x, moved_y)."""
+    if not (moved_x or moved_y):
+        return targets
+
+    def cell(c: dict[str, Any], kx: str = "dx", ky: str = "dy") -> dict[str, Any]:
+        return {**c, kx: round(float(c.get(kx) or 0) - moved_x, 1), ky: round(float(c.get(ky) or 0) - moved_y, 1)}
+
+    out = dict(targets)
+    for key in ("place", "mine"):
+        if key in out:
+            out[key] = [cell(c) for c in out[key]]
+    if "aim" in out:
+        out["aim"] = cell(out["aim"])
+    if "fight" in out:
+        fight = cell(out["fight"], "attack_dx", "attack_dy")
+        fight["enemies"] = [cell(e) for e in fight.get("enemies") or []]
+        out["fight"] = fight
+    return out
+
+
+def _pos_xy(hud: dict[str, Any]) -> tuple[float, float] | None:
+    pos = hud.get("pos")
+    try:
+        if isinstance(pos, dict):
+            return float(pos["x"]), float(pos["y"])
+        if isinstance(pos, (list, tuple)) and len(pos) >= 2:
+            return float(pos[0]), float(pos[1])
+    except (KeyError, TypeError, ValueError):
+        pass
+    return None
+
 
 STRATEGY_SYSTEM = (
     "You are the long-term strategist for an agent playing real Terraria whose single goal is to defeat the Eye of "
@@ -253,6 +389,19 @@ DECISION_BRIEF = (
     "You control a Terraria player with a keyboard and mouse, like a human. Every answer becomes a real input. "
     "You are the fast loop (~1 Hz): react immediately to what the attached frame, `LIVE TILE & ENEMY COORDINATES`, "
     "and `SHORT-TERM TACTICAL PLAN` show while advancing the Supervisor's stage objective. Do not wait.\n"
+    "CHAIN OF COMMAND: Carbon sets the strategy and task list. Hydrogen supervises the ONE current task and writes "
+    "the `SHORT-TERM TACTICAL PLAN`. The vision model, briefed by Hydrogen, gives `VISION ACTION TARGETS`: exact "
+    "cells to place on, cells to mine, the point to aim at and how to fight, already converted to offsets from "
+    "where you stand now. When a target is given for what you are doing, copy its hotbar slot and its (dx, dy) "
+    "into `hotbar`, `cursor_x`, `cursor_y`: `fight` first when threat_level is high or critical, then `place` / "
+    "`mine` in list order (first cell first), else `aim`. Follow `move` for walking and jumping. If a target is "
+    "out of reach (more than 5 tiles sideways / 4 vertically), walk toward it instead of clicking. If it is in "
+    "reach, set `move_x` to idle and keep working that cell until the game feedback shows it is gone or filled: "
+    "walking while clicking moves you off the target and wastes the swing. Never hold a walk key just to be "
+    "doing something; with no target and no enemy, follow Hydrogen's first tactical step.\n"
+    "`HYDROGEN ORDER` is the newest instruction from your supervisor, who has just watched your last inputs and "
+    "what the game measured after each one. Carry it out now, before anything except an enemy that is hitting "
+    "you, and correct what `HYDROGEN FEEDBACK` says went wrong instead of repeating it.\n"
     "COORDINATE AIMING: Use exact `(dx, dy)` offsets from `enemies_dx_dy`, `trees`, `ores`, `chests`, `stations`, "
     "`dropped_items`, and `town_npcs` to set `cursor_x` and `cursor_y` directly onto your target, and move left/right "
     "toward items/enemies/trees that are out of reach. Attack any enemy with `los=true` and `dist<=5` immediately.\n"
@@ -292,6 +441,23 @@ def _parse_json_object(text: str) -> dict[str, Any]:
     return data
 
 
+def parse_tasks(raw: Any) -> list[dict[str, str]]:
+    """Carbon's ordered task list: each entry is one job Hydrogen supervises to completion."""
+    out: list[dict[str, str]] = []
+    for i, entry in enumerate(raw if isinstance(raw, list) else []):
+        if isinstance(entry, str):
+            entry = {"task": entry}
+        if not isinstance(entry, dict) or not str(entry.get("task") or "").strip():
+            continue
+        out.append({
+            "id": re.sub(r"[^a-z0-9_]", "", str(entry.get("id") or f"task_{i + 1}").lower())[:40] or f"task_{i + 1}",
+            "task": str(entry.get("task")).strip()[:300],
+            "routine": str(entry.get("routine") or "none").strip()[:40],
+            "done_when": str(entry.get("done_when") or "").strip()[:300],
+        })
+    return out[:8]
+
+
 def parse_real_plan(text: str) -> dict[str, Any]:
     data = _parse_json_object(text)
     strategy = str(data.get("strategy") or "").strip()
@@ -303,6 +469,7 @@ def parse_real_plan(text: str) -> dict[str, Any]:
         "strategy": strategy[:1200],
         "objective": objective[:400],
         "roadmap": [str(s)[:200] for s in (data.get("roadmap") or [])][:7],
+        "tasks": parse_tasks(data.get("tasks")),
         "steps": [str(s)[:300] for s in (data.get("steps") or [])][:8],
         "avoid": [str(s)[:200] for s in (data.get("avoid") or [])][:6],
         "done_when": str(data.get("done_when") or "")[:300],
@@ -1007,8 +1174,9 @@ class RealGameController:
         supervisor_fn: Callable[[str, str | None], str] | None = None,
         short_term_fn: Callable[[str, str | None], str] | None = None,
         strategy_fn: Callable[[str, str | None], str] | None = None,
-        supervisor_every: int = 90,
-        short_term_every: int = 8,
+        supervisor_every: int | None = None,
+        short_term_every: int | None = None,
+        carbon_model: str | None = None,
         async_supervisor: bool = True,
         async_vision: bool = True,
         decision_sees_frame: bool | None = None,
@@ -1024,9 +1192,12 @@ class RealGameController:
             lambda prompt, png: agent._call_supervisor_model(
                 prompt, png, system=VISION_SYSTEM, model=vision_model,
                 thinking_level=os.environ.get("TERRARIA_VISION_THINKING", "low") or None))
-        self.supervisor_fn = supervisor_fn or (
-            lambda prompt, png: agent._call_supervisor_model(prompt, png, system=REAL_SUPERVISOR_SYSTEM))
-        short_term_model = os.environ.get("TERRARIA_SHORT_TERM_MODEL") or vision_model
+        # Carbon writes the run-long strategy; Hydrogen (the agent's own model) supervises one task at a time.
+        self.carbon_model = carbon_model or os.environ.get("TERRARIA_CARBON_MODEL") or DEFAULT_CARBON_MODEL
+        self._carbon_failed = False
+        self.supervisor_fn = supervisor_fn or self._carbon_call(REAL_SUPERVISOR_SYSTEM)
+        short_term_model = (os.environ.get("TERRARIA_HYDROGEN_MODEL") or os.environ.get("TERRARIA_SHORT_TERM_MODEL")
+                            or agent.model)
         if short_term_fn is not None:
             self.short_term_fn = short_term_fn
         elif live:
@@ -1037,10 +1208,14 @@ class RealGameController:
         else:
             self.short_term_fn = None
         # Skill mode: the same strategy model writes the run's long-term plan (eye_planner.Strategy).
-        self.strategy_fn = strategy_fn or (
-            lambda prompt, png: agent._call_supervisor_model(prompt, png, system=STRATEGY_SYSTEM))
-        self.supervisor_every = max(1, int(supervisor_every))
-        self.short_term_every = max(1, int(short_term_every))
+        self.strategy_fn = strategy_fn or self._carbon_call(STRATEGY_SYSTEM)
+        # Both supervisors run back to back: a new call starts as soon as the last one has answered. Carbon is also
+        # held to a minimum gap in seconds, since ticks pass much faster while a routine runs than while models think.
+        self.supervisor_every = max(1, int(supervisor_every or os.environ.get("TERRARIA_CARBON_EVERY") or 30))
+        self.short_term_every = max(1, int(short_term_every or os.environ.get("TERRARIA_HYDROGEN_EVERY") or 1))
+        self.carbon_seconds = float(os.environ.get("TERRARIA_CARBON_SECONDS") or 15)
+        self.hydrogen_frames = max(1, int(os.environ.get("TERRARIA_HYDROGEN_FRAMES") or 4))
+        self.carbon_frames = max(1, int(os.environ.get("TERRARIA_CARBON_FRAMES") or 4))
         self.async_supervisor = async_supervisor
         self.async_vision = async_vision
         if decision_sees_frame is None:
@@ -1048,9 +1223,9 @@ class RealGameController:
         self.decision_sees_frame = decision_sees_frame
 
         self.tiers = {
-            "supervisor": _Tier("strategy", agent.model),
-            "short_term": _Tier("tactical_planner", short_term_model),
-            "vision": _Tier("sight", vision_model),
+            "supervisor": _Tier("carbon_strategy", self.carbon_model),
+            "short_term": _Tier("hydrogen_task_supervisor", short_term_model),
+            "vision": _Tier("targeting_sight", vision_model),
             "decision": _Tier("controls", agent.decisions.model),
         }
         if not live:
@@ -1070,9 +1245,16 @@ class RealGameController:
         self._short_term_requested_tick = 0
         self._short_term_plan_no = 0
         self._short_term_planning = False
+        self._task_index = 0  # which of Carbon's tasks Hydrogen is supervising
+        self._mod_outdated_until = 0  # decisions pause until this tick after the mod rejected a skill as unknown
+        self._task_reported: tuple[int, int, str] | None = None  # last (plan, task, status) sent up to Carbon
         self._want_replan = False
         self._was_dead = False
         self._history: deque[str] = deque(maxlen=6)
+        self._plan_requested_time = 0.0
+        self._frames: deque[tuple[int, str]] = deque(maxlen=40)  # recent (tick, frame): the supervisors' clip
+        self._trace: deque[dict[str, Any]] = deque(maxlen=14)  # controller inputs with their measured results
+        self._trace_snap: dict[str, Any] | None = None
         self._inventory_memory: dict[str, Any] | None = None
         self._inventory_memory_tick = 0
         self._seeing = False
@@ -1097,6 +1279,36 @@ class RealGameController:
         self._strategy_deaths = 0
 
     # ------------------------------------------------------------------ tiers
+    def _carbon_call(self, system: str) -> Callable[[str, str | None], str]:
+        """Call Carbon. If Carbon cannot be reached, Hydrogen's model answers and the tier label says so."""
+        def call(prompt: str, png: str | None) -> str:
+            agent, tier = self.agent, self.tiers["supervisor"]
+            if not self._carbon_failed:
+                try:
+                    out = agent._call_supervisor_model(prompt, png, system=system, model=self.carbon_model)
+                    tier.model = self.carbon_model
+                    return out
+                except Exception:
+                    if self.carbon_model == agent.model:
+                        raise
+                    self._carbon_failed = True
+            out = agent._call_supervisor_model(prompt, png, system=system, model=agent.model)
+            tier.model = f"{agent.model} (standing in for {self.carbon_model}, which failed)"
+            return out
+        return call
+
+    def _current_task(self, plan: dict[str, Any] | None) -> dict[str, str]:
+        """The one task of Carbon's plan that Hydrogen supervises now."""
+        if plan is None:
+            return {"id": "goal", "task": self.goal, "routine": "none", "done_when": ""}
+        tasks = plan.get("tasks") or []
+        if tasks:
+            return tasks[min(self._task_index, len(tasks) - 1)]
+        steps = plan.get("steps") or []
+        return {"id": str(plan.get("phase") or "objective"),
+                "task": str(plan.get("objective") or (steps[0] if steps else plan.get("strategy") or self.goal)),
+                "routine": "none", "done_when": str(plan.get("done_when") or "")}
+
     def _see(self, shot: str | None, hud: dict[str, Any], shot_error: str | None, tick: int) -> dict[str, Any]:
         tier = self.tiers["vision"]
         if not shot:
@@ -1109,19 +1321,28 @@ class RealGameController:
             plan = self._plan
             short_term = self._short_term_plan
             recent_inputs = list(self._history)[-5:]
+            task = self._current_task(plan)
         plan_summary = (
             {"phase": plan.get("phase", ""), "objective": plan.get("objective", "")}
             if plan is not None else {"phase": "", "objective": self.goal}
         )
+        st = short_term or {}
+        brief = {
+            "task": task.get("task"), "task_done_when": task.get("done_when"),
+            "subgoal": st.get("current_subgoal", ""), "steps": st.get("tactical_steps", []),
+            "priority_target": st.get("priority_target", ""), **(st.get("vision_brief") or {}),
+        }
         ppt = (safe_hud.get("view") or {}).get("px_per_tile")
         prompt = (
-            "Inspect this Terraria frame, identify any mistake the AI is making right now in \"correction\", "
-            "and output rapid reaction guidance for the Decision API."
+            "Locate the targets for Hydrogen's task in this Terraria frame: cells to place on, cells to mine, the "
+            "point to aim at, enemies to fight and which way to move. Give every position as (dx, dy) tiles from "
+            "the player."
             + (f" In this image one tile is about {float(ppt):.1f} pixels." if ppt else "")
-            + f"\nCURRENT SUPERVISOR GOAL: {json.dumps(plan_summary, default=str)}"
-            + (f"\nSHORT-TERM SUBGOAL: {json.dumps(short_term, default=str)}" if short_term else "")
+            + f"\nHYDROGEN TASK BRIEF (find exactly this): {json.dumps(brief, default=str)}"
+            + f"\nCARBON STAGE: {json.dumps(plan_summary, default=str)}"
             + (f"\nRECENT AI INPUTS: {json.dumps(recent_inputs, default=str)}" if recent_inputs else "")
-            + f"\nHUD SUMMARY (FULL & COORDINATES): {json.dumps(hud_summary, sort_keys=True, default=str)}"
+            + f"\nLIVE COORDINATES (exact dx/dy from the game; reuse them): {json.dumps(self._coordinates_summary(safe_hud), default=str)}"
+            + f"\nHUD SUMMARY (hotbar slots, items, HP): {json.dumps(hud_summary, sort_keys=True, default=str)}"
         )
         with self._lock:
             self.last_prompts["vision"] = prompt
@@ -1141,8 +1362,29 @@ class RealGameController:
         }
         raw_reaction = report.get("reaction")
         report["reaction"] = {**default_reaction, **(raw_reaction if isinstance(raw_reaction, dict) else {})}
+        targets = vision_targets(report)
+        if targets:
+            report["targets"] = targets
+            report["targets_pos"] = _pos_xy(hud)  # player tile in this frame, to re-anchor offsets after it moves
+            report["targets_time"] = started  # when the frame was taken, not when the model answered
         tier.ok(tick, time.time() - started)
         return report
+
+    def _live_targets(self, report: dict[str, Any], hud: dict[str, Any], age_s: float | None) -> dict[str, Any]:
+        """Vision targets as offsets from where the player stands now; dropped once too old to trust."""
+        targets = report.get("targets")
+        taken = report.get("targets_time")
+        if taken:
+            age_s = time.time() - float(taken)
+        if not isinstance(targets, dict) or not targets or (age_s is not None and age_s > TARGET_MAX_AGE_S):
+            return {}
+        then, now = report.get("targets_pos"), _pos_xy(hud)
+        if then and now:
+            moved_x, moved_y = now[0] - then[0], now[1] - then[1]
+            if abs(moved_x) > TARGET_MAX_MOVE or abs(moved_y) > TARGET_MAX_MOVE:
+                return {}  # the player has left the screen the targets were read from
+            targets = shift_targets(targets, moved_x, moved_y)
+        return targets
 
     def _look(self, shot: str | None, hud: dict[str, Any], shot_error: str | None, tick: int) -> dict[str, Any]:
         """Use 0ms simulated player world_view when provided, plus periodic async VLM supervision."""
@@ -1171,9 +1413,17 @@ class RealGameController:
             if isinstance(vlm_latest, dict):
                 vlm_correction = str(vlm_latest.get("correction") or "").strip()
                 vlm_reaction = vlm_latest.get("reaction") if isinstance(vlm_latest.get("reaction"), dict) else {}
+                age_now = round(now - vlm_seen_at, 1) if vlm_seen_at else 0.0
+                live_targets = self._live_targets(vlm_latest, hud, age_now)
+                if live_targets:
+                    report["targets"] = live_targets
+                    report["vlm_age_s"] = age_now
+                for key in ("task_view", "house_progress", "task_status_seen"):
+                    if str(vlm_latest.get(key) or "").strip():
+                        report[key] = str(vlm_latest[key]).strip()[:400]
                 vlm_bits = [
                     f"FIX: {vlm_correction}" if vlm_correction and vlm_correction.lower() != "none" else "",
-                    str(vlm_latest.get("surroundings") or "").strip(),
+                    str(vlm_latest.get("task_view") or vlm_latest.get("surroundings") or "").strip(),
                     str(vlm_reaction.get("immediate_directive") or "").strip(),
                     str(vlm_latest.get("notes") or "").strip(),
                 ]
@@ -1191,7 +1441,9 @@ class RealGameController:
             return {**report, "age_s": 0.0}
 
         if not shot or not self.async_vision:
-            return self._see(shot, hud, shot_error, tick)
+            report = self._see(shot, hud, shot_error, tick)
+            report.pop("targets_pos", None)
+            return report
 
         def work() -> None:
             try:
@@ -1211,26 +1463,43 @@ class RealGameController:
             threading.Thread(target=work, daemon=True).start()
         if latest is None:
             return {"lighting": "unknown", "surroundings": "Scene notes not ready yet: go by the attached frame.", "age_s": None}
-        return {**latest, "age_s": round(time.time() - seen_at, 1)}
+        age = round(time.time() - seen_at, 1)
+        out = {k: v for k, v in latest.items() if k not in ("targets", "targets_pos")}
+        live_targets = self._live_targets(latest, hud, age)
+        if live_targets:
+            out["targets"] = live_targets
+        return {**out, "age_s": age}
 
-    def _supervise(self, tick: int, hud: dict[str, Any], vision: dict[str, Any], shot: str | None, reason: str) -> None:
+    def _supervise(self, tick: int, hud: dict[str, Any], vision: dict[str, Any], shot: str | None, reason: str,
+                   clip: list[tuple[int, str]] | None = None, trace: list[str] | None = None) -> None:
         tier = self.tiers["supervisor"]
         safe_hud = sanitize_hud(hud)
         with self._lock:
             previous = self._plan
             history = list(self._history)
+            hydrogen = self._short_term_plan
+            task_now = self._current_task(previous) if previous else None
         hud_for_prompt = self._hud_for_prompt(safe_hud, tick)
         coords_text = json.dumps(self._coordinates_summary(safe_hud), default=str)
+        hydrogen_text = json.dumps({
+            "task_it_was_supervising": task_now,
+            **{k: (hydrogen or {}).get(k) for k in ("status", "evidence", "current_subgoal", "report_to_carbon")},
+        }, default=str)[:1200] if task_now else "none yet"
         prompt = (
             f"GOAL\n{self.goal}\n\nWHY YOU ARE BEING ASKED\n{reason}\n\n"
+            f"HYDROGEN REPORT (your task supervisor: which task it was on and how that task stands)\n{hydrogen_text}\n\n"
             f"PROGRESSION STAGES\n{json.dumps(PROGRESSION_STAGES)}\n\n"
             f"TERRARIA KNOWLEDGE BASE\n{TERRARIA_KNOWLEDGE_BASE}\n\n"
             f"LIVE TILE & ENEMY COORDINATES (dx/dy in tiles from player)\n{coords_text}\n\n"
             f"VISION REPORT (what is on screen now)\n{json.dumps(vision, sort_keys=True, default=str)[:2500]}\n\n"
             f"ON-SCREEN HUD\n{json.dumps(hud_for_prompt, sort_keys=True, default=str)[:3000]}\n\n"
             f"YOUR PREVIOUS PLAN\n{json.dumps(previous, default=str)[:1500] if previous else 'none'}\n\n"
-            "RECENT INPUTS BY THE DECISION MODEL\n" + ("\n".join(history) or "none")
+            f"CLIP\n{self._clip_text(clip or [])}\n\n"
+            "CONTROLLER TRACE (each input with what the game measured right after it; oldest first)\n"
+            + ("\n".join(trace or []) or "none yet")
+            + "\n\nRECENT INPUTS BY THE DECISION MODEL\n" + ("\n".join(history) or "none")
         )
+        frames: Any = [png for _, png in clip] if clip and len(clip) > 1 else shot
         wiki_context = retrieve_wiki_context(
             " ".join((
                 self.goal,
@@ -1248,7 +1517,7 @@ class RealGameController:
         self.last_prompts["supervisor"] = prompt
         started = time.time()
         try:
-            plan = parse_real_plan(self.supervisor_fn(prompt, shot))
+            plan = parse_real_plan(self.supervisor_fn(prompt, frames))
         except Exception as exc:
             tier.fail(exc)
             if previous is not None:
@@ -1261,6 +1530,12 @@ class RealGameController:
             self._plan_no += 1
             self._plan_tick = tick
             self._supervisor_retry_at_tick = 0
+            # Hydrogen keeps its place when Carbon repeats the task it is on; otherwise the new first task is next.
+            finished = self._task_reported is not None and self._task_reported[1:] == (self._task_index, "done")
+            kept = self._current_task(previous).get("id") if previous and not finished else None
+            ids = [t.get("id") for t in plan.get("tasks") or []]
+            self._task_index = ids.index(kept) if kept and kept in ids else 0
+            self._task_reported = None
             for routine in plan.get("routines") or []:
                 self._stored_routines.pop(routine["name"], None)
                 self._stored_routines[routine["name"]] = routine
@@ -1286,19 +1561,25 @@ class RealGameController:
                 reason = self._replan_reason or "The decision model reported the objective is finished or not working."
             elif died:
                 reason = "The player just died."
-            elif tick - self._plan_requested_tick >= self.supervisor_every:
-                reason = "Routine check-in: confirm or update the plan from what is on screen now."
+            elif (tick - self._plan_requested_tick >= self.supervisor_every
+                  or (self.async_supervisor and self.carbon_seconds > 0
+                      and time.time() - self._plan_requested_time >= self.carbon_seconds)):
+                reason = ("Continuous supervision: judge the clip and the controller trace, then confirm or update "
+                          "the plan.")
             if not reason or self._supervising:
                 return
             self._supervising = True
             self._want_replan = False
             self._plan_requested_tick = tick
+            self._plan_requested_time = time.time()
             self._replan_reason = ""
             blocking = not self.async_supervisor
+            clip = self._clip(self.carbon_frames, self._frames.maxlen or 40)
+            trace = self._trace_lines()
 
         def work() -> None:
             try:
-                self._supervise(tick, hud, vision, shot, reason)
+                self._supervise(tick, hud, vision, shot, reason, clip, trace)
             finally:
                 with self._lock:
                     self._supervising = False
@@ -1308,7 +1589,8 @@ class RealGameController:
         else:
             threading.Thread(target=work, daemon=True).start()
 
-    def _short_term_supervise(self, tick: int, hud: dict[str, Any], vision: dict[str, Any], plan: dict[str, Any], plan_no: int) -> None:
+    def _short_term_supervise(self, tick: int, hud: dict[str, Any], vision: dict[str, Any], plan: dict[str, Any], plan_no: int,
+                              clip: list[tuple[int, str]] | None = None, trace: list[str] | None = None) -> None:
         if self.short_term_fn is None:
             return
         tier = self.tiers["short_term"]
@@ -1318,27 +1600,58 @@ class RealGameController:
         with self._lock:
             history = list(self._history)
             prev_st = self._short_term_plan
+            task_index = self._task_index
+            task = self._current_task(plan)
+        tasks = plan.get("tasks") or []
+        targets = vision.get("targets") if isinstance(vision.get("targets"), dict) else {}
+        scene = {k: v for k, v in vision.items() if k != "targets"}
         prompt = (
-            f"LONG-TERM PLAN #{plan_no}\n{json.dumps({k: v for k, v in plan.items() if k != 'routines'}, default=str)[:2000]}\n\n"
+            f"YOUR TASK ({min(task_index, max(len(tasks) - 1, 0)) + 1} of {max(len(tasks), 1)} in Carbon's plan; "
+            f"supervise only this one)\n{json.dumps(task, default=str)}\n\n"
+            f"LONG-TERM PLAN #{plan_no} from Carbon\n{json.dumps({k: v for k, v in plan.items() if k != 'routines'}, default=str)[:2000]}\n\n"
             f"LIVE TILE & ENEMY COORDINATES (dx/dy in tiles from player)\n{coords_text}\n\n"
-            f"VISION REPORT (live surroundings & threats)\n{json.dumps(vision, sort_keys=True, default=str)[:1800]}\n\n"
+            f"VISION TARGETS (what your vision model located for the last brief you gave it)\n"
+            f"{json.dumps(targets, sort_keys=True, default=str)[:1500] if targets else 'none yet'}\n\n"
+            f"VISION REPORT (live surroundings & threats)\n{json.dumps(scene, sort_keys=True, default=str)[:1800]}\n\n"
             f"ON-SCREEN HUD\n{json.dumps(hud_for_prompt, sort_keys=True, default=str)[:2200]}\n\n"
-            f"PREVIOUS SHORT-TERM PLAN\n{json.dumps(prev_st, default=str)[:800] if prev_st else 'none'}\n\n"
-            "RECENT INPUTS BY THE DECISION MODEL\n" + ("\n".join(history) or "none")
+            f"YOUR PREVIOUS ANSWER (the Decision model was acting on this during the trace)\n"
+            f"{json.dumps({k: v for k, v in prev_st.items() if k != 'vision_brief'}, default=str)[:900] if prev_st else 'none'}\n\n"
+            f"CLIP\n{self._clip_text(clip or [])}\n\n"
+            "CONTROLLER TRACE (each input with what the game measured right after it; oldest first)\n"
+            + ("\n".join(trace or []) or "none yet")
+            + "\n\nRECENT INPUTS BY THE DECISION MODEL\n" + ("\n".join(history) or "none")
         )
         self.last_prompts["short_term"] = prompt
+        frames: Any = [png for _, png in clip] if clip else None
         started = time.time()
         try:
-            st_plan = parse_short_term_plan(self.short_term_fn(prompt, None))
+            st_plan = parse_short_term_plan(self.short_term_fn(prompt, frames))
         except Exception as exc:
             tier.fail(exc)
             if prev_st is not None:
                 tier.status = "STALE"
             return
+        status = st_plan["status"]
         with self._lock:
             self._short_term_plan = st_plan
             self._short_term_tick = tick
             self._short_term_plan_no = plan_no
+            report_key = (plan_no, task_index, status)
+            if plan_no == self._plan_no and status != "in_progress" and self._task_reported != report_key:
+                self._task_reported = report_key
+                detail = " ".join(x for x in (st_plan["evidence"], st_plan["report_to_carbon"]) if x)[:500]
+                if status == "done" and task_index + 1 < len(tasks):
+                    # Hydrogen moves to Carbon's next task at once and plans it on the next decision.
+                    self._task_index = task_index + 1
+                    self._short_term_plan_no = -1
+                    self._history.append(f"#{tick}: task '{task.get('task', '')[:80]}' DONE ({st_plan['evidence'][:120]})")
+                else:
+                    # Last task finished, or the task cannot proceed: Carbon must write what comes next.
+                    self._want_replan = True
+                    self._replan_reason = (
+                        f"Hydrogen reports task '{task.get('task', '')[:160]}' is {status.upper()}: {detail or 'no detail given'}. "
+                        + ("Write the next stage's tasks." if status == "done" else "Give a different way to reach this stage.")
+                    )
         tier.ok(tick, time.time() - started)
 
     def _maybe_short_term_plan(self, hud: dict[str, Any], vision: dict[str, Any]) -> None:
@@ -1360,10 +1673,12 @@ class RealGameController:
             self._short_term_planning = True
             self._short_term_requested_tick = tick
             blocking = not self.async_supervisor
+            clip = self._clip(self.hydrogen_frames, 12)
+            trace = self._trace_lines()
 
         def work() -> None:
             try:
-                self._short_term_supervise(tick, hud, vision, plan, plan_no)
+                self._short_term_supervise(tick, hud, vision, plan, plan_no, clip, trace)
             finally:
                 with self._lock:
                     self._short_term_planning = False
@@ -1372,6 +1687,84 @@ class RealGameController:
             work()
         else:
             threading.Thread(target=work, daemon=True).start()
+
+    # ------------------------------------------------------------------ what the supervisors watch
+    @staticmethod
+    def _item_totals(hud: dict[str, Any]) -> dict[str, int]:
+        bag = hud.get("backpack")
+        if isinstance(bag, dict):
+            return {str(n): int(q or 0) for n, q in bag.items() if int(q or 0) > 0}
+        totals: dict[str, int] = {}
+        for entry in hud.get("hotbar") or []:
+            if isinstance(entry, dict) and entry.get("name") and int(entry.get("stack") or 0) > 0:
+                totals[str(entry["name"])] = totals.get(str(entry["name"]), 0) + int(entry["stack"])
+        return totals  # hotbar only: the inventory list appears and vanishes as the inventory opens and closes
+
+    def _settle_trace(self, hud: dict[str, Any]) -> None:
+        """Measure what the previous input did (tiles moved, HP, items, game messages) and attach it to that input."""
+        snap = {"pos": _pos_xy(hud), "hp": int(hud.get("hp") or 0), "items": self._item_totals(hud)}
+        prev, self._trace_snap = self._trace_snap, snap
+        if prev is None or not self._trace:
+            return
+        result = self._trace[-1].setdefault("result", {"moved": [0.0, 0.0], "hp": 0, "items": {}, "events": []})
+        if prev["pos"] and snap["pos"]:
+            result["moved"] = [round(result["moved"][i] + snap["pos"][i] - prev["pos"][i], 1) for i in (0, 1)]
+        result["hp"] += snap["hp"] - prev["hp"]
+        for name in set(prev["items"]) | set(snap["items"]):
+            delta = snap["items"].get(name, 0) - prev["items"].get(name, 0)
+            if delta:
+                result["items"][name] = result["items"].get(name, 0) + delta
+        for event in hud.get("events") or []:
+            if str(event) not in result["events"] and len(result["events"]) < 4:
+                result["events"].append(str(event)[:160])
+
+    def _record_trace(self, controls: dict[str, Any], source: str, note: str) -> None:
+        keys = " ".join(controls.get("active_keys") or []) or "no keys"
+        cursor = (controls.get("cursor_dx") or 0.0, controls.get("cursor_dy") or 0.0)
+        last = self._trace[-1] if self._trace else None
+        if last is not None and (last["by"], last["keys"], last["cursor"]) == (source, keys, cursor):
+            last["times"] += 1  # the same input again: one line, results added up
+            last["last_tick"] = self.ticks
+            return
+        self._trace.append({"tick": self.ticks, "last_tick": self.ticks, "times": 1, "by": source, "keys": keys,
+                            "cursor": cursor, "note": note[:120] if source != "decisions_api" else ""})
+
+    def _trace_lines(self) -> list[str]:
+        lines = []
+        for entry in self._trace:
+            result = entry.get("result")
+            if result is None:
+                outcome = "result not measured yet"
+            else:
+                bits = []
+                if any(abs(v) >= 0.2 for v in result["moved"]):
+                    bits.append(f"moved ({result['moved'][0]:+g},{result['moved'][1]:+g}) tiles")
+                if result["hp"]:
+                    bits.append(f"HP {result['hp']:+d}")
+                bits += [f"{name} {delta:+d}" for name, delta in list(result["items"].items())[:5] if delta]
+                if result["events"]:
+                    bits.append("game said: " + "; ".join(result["events"]))
+                outcome = ", ".join(bits) or "NO EFFECT (did not move, HP and items unchanged, no game message)"
+            span = f"#{entry['tick']}" + (f"-#{entry['last_tick']} x{entry['times']}" if entry["times"] > 1 else "")
+            lines.append(
+                f"{span} [{entry['by']}] {entry['keys']} | cursor ({entry['cursor'][0]:+g},{entry['cursor'][1]:+g})"
+                + (f" | {entry['note']}" if entry.get("note") else "") + f" => {outcome}")
+        return lines
+
+    def _clip(self, count: int, span: int) -> list[tuple[int, str]]:
+        """Up to ``count`` frames spread over the last ``span`` ticks, oldest first; the last is the current frame."""
+        frames = [f for f in self._frames if f[0] > self.ticks - span]
+        if len(frames) > count:
+            picks = sorted({round(i * (len(frames) - 1) / max(count - 1, 1)) for i in range(count)} | {len(frames) - 1})
+            frames = [frames[i] for i in picks][-count:]
+        return frames
+
+    @staticmethod
+    def _clip_text(clip: list[tuple[int, str]]) -> str:
+        if not clip:
+            return "no frames attached"
+        return (f"{len(clip)} frame(s) attached, oldest first, taken at decisions "
+                + ", ".join(f"#{t}" for t, _ in clip) + " (the last is now)")
 
     def _coordinates_summary(self, hud: dict[str, Any]) -> dict[str, Any]:
         """Compact, never-truncated tile & enemy coordinate summary for all 4 tiers."""
@@ -1655,6 +2048,10 @@ class RealGameController:
                 elif self._house_completed:
                     hud["world_view"] = {**wv, "house_status": {**hs, "valid_room": True}}
         shot = payload.get("screenshot_b64") or None
+        if self.live:
+            self._settle_trace(hud)
+            if shot:
+                self._frames.append((tick, shot))
         if hud.get("inventory_open"):
             self._inventory_memory = {k: hud.get(k) for k in ("inventory", "equipment", "craftable")}
             self._inventory_memory_tick = tick
@@ -1667,6 +2064,9 @@ class RealGameController:
 
         # Settle a running routine skill first, so a result that arrived this tick is in what every tier reads now.
         running = self._track_routine_skill(hud, tick)
+        if tick < self._mod_outdated_until:
+            return self._reply(idle_controls(), {}, self._plan, "outdated_mod",
+                               note="OUTDATED MOD: run `dotnet build mod/TerrariaRLBridge`, then reload mods in tModLoader")
         if self._house_completed:
             self._last_build = None
         elif self._last_build is not None:
@@ -1717,23 +2117,40 @@ class RealGameController:
             f"IMMEDIATE SHORT-TERM REACTION (from live vision)\n{json.dumps(reaction, sort_keys=True, default=str)}\n\n"
             if isinstance(reaction, dict) and reaction else ""
         )
-        short_term_text = (
-            f"SHORT-TERM TACTICAL PLAN (updated {tick - short_term_tick} ticks ago)\n"
-            f"{json.dumps(short_term_plan, sort_keys=True, default=str)}\n\n"
+        with self._lock:
+            task = self._current_task(plan)
+        order = short_term_plan if isinstance(short_term_plan, dict) else {}
+        order_text = (
+            (f"HYDROGEN ORDER (from your task supervisor {tick - short_term_tick} decisions ago, after watching your "
+             f"inputs: do this now)\n{order['directive']}\n\n" if order.get("directive") else "")
+            + (f"HYDROGEN FEEDBACK on your last inputs\n{order['feedback']}\n\n" if order.get("feedback") else "")
+        )
+        short_term_text = order_text + f"CURRENT TASK (the one thing to get done now)\n{json.dumps(task, default=str)}\n\n" + (
+            f"SHORT-TERM TACTICAL PLAN from Hydrogen, the task supervisor (updated {tick - short_term_tick} ticks ago)\n"
+            f"{json.dumps({k: v for k, v in short_term_plan.items() if k not in ('vision_brief', 'report_to_carbon')}, sort_keys=True, default=str)}\n\n"
             if isinstance(short_term_plan, dict) and short_term_plan.get("current_subgoal") else ""
         )
+        targets = vision.get("targets") if isinstance(vision.get("targets"), dict) else {}
+        targets_age = vision.get("vlm_age_s", vision.get("age_s")) or 0
+        targets_text = (
+            f"VISION ACTION TARGETS ({targets_age}s old; dx/dy are tiles from where you stand NOW: "
+            f"put them in cursor_dx/cursor_dy and select the listed hotbar slot)\n"
+            f"{json.dumps(targets, sort_keys=True, default=str)}\n\n"
+            if targets else ""
+        )
+        scene = {k: v for k, v in vision.items() if k != "targets"}
         plan_text = (
-            f"SUPERVISOR PLAN #{plan_no} (written {tick - plan_tick} decisions ago)\n{json.dumps({k: v for k, v in plan.items() if k != 'routines'}, default=str)}"
+            f"SUPERVISOR PLAN #{plan_no} from Carbon (written {tick - plan_tick} decisions ago)\n{json.dumps({k: v for k, v in plan.items() if k != 'routines'}, default=str)}"
             if plan is not None else
             f"SUPERVISOR PLAN: the first plan is still being written. Until it arrives, work toward the goal yourself and stay alive.\nGOAL: {self.goal}"
         )
         coords_text = json.dumps(self._coordinates_summary(hud), default=str)
         context = (
-            f"{DECISION_BRIEF}\n\n{correction_text}{short_term_text}{reaction_text}"
+            f"{DECISION_BRIEF}\n\n{short_term_text}{correction_text}{targets_text}{reaction_text}"
             f"LIVE TILE & ENEMY COORDINATES (use exact dx/dy for cursor_dx/cursor_dy)\n{coords_text}\n\n"
             f"{plan_text}\n\n"
             f"SCENE NOTES from the vision model ({vision.get('age_s', 0) or 0} s old; the attached frame is current)\n"
-            f"{json.dumps(vision, sort_keys=True, default=str)}\n\n"
+            f"{json.dumps(scene, sort_keys=True, default=str)}\n\n"
             f"ON-SCREEN HUD\n{json.dumps(self._hud_for_prompt(hud, tick), sort_keys=True, default=str)}\n\n"
             "YOUR RECENT INPUTS (oldest first)\n" + ("\n".join(self._history) or "none")
         )
@@ -1798,6 +2215,19 @@ class RealGameController:
             self._signatures.clear()
         return self._reply(controls, vision, plan, "decisions_api")
 
+    @staticmethod
+    def _targets_line(vision: dict[str, Any]) -> str:
+        """One-line count of what vision located, for the on-screen status line."""
+        targets = vision.get("targets") if isinstance(vision.get("targets"), dict) else {}
+        bits = [f"{key} x{len(targets[key])}" for key in ("place", "mine") if targets.get(key)]
+        if targets.get("aim"):
+            bits.append(f"aim ({targets['aim']['dx']:+g},{targets['aim']['dy']:+g})")
+        if targets.get("fight"):
+            bits.append(f"fight {targets['fight'].get('threat_level', '')}")
+        if targets.get("move"):
+            bits.append(f"move {targets['move'].get('direction')}")
+        return f"targets: {', '.join(bits)}; " if bits else ""
+
     def _routine_skill_controls(self) -> dict[str, Any]:
         rs = self._routine_skill or {}
         ctrl = {**idle_controls(), "skill": {"id": rs.get("id"), "name": rs.get("name"), "args": dict(rs.get("args") or {})}}
@@ -1832,6 +2262,11 @@ class RealGameController:
             return ctrl
         ok = status == "success"
         self._routine_skill = None
+        if "unknown skill" in reason:
+            # The installed mod predates this skill. No model can fix that, so say it plainly and pause.
+            reason = (f"the installed TerrariaRLBridge mod is older than this code and has no '{rs['name']}' skill. "
+                      "Rebuild it (dotnet build mod/TerrariaRLBridge) and reload mods in tModLoader")
+            self._mod_outdated_until = tick + 20
         self._history.append(f"#{tick}: routine {rs['routine']} {'SUCCEEDED' if ok else 'FAILED'}: {reason[:400]}")
         if rs["name"] == "build_house":
             self._last_build = {
@@ -1854,19 +2289,30 @@ class RealGameController:
         confidence: float = 0.0,
     ) -> dict[str, Any]:
         tick = self.ticks
+        if self.live:
+            self._record_trace(controls, source, note)
         sup, vis, dec = (self.tiers[k] for k in ("supervisor", "vision", "decision"))
         tiers = {k: tier.as_dict(tick) for k, tier in self.tiers.items()}
         sup_state, vis_state, dec_state = tiers["supervisor"], tiers["vision"], tiers["decision"]
         if plan is not None:
-            st_subgoal = ((self._short_term_plan or {}).get("current_subgoal") or "").strip()
-            st_suffix = f" | next: {st_subgoal}" if st_subgoal else ""
+            st = self._short_term_plan or {}
+            st_subgoal = (st.get("current_subgoal") or "").strip()
+            tasks = plan.get("tasks") or []
+            st_suffix = ""
+            if tasks:
+                index = min(self._task_index, len(tasks) - 1)
+                st_suffix = f" | task {index + 1}/{len(tasks)}: {tasks[index]['task'][:90]}"
+                if st.get("status") and st_subgoal:
+                    st_suffix += f" [{st['status']}]"
+            st_suffix += f" | next: {st_subgoal}" if st_subgoal else ""
+            st_suffix += f" | order: {st['directive'][:120]}" if st.get("directive") else ""
             sup_line = f"{sup.model} [{sup_state['status']}] plan #{self._plan_no}, {tick - self._plan_tick}t old: {plan.get('objective') or plan.get('strategy')}{st_suffix}"
         else:
             sup_line = f"{sup.model} [{sup_state['status']}] " + ("writing first plan..." if self._supervising else "no plan") + (f" - {sup_state['last_error']}" if sup_state['last_error'] else "")
         if vis_state["status"] == "LIVE":
             age = vision.get("age_s")
             vis_line = (f"{vis.model} [LIVE {vis_state['last_latency_s']}s" + (f", notes {age}s old" if age is not None else "")
-                        + f"] light={vision.get('lighting', '?')}; {vision.get('surroundings', '')}")
+                        + f"] {self._targets_line(vision)}{vision.get('task_view') or vision.get('surroundings', '')}")
         else:
             vis_line = f"{vis.model} [{vis_state['status']}]" + (f" - {vis_state['last_error']}" if vis_state['last_error'] else "")
         skill = controls.get("skill") if isinstance(controls.get("skill"), dict) else None

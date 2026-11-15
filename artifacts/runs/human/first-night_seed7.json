@@ -1,12 +1,20 @@
 {
  "deaths": 0,
+ "eye": {
+  "armor_peak": 3,
+  "armor_start": 0,
+  "fought": false,
+  "max_hp": 100,
+  "min_hp_ratio": 1.0,
+  "start_max_hp": 100
+ },
  "manifest": {
   "calibration_sha256": "none",
   "image_digest": "unpinned-local-run",
-  "python": "3.11.15",
-  "seed_data_sha256": "none",
-  "source_commit": "1e2f7e62ec8c4421283d7ffe4ced1de28cb58e0c",
-  "source_hash": "56edbd302f52699b87032eb8dba6f5ae2e39e124a54c51be2e175bf6b63c092d"
+  "python": "3.12.13",
+  "seed_data_sha256": "c3529f17c34fdb5e5149f999a4928ba182a6e216d6b17ae01706fd5bffe80845",
+  "source_commit": "cdaee18568dc34a349636cf54f486fe88e8d5aea",
+  "source_hash": "d980165f6117a07ca80d1c996b1cd6b64df4f4e34e693df41cfc2ed68593b564"
  },
  "milestones": [
   "CRAFT:wood_armor",
@@ -19,7 +27,7 @@
  "phi0": 0.48,
  "phi_final": 81.33,
  "seed": 7,
- "sha256": "5845cca8e0d683d9ceb7c7e7d2ba3fe4fadb2aa100b8cd003b8a873b984a495e",
+ "sha256": "a50c29301f72ab5dbb10267c663b5331afc87df652c81a74be349133620377aa",
  "state_hash": "75b026104e7a1c4cd7bc54c2a74194880e6124a9608f9d9c59052b92b548ca11",
  "task": "first-night",
  "windows": [
