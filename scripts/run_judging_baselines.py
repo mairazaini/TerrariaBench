@@ -21,7 +21,7 @@ sys.path.insert(0, str(REPO))
 from terraria_bench.grader import grade  # noqa: E402
 from terraria_bench.policies import run_policy_episode  # noqa: E402
 from terraria_bench.provenance import load_calibration  # noqa: E402
-from terraria_bench.tasks import EVAL_TASKS  # noqa: E402
+from terraria_bench.tasks import EVAL_TASKS, HARDCORE_TASKS  # noqa: E402
 from terraria_bench.tools import Episode  # noqa: E402
 
 
@@ -34,7 +34,7 @@ def run_stop_early(task_id: str, seed: int, calibration: dict) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--task", default="eye-of-cthulhu", choices=list(EVAL_TASKS))
+    parser.add_argument("--task", default="eye-of-cthulhu", choices=list(HARDCORE_TASKS) + list(EVAL_TASKS))
     parser.add_argument("--seed", type=int, default=7)
     args = parser.parse_args()
 
