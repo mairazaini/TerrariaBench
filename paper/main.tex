@@ -159,8 +159,8 @@ The agent acts through 24 tools spanning five families (Appendix~\ref{app:tools}
 \end{center}
 Every tool call costs 1 operation except \texttt{terraria\_status} (0 operations). Operations do not roll over across windows. Thus, reading the viewport (\texttt{observe\_viewport}) or scanning ores (\texttt{scan\_biome\_and\_ores}) competes directly with gathering, crafting, and combat for the same scarce budget. When operations reach zero or the agent calls \texttt{end\_window}, the remaining ticks of the 12-hour window resolve with the player standing at its current position: an unsheltered agent at night takes hostile damage, and dying forfeits 50\% of raw materials plus operations in the following window.
 
-\subsection{Live \texttt{tModLoader} Bridge and Real-Game Recording}
-Beyond the fast headless simulator, TerrariaBench includes a C\# \texttt{tModLoader} mod (\texttt{mod/TerrariaRLBridge/}) that exports 60\,Hz Terraria state and referee kill/death telemetry alongside skill macros (\texttt{Skills.cs}) executed via OS keyboard and mouse control (\texttt{real\_game.py}, \texttt{live\_play.py}). A three-tier Gemini vision-and-strategy loop runs against live Terraria pixels, while \texttt{terraria\_bench/real\_eval.py} scores committed recordings offline across 13 Eye-of-Cthulhu progression stages with tamper-evident referee consistency checks.
+\subsection{Track B: Live 60\,Hz Real-Terraria Environment (\texttt{tModLoader} Bridge)}
+As an equal, real-time counterpart to the deterministic MCP simulator (Track A, Sections 3.1--3.4), TerrariaBench includes a C\# \texttt{tModLoader} mod (\texttt{mod/TerrariaRLBridge/}) that connects agents directly to live 60\,Hz Terraria. Rather than calling discrete, turn-based MCP tools, the agent perceives raw screen pixels alongside 60\,Hz referee state and kill/death telemetry, and acts through OS keyboard and mouse inputs plus skill macros (\texttt{Skills.cs}, driven by \texttt{real\_game.py} and \texttt{live\_play.py}). Because continuous 60\,Hz physics cannot pause for 30--45\,s frontier reasoning tokens, Track B runs a four-role hierarchical stack: a frontier supervisor (\texttt{gemini-4-carbon}), short-term planner and vision modules (\texttt{gemini-4-hydrogen}), and a sub-second decision/reflex layer (\texttt{gemini-decision-1}). Committed recordings are graded offline by \texttt{terraria\_bench/real\_eval.py} across 13 Eye-of-Cthulhu progression stages with tamper-evident referee consistency checks.
 
 \section{Grader Design}
 
@@ -238,7 +238,7 @@ In Harbor evaluations, the simulator, sealed calibration, and ledger reside in a
 
 \section{Evaluation Results}
 
-\subsection{Standard Grid, Hardcore Gap, and 42-Run Autopsy}
+\subsection{Track A: Deterministic Simulator Results and 42-Run Autopsy}
 Table~\ref{tab:leaderboard} reports the reproducible standard leaderboard from \texttt{reporting/generate\_report.py}. Across the full 24-cell evaluation suite, \texttt{smart-triage} achieves a mean composite of \textbf{0.982} (100\% pass rate, 57\% Eye progress), \texttt{rule-based} reaches \textbf{0.505} (0\% pass rate), and \texttt{blast-list} scores \textbf{0.116}. All three non-progress baselines---\texttt{do-nothing}, \texttt{absentee}, and \texttt{exploiter}---score \textbf{0.000}. Notice that repeat runs of one cell are averaged into that cell first so repeated headline episodes do not re-weight a model's row. Across 10 evaluated cells (12 sealed runs), Gemini 4 / 2.5 averages \textbf{0.652} (47\% pass rate; averaging \textbf{0.884} over three uncapped \texttt{eye-of-cthulhu:7} runs: 0.971, 0.682, 1.000), while Nemotron 3.5 VL averages \textbf{0.144} across 10 cells (12 runs, 0\% pass; \textbf{0.108} on \texttt{eye-of-cthulhu:7}). On the 2-cell seed-7 replay subset (\texttt{first-night:7}, \texttt{eye-of-cthulhu:7}), Verda DeepSeek V4.1 Flash averages \textbf{0.801} (50\% pass, 6 runs) and Verda Kimi K3.1 Pro averages \textbf{0.975} (67\% pass, 6 runs).
 
 \begin{table}[t]
@@ -292,24 +292,33 @@ Replaying all 42 transcripts reveals \textbf{23 runs with at least one death} ac
 (2) \emph{Unwinnable boss clock} (\textbf{7/23} deaths): summoning the 2,800-HP Eye late in a window when observable per-burst damage makes finishing before window close impossible.
 (3) \emph{Zero cave return margin} (\textbf{7/23} deaths): exhausting operations underground instead of tracking \texttt{navigate\_to} return distance. Across \textbf{14 of the 23 fatal runs}, the model's stated reason for its final action explicitly claimed it was safe immediately before dying.
 
-\textbf{Sim-to-Real 60\,Hz Terraria gap.} In symbolic MCP simulation, the Gemini two-tier agent averages \textbf{90\%} Eye progress (killing the Eye in 3 of 4 runs). Projecting into live 60\,Hz \texttt{tModLoader} Terraria via pixels, keyboard, and mouse (\texttt{real\_eval.py}, Table~\ref{tab:live60hz}), two 300-frame live sessions with the four-role hierarchical stack (\texttt{gemini-4-carbon} supervisor, \texttt{gemini-4-hydrogen} short-term/vision, \texttt{gemini-decision-1} reflex) reach \textbf{20\%} Eye progress (\texttt{real\_terraria\_run1.json}: 4/13 stages, 2 deaths) and \textbf{22.3\%} Eye progress (\texttt{real\_terraria\_run2.json}: 6/13 stages adding furnace smelting and armor equipping, 0 deaths), both stalling at \texttt{ammunition\_ready} with consistent offline referee telemetry. Median latencies explain why a fast decision tier is essential: the frontier supervisor takes 32.8--46.2\,s per strategic update, whereas the decision/reflex tier responds in 0.57--0.78\,s.
+\subsection{Track B: Live 60\,Hz Real-Terraria Results and Sim-to-Real Breakdown}
+While Track A isolates pure planning, spatial state verification, and reward integrity under clean symbolic tools, Track B tests whether the same hierarchical agent survives contact with continuous 60\,Hz physics and raw visual grounding. In symbolic MCP simulation, the Gemini agent averages \textbf{90\%} Eye progress (killing the Eye in 3 of 4 runs). Projecting into live 60\,Hz \texttt{tModLoader} Terraria via pixels, keyboard, and mouse (\texttt{real\_eval.py}, Table~\ref{tab:live60hz}), two 300-frame live sessions with the four-role hierarchical stack (\texttt{gemini-4-carbon} supervisor, \texttt{gemini-4-hydrogen} short-term/vision, \texttt{gemini-decision-1} reflex) reach \textbf{20.0\%} Eye progress (\texttt{real\_terraria\_run1.json}: 4/13 stages, 2 deaths) and \textbf{22.3\%} Eye progress (\texttt{real\_terraria\_run2.json}: 6/13 stages adding furnace smelting and armor equipping, 0 deaths), both stalling at \texttt{ammunition\_ready} with consistent offline referee telemetry.
+
+\textbf{Why agents break down differently in real 60\,Hz Terraria.} Transitioning from Track A to Track B exposes qualitatively different failure modes than those in the 42-run simulator autopsy:
+\begin{enumerate}[leftmargin=18pt,itemsep=2pt]
+  \item \textbf{Random wandering under continuous physics.} Without discrete \texttt{navigate\_to} primitives, terrain bumps, knockback, and pitch-black shafts cause the low-level controller to drift or oscillate rather than hold a coherent traversal path.
+  \item \textbf{Fractured short- and long-term execution.} Median latencies explain why a fast decision tier is mandatory---the frontier supervisor takes 32.8--46.2\,s per strategic update while the reflex layer responds in 0.57--0.78\,s---yet async handoffs between slow strategic revisions and fast motor actions cause plans to desynchronize mid-execution.
+  \item \textbf{Incomplete physical construction and prep.} Even when high-level recipes are known, reliably finishing enclosed houses, placing crafting stations, and completing \texttt{ammunition\_ready} in real time fails far more often than calling deterministic MCP build tools.
+\end{enumerate}
+Balancing Track A and Track B is therefore essential: Track A cleanly separates reasoning failures from motor noise, while Track B proves that passing a symbolic tool benchmark overestimates real-world 60\,Hz autonomy.
 
 \begin{table}[t]
 \centering
-\caption{Live 60\,Hz \texttt{tModLoader} Terraria agent performance (\texttt{artifacts/runs/real\_terraria/summary.json}) vs.\ symbolic MCP simulation. Both live sessions run 300 frames with \texttt{gemini-4-carbon} (supervisor), \texttt{gemini-4-hydrogen} (short-term \& vision), and \texttt{gemini-decision-1} (reflex).}
+\caption{Track B: Live 60\,Hz \texttt{tModLoader} Terraria agent performance (\texttt{artifacts/runs/real\_terraria/summary.json}) vs.\ Track A symbolic MCP simulation. Both live sessions run 300 frames with \texttt{gemini-4-carbon} (supervisor), \texttt{gemini-4-hydrogen} (short-term \& vision), and \texttt{gemini-decision-1} (reflex).}
 \label{tab:live60hz}
 \begin{tabular}{lccccc}
 \toprule
 Session & Stages & Eye Prog. & Deaths & Stall Stage & Med.\ Latency (Sup.\ / Dec.) \\
 \midrule
-Symbolic MCP (Gemini, 4 runs) & --- & \textbf{90\%} (3/4 kills) & --- & --- & --- \\
-Live 60\,Hz Run 1 (\texttt{real\_terraria\_run1}) & 4/13 & 20.0\% & 2 & \texttt{ammunition\_ready} & 32.81\,s / 0.57\,s \\
-Live 60\,Hz Run 2 (\texttt{real\_terraria\_run2}) & 6/13 & 22.3\% & 0 & \texttt{ammunition\_ready} & 46.24\,s / 0.78\,s \\
+Track A: Symbolic MCP (Gemini, 4 runs) & --- & \textbf{90\%} (3/4 kills) & --- & --- & --- \\
+Track B: Live 60\,Hz Run 1 (\texttt{real\_terraria\_run1}) & 4/13 & 20.0\% & 2 & \texttt{ammunition\_ready} & 32.81\,s / 0.57\,s \\
+Track B: Live 60\,Hz Run 2 (\texttt{real\_terraria\_run2}) & 6/13 & 22.3\% & 0 & \texttt{ammunition\_ready} & 46.24\,s / 0.78\,s \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Three Failure Areas}
+\subsection{Track A Capability Axes}
 Table~\ref{tab:areas} groups the 8-task standard evaluation suite into three capability axes (\texttt{EVAL\_RESULTS.md}):
 \begin{table}[t]
 \centering
