@@ -1,0 +1,7 @@
+{
+  "task": "03_open_ended_progress",
+  "tier": 1,
+  "description": "Gather wood, build shelter, craft work bench, and survive the first day in Terraria.",
+  "timeout_sec": 300,
+  "scoring": "checkpoints.jsonl"
+}
